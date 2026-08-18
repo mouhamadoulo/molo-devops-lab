@@ -1,0 +1,5 @@
+app:
+  identity:
+    bootstrap-admin-email: integration.admin@example.com
+    bootstrap-admin-password: local-integration-test-password
+    bootstrap-admin-name: Integration Admin

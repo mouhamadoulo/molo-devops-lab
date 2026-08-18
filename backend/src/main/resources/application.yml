@@ -22,6 +22,10 @@ spring:
 app:
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
+  identity:
+    bootstrap-admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
+    bootstrap-admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
+    bootstrap-admin-name: ${BOOTSTRAP_ADMIN_NAME:}
 
 server:
   shutdown: graceful
