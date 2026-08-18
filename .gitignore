@@ -3,6 +3,7 @@ task_plan.md
 findings.md
 progress.md
 .superpowers/
+.worktrees/
 
 # Environment and secrets
 .env
