@@ -26,6 +26,10 @@ app:
     bootstrap-admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
     bootstrap-admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}
     bootstrap-admin-name: ${BOOTSTRAP_ADMIN_NAME:}
+    jwt:
+      issuer: ${JWT_ISSUER:https://devops-store.local}
+      secret: ${JWT_SECRET:}
+      access-token-ttl: 15m
 
 server:
   shutdown: graceful
