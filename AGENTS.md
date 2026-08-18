@@ -80,6 +80,20 @@ Ne jamais versionner de secret réel. Ajouter les exemples sans secret dans un f
 
 ## Commandes de build et d'exécution
 
+### Frontend Angular
+
+Exécuter les commandes npm depuis `frontend/` :
+
+```bash
+npm start
+npm run lint
+npm run test:ci
+npm run build
+npm run e2e
+```
+
+`npm run e2e` démarre le serveur Angular défini dans `playwright.config.ts` lorsque nécessaire.
+
 Exécuter les commandes Maven depuis `backend/`.
 
 ### Linux et macOS
