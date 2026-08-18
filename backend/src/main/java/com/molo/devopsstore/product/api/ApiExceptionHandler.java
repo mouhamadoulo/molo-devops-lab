@@ -1,8 +1,12 @@
 package com.molo.devopsstore.product.api;
 
+import com.molo.devopsstore.identity.application.DuplicateUserEmailException;
 import com.molo.devopsstore.identity.application.ForbiddenAuthRequestException;
 import com.molo.devopsstore.identity.application.InvalidCredentialsException;
 import com.molo.devopsstore.identity.application.InvalidSessionException;
+import com.molo.devopsstore.identity.application.InvalidUserOperationException;
+import com.molo.devopsstore.identity.application.InvalidUserSortException;
+import com.molo.devopsstore.identity.application.UserNotFoundException;
 import com.molo.devopsstore.product.application.InvalidProductSortException;
 import com.molo.devopsstore.product.application.ProductNotFoundException;
 import java.util.Map;
@@ -18,6 +22,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleUserNotFound(UserNotFoundException exception) {
+        return problem(HttpStatus.NOT_FOUND, "User not found", exception.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateUserEmailException.class)
+    public ResponseEntity<ProblemDetail> handleDuplicateUserEmail(DuplicateUserEmailException exception) {
+        return problem(HttpStatus.CONFLICT, "User email already used", exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidUserOperationException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidUserOperation(InvalidUserOperationException exception) {
+        return problem(HttpStatus.BAD_REQUEST, "Invalid user operation", exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidUserSortException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidUserSort(InvalidUserSortException exception) {
+        return problem(HttpStatus.BAD_REQUEST, "Invalid user sort", exception.getMessage());
+    }
 
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<ProblemDetail> handleInvalidCredentials() {
