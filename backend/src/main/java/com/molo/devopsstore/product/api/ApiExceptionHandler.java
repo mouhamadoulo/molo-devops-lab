@@ -1,9 +1,13 @@
 package com.molo.devopsstore.product.api;
 
+import com.molo.devopsstore.identity.application.ForbiddenAuthRequestException;
+import com.molo.devopsstore.identity.application.InvalidCredentialsException;
+import com.molo.devopsstore.identity.application.InvalidSessionException;
 import com.molo.devopsstore.product.application.InvalidProductSortException;
 import com.molo.devopsstore.product.application.ProductNotFoundException;
 import java.util.Map;
 import java.util.TreeMap;
+import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
@@ -14,6 +18,21 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidCredentials() {
+        return problem(HttpStatus.UNAUTHORIZED, "Unauthorized", "Invalid credentials");
+    }
+
+    @ExceptionHandler(InvalidSessionException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidSession() {
+        return problem(HttpStatus.UNAUTHORIZED, "Unauthorized", "Invalid session");
+    }
+
+    @ExceptionHandler(ForbiddenAuthRequestException.class)
+    public ResponseEntity<ProblemDetail> handleForbiddenAuthRequest() {
+        return problem(HttpStatus.FORBIDDEN, "Forbidden", "Authentication request is not allowed");
+    }
 
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleNotFound(ProductNotFoundException exception) {
@@ -42,6 +61,10 @@ public class ApiExceptionHandler {
     private ResponseEntity<ProblemDetail> problem(HttpStatus status, String title, String message) {
         var detail = ProblemDetail.forStatusAndDetail(status, message);
         detail.setTitle(title);
+        var requestId = MDC.get("requestId");
+        if (requestId != null) {
+            detail.setProperty("requestId", requestId);
+        }
         return ResponseEntity.status(status)
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(detail);

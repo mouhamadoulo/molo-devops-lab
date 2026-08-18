@@ -74,14 +74,15 @@ class SecurityConfigTest {
     }
 
     @Test
-    void leavesTheFutureLoginEndpointPublicAndOutsideCsrfProtection() throws Exception {
+    void leavesLoginPublicAndOutsideCsrfProtection() throws Exception {
         var response = send(HttpRequest.newBuilder(uri("/api/v1/auth/login"))
                 .header("Content-Type", "application/json")
+                .header("Origin", "http://localhost:4200")
                 .header("X-Request-ID", "security-login")
                 .POST(HttpRequest.BodyPublishers.ofString("{}"))
                 .build());
 
-        assertThat(response.statusCode()).isEqualTo(404);
+        assertThat(response.statusCode()).isEqualTo(400);
     }
 
     @Test

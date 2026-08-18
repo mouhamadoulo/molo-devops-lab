@@ -30,6 +30,9 @@ app:
       issuer: ${JWT_ISSUER:https://devops-store.local}
       secret: ${JWT_SECRET:}
       access-token-ttl: 15m
+    auth:
+      refresh-token-ttl: 7d
+      cookie-secure: ${AUTH_COOKIE_SECURE:true}
 
 server:
   shutdown: graceful

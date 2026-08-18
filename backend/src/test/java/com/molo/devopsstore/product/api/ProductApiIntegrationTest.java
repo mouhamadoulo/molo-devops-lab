@@ -85,7 +85,10 @@ class ProductApiIntegrationTest {
         assertThat(product.body()).contains("Clavier mécanique");
 
         var metrics = httpClient.send(
-                HttpRequest.newBuilder(URI.create(baseUri + "/actuator/prometheus")).GET().build(),
+                HttpRequest.newBuilder(URI.create(baseUri + "/actuator/prometheus"))
+                        .header("Authorization", "Bearer " + adminAccessToken())
+                        .GET()
+                        .build(),
                 HttpResponse.BodyHandlers.ofString());
         assertThat(metrics.statusCode()).isEqualTo(200);
         assertThat(metrics.body()).contains("products_created_events_total");
@@ -97,7 +100,10 @@ class ProductApiIntegrationTest {
         assertThat(health.body()).contains("\"status\":\"UP\"");
 
         var openApi = httpClient.send(
-                HttpRequest.newBuilder(URI.create(baseUri + "/v3/api-docs")).GET().build(),
+                HttpRequest.newBuilder(URI.create(baseUri + "/v3/api-docs"))
+                        .header("Authorization", "Bearer " + adminAccessToken())
+                        .GET()
+                        .build(),
                 HttpResponse.BodyHandlers.ofString());
         assertThat(openApi.statusCode()).isEqualTo(200);
         assertThat(openApi.body()).contains("/api/v1/products");

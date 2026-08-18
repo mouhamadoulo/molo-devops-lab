@@ -74,6 +74,16 @@ public class RefreshToken {
         return new RefreshToken(user, tokenHash, familyId, expiresAt, createdAt);
     }
 
+    public void consume(Instant consumedAt, Long replacedById) {
+        this.consumedAt = Objects.requireNonNull(consumedAt, "consumedAt must not be null");
+        this.lastUsedAt = consumedAt;
+        this.replacedById = replacedById;
+    }
+
+    public void revoke(Instant revokedAt) {
+        this.revokedAt = Objects.requireNonNull(revokedAt, "revokedAt must not be null");
+    }
+
     private static String requireHash(String value) {
         if (value == null || value.length() != 64) {
             throw new IllegalArgumentException("tokenHash must contain 64 characters");
