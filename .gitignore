@@ -1,0 +1,34 @@
+# Local planning files
+task_plan.md
+findings.md
+progress.md
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# IDE and operating system
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Build outputs
+backend/target/
+frontend/node_modules/
+frontend/dist/
+.angular/
+coverage/
+*.log
+
+# Infrastructure tooling
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+.sonar/
+.trivycache/
