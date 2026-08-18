@@ -5,8 +5,9 @@ DevSecOps de bout en bout. Le périmètre métier reste volontairement limité a
 recherche, aux filtres et à la pagination afin de concentrer l'apprentissage sur la chaîne de
 livraison.
 
-> État actuel : phases 0 et 1 terminées. L'API Products Spring Boot est opérationnelle et le
-> frontend sera construit à la phase suivante du [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
+> État actuel : l'API Products, l'authentification JWT avec refresh rotatif, le RBAC et le socle
+> Angular sécurisé sont opérationnels. Le CRUD produits dans la console reste à construire selon
+> le [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
 
@@ -50,6 +51,17 @@ Le backend se valide avec un JDK 25 :
 cd backend
 ./mvnw clean verify
 ```
+
+Le frontend se lance séparément :
+
+```bash
+cd frontend
+npm start
+```
+
+Les contrôles frontend disponibles sont `npm run lint`, `npm run test:ci`, `npm run build` et
+`npm run e2e`. Le backend local exige PostgreSQL ainsi que les variables d'identité documentées
+dans [`.env.example`](.env.example).
 
 Le démarrage en une commande sera disponible à partir de la phase Docker :
 

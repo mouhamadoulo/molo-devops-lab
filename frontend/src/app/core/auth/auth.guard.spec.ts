@@ -1,24 +1,27 @@
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, provideRouter, Router, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, provideRouter, Router, RouterStateSnapshot, UrlTree } from '@angular/router';
 import { authGuard } from './auth.guard';
 import { UserRole } from './auth.models';
 import { roleGuard } from './role.guard';
 import { AuthStore } from './auth.store';
+import { firstValueFrom, Observable } from 'rxjs';
 
 describe('authentication guards', () => {
   const authenticated = signal(false);
   const role = signal<UserRole | null>(null);
+  const restoring = signal(false);
 
   beforeEach(() => {
     authenticated.set(false);
     role.set(null);
+    restoring.set(false);
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         {
           provide: AuthStore,
-          useValue: { authenticated, role },
+          useValue: { authenticated, role, restoring },
         },
       ],
     });
@@ -53,5 +56,16 @@ describe('authentication guards', () => {
       roleGuard(route, { url: '/users' } as RouterStateSnapshot));
 
     expect(result).toBe(true);
+  });
+
+  it('waits for session restoration before deciding', async () => {
+    restoring.set(true);
+    const result = TestBed.runInInjectionContext(() =>
+      authGuard({} as ActivatedRouteSnapshot, { url: '/products' } as RouterStateSnapshot));
+
+    authenticated.set(true);
+    restoring.set(false);
+
+    expect(await firstValueFrom(result as Observable<boolean | UrlTree>)).toBe(true);
   });
 });

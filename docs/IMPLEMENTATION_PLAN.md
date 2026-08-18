@@ -19,7 +19,8 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 
 ## Contraintes globales
 
-- Le MVP ne contient ni authentification, ni utilisateur, ni panier, ni commande, ni paiement.
+- Le MVP contient une authentification interne et trois rôles ; il ne contient ni inscription
+  publique, ni panier, ni commande, ni paiement.
 - L'application reste un monolithe modulaire ; aucun microservice n'est introduit.
 - Flyway est seul responsable du schéma et Hibernate utilise `ddl-auto=validate`.
 - Les tests qui vérifient PostgreSQL utilisent un vrai conteneur PostgreSQL.
@@ -34,8 +35,9 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 
 ## État du dépôt au 18 août 2026
 
-- Le dépôt contient le cahier des charges, les documents de phase 0 et le backend livré en phase 1.
-- Le dossier n'est pas encore initialisé comme dépôt Git.
+- Le dépôt Git contient le backend, l'identité/RBAC et le socle Angular sécurisé.
+- Le login, la restauration de session, les guards et le shell responsive sont implémentés ; le
+  CRUD produits du frontend reste planifié.
 - Docker 29.2.1, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0,
   Maven 3.9.13, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
@@ -322,16 +324,21 @@ suppression et filtres.
 
 **Implémentation :**
 
-- [ ] Générer Angular CLI 22 sans NgModule, avec routing, SCSS, npm et sans dépôt Git imbriqué.
-- [ ] Activer le mode TypeScript strict et conserver le builder application esbuild.
+- [x] Générer Angular CLI 22 sans NgModule, avec routing, SCSS, npm et sans dépôt Git imbriqué.
+- [x] Activer le mode TypeScript strict et conserver le builder application esbuild.
 - [ ] Définir les modèles `Product`, `ProductCategory`, requests et `PageResponse<T>`.
 - [ ] Créer `ProductsApi` pour le contrat HTTP et `ProductsStore` pour les Signals d'état.
 - [ ] Lazy-loader `products.routes.ts` depuis `app.routes.ts`.
 - [ ] Créer pages liste, détail et formulaire, puis composants filtres, carte/table et confirmation.
-- [ ] Utiliser `@if`, `@for`, `@switch`, `computed` et des formulaires réactifs typés.
+- [x] Utiliser `@if`, `computed` et des formulaires réactifs typés dans le socle livré ; `@for` et
+  `@switch` seront ajoutés avec les écrans de catalogue.
 - [ ] Implémenter états loading/error/empty/success et messages d'erreur accessibles.
 - [ ] Utiliser `/api` comme base relative afin que Nginx fasse le reverse proxy en production.
-- [ ] Ajouter des budgets de bundle et refuser les dépendances CommonJS non justifiées.
+- [x] Ajouter des budgets de bundle et refuser les dépendances CommonJS non justifiées.
+
+**Incrément sécurité livré :** login accessible, access token uniquement en mémoire, refresh
+rotatif par cookie HttpOnly, guards d'authentification et de rôle, sidebar desktop, navigation
+basse mobile et page 403. Les tests Vitest et Playwright couvrent ces parcours.
 
 **Commandes de validation :**
 

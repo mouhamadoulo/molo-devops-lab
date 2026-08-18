@@ -16,6 +16,8 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
-    provideAppInitializer(() => inject(AuthStore).restoreSession()),
+    provideAppInitializer(() => {
+      inject(AuthStore).restoreSession().subscribe();
+    }),
   ]
 };

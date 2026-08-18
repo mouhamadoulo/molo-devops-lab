@@ -13,6 +13,7 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [Plan authentification et RBAC](superpowers/plans/2026-08-18-authentication-rbac.md) | JWT, refresh rotatif, rôles et shell Angular sécurisé |
 | [Plan images produits S3](superpowers/plans/2026-08-18-product-images-s3.md) | Métadonnées, stockage privé, galerie et cohérence |
 | [Plan console produits Angular](superpowers/plans/2026-08-18-angular-product-console.md) | Catalogue responsive, formulaires, galerie et utilisateurs |
+| [Contexte produit](../PRODUCT.md) | Public, personnalité, anti-références et principes d'accessibilité de la console |
 
 ## Architecture
 
