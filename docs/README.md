@@ -9,6 +9,7 @@ reste volontairement court et sert uniquement de point d'entrée.
 |---|---|
 | [Plan d'implémentation](IMPLEMENTATION_PLAN.md) | Architecture, versions, phases, validations et critères d'acceptation |
 | [Cahier des charges](../Prompt-DevSecOps-Lab.md) | Besoin initial et contraintes du laboratoire |
+| [Console produits sécurisée](superpowers/specs/2026-08-18-secure-product-console-design.md) | Design validé du frontend, de l'authentification et des images produits |
 
 ## Architecture
 
