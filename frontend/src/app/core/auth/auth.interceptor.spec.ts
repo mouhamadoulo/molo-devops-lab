@@ -43,6 +43,7 @@ describe('authInterceptor', () => {
     initial.forEach((request) => request.flush(null, { status: 401, statusText: 'Unauthorized' }));
 
     const refresh = http.expectOne(`${environment.apiUrl}/auth/refresh`);
+    expect(refresh.request.headers.has('Authorization')).toBe(false);
     refresh.flush(session('new-token'));
 
     const retries = http.match(productsUrl);

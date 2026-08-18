@@ -45,7 +45,11 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
 };
 
 function withBearer(request: HttpRequest<unknown>, token: string | null): HttpRequest<unknown> {
-  if (token === null || !request.url.startsWith(environment.apiUrl)) {
+  if (
+    token === null
+    || !request.url.startsWith(environment.apiUrl)
+    || request.url.startsWith(`${environment.apiUrl}/auth/`)
+  ) {
     return request;
   }
   return request.clone({ setHeaders: { Authorization: `Bearer ${token}` } });
