@@ -1,0 +1,42 @@
+:host { display: block; min-height: 100dvh; }
+.login-layout { min-height: 100dvh; display: grid; grid-template-columns: minmax(20rem, 0.9fr) minmax(25rem, 1.1fr); background: var(--surface); }
+.login-intro { position: relative; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(2rem, 5vw, 5rem); color: var(--nav-ink); background: var(--nav); overflow: hidden; }
+.login-intro::after { content: ''; position: absolute; inline-size: 22rem; block-size: 22rem; inset: auto -8rem -10rem auto; border: 1px solid oklch(72% 0.08 250 / 0.25); border-radius: 50%; box-shadow: 0 0 0 4rem oklch(72% 0.08 250 / 0.05), 0 0 0 8rem oklch(72% 0.08 250 / 0.04); }
+.brand-lockup { display: flex; align-items: center; gap: 0.75rem; font-weight: 700; letter-spacing: -0.01em; }
+.brand-mark { display: grid; place-items: center; inline-size: 2.5rem; block-size: 2.5rem; border-radius: 0.65rem; color: var(--nav); background: var(--accent-soft); font-size: 0.8rem; letter-spacing: 0.04em; }
+.intro-copy { position: relative; z-index: 1; max-inline-size: 34rem; }
+.eyebrow { margin: 0 0 0.75rem; color: var(--accent-soft); font-size: 0.75rem; font-weight: 750; letter-spacing: 0.11em; text-transform: uppercase; }
+.intro-copy h1 { margin: 0; max-inline-size: 12ch; font-size: clamp(2.4rem, 5vw, 4.75rem); line-height: 0.98; letter-spacing: -0.055em; }
+.intro-copy > p:last-child { max-inline-size: 36rem; margin: 1.5rem 0 0; color: oklch(88% 0.02 250); font-size: 1.05rem; line-height: 1.65; }
+.environment-label { position: relative; z-index: 1; margin: 0; color: oklch(75% 0.025 250); font-size: 0.8rem; }
+.login-panel { display: grid; place-items: center; padding: 2rem; }
+form { inline-size: min(100%, 27rem); }
+.form-heading { margin-block-end: 2rem; }
+.form-heading .eyebrow { color: var(--accent); }
+.form-heading h2 { margin: 0; color: var(--ink); font-size: 2rem; letter-spacing: -0.035em; }
+.form-heading p:last-child { margin: 0.65rem 0 0; color: var(--ink-muted); line-height: 1.55; }
+.field { margin-block: 1.25rem; }
+label { display: block; margin-block-end: 0.5rem; color: var(--ink); font-size: 0.875rem; font-weight: 650; }
+input { inline-size: 100%; min-block-size: 3rem; box-sizing: border-box; padding: 0.75rem 0.875rem; border: 1px solid var(--line); border-radius: 0.65rem; color: var(--ink); background: var(--surface-raised); font: inherit; transition: border-color 160ms ease-out, box-shadow 160ms ease-out; }
+input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px var(--focus-ring); }
+input[aria-invalid='true'] { border-color: var(--danger); }
+.field-error { margin: 0.45rem 0 0; color: var(--danger); font-size: 0.8rem; }
+.error-summary { display: grid; gap: 0.2rem; padding: 0.9rem 1rem; border: 1px solid var(--danger-line); border-radius: 0.65rem; color: var(--danger-ink); background: var(--danger-surface); font-size: 0.875rem; }
+.error-summary:focus { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+.primary-action { inline-size: 100%; min-block-size: 3rem; display: flex; align-items: center; justify-content: center; gap: 0.6rem; margin-block-start: 1.75rem; border: 0; border-radius: 0.65rem; color: var(--accent-ink); background: var(--accent); font: inherit; font-weight: 700; cursor: pointer; transition: background 160ms ease-out, transform 160ms ease-out; }
+.primary-action:hover:not(:disabled) { background: var(--accent-hover); }
+.primary-action:active:not(:disabled) { transform: translateY(1px); }
+.primary-action:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+.primary-action:disabled { cursor: wait; opacity: 0.72; }
+.spinner { inline-size: 1rem; block-size: 1rem; border: 2px solid currentColor; border-block-start-color: transparent; border-radius: 50%; animation: spin 700ms linear infinite; }
+.skip-link { position: absolute; inset: 0 auto auto 1rem; z-index: 3; padding: 0.65rem 0.85rem; color: var(--nav); background: var(--nav-ink); transform: translateY(-120%); }
+.skip-link:focus { transform: translateY(0); }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 760px) {
+  .login-layout { grid-template-columns: 1fr; }
+  .login-intro { min-block-size: 13rem; padding: 1.5rem; }
+  .intro-copy h1 { max-inline-size: none; font-size: 2.3rem; }
+  .intro-copy > p:last-child, .environment-label { display: none; }
+  .login-panel { place-items: start center; padding: 2rem 1.25rem 3rem; }
+}
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 1.5s; } * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; } }

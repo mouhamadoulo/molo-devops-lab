@@ -1,0 +1,37 @@
+:host { display: block; min-height: 100dvh; }
+.shell { min-height: 100dvh; display: grid; grid-template-columns: 16.5rem 1fr; background: var(--canvas); }
+.sidebar { position: sticky; inset-block-start: 0; height: 100dvh; display: flex; flex-direction: column; padding: 1.25rem 1rem; box-sizing: border-box; color: var(--nav-ink); background: var(--nav); }
+.brand { min-height: 3rem; display: flex; align-items: center; gap: 0.75rem; padding-inline: 0.6rem; color: inherit; text-decoration: none; font-weight: 750; }
+.brand-mark { display: grid; place-items: center; inline-size: 2.2rem; block-size: 2.2rem; border-radius: 0.55rem; color: var(--nav); background: var(--accent-soft); font-size: 0.72rem; letter-spacing: 0.04em; }
+nav { display: grid; gap: 0.35rem; margin-block-start: 2.5rem; }
+nav a { min-height: 2.8rem; display: flex; align-items: center; gap: 0.8rem; padding-inline: 0.8rem; border-radius: 0.55rem; color: oklch(83% 0.025 250); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 160ms ease-out, background 160ms ease-out; }
+nav a:hover { color: var(--nav-ink); background: oklch(100% 0 0 / 0.07); }
+nav a.active { color: var(--nav-ink); background: oklch(100% 0 0 / 0.12); }
+svg { inline-size: 1.25rem; block-size: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.sidebar-foot { margin-block-start: auto; padding: 0.8rem; color: oklch(70% 0.025 250); font-size: 0.72rem; }
+.workspace { min-inline-size: 0; }
+header { min-height: 4.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-inline: clamp(1rem, 3vw, 2.5rem); border-block-end: 1px solid var(--line); background: var(--surface-raised); }
+.context { display: flex; align-items: baseline; gap: 0.5rem; color: var(--ink-muted); font-size: 0.8rem; }
+.context strong { color: var(--ink); font-size: 0.95rem; }
+.identity { display: flex; align-items: center; gap: 0.65rem; }
+.avatar { display: grid; place-items: center; inline-size: 2.25rem; block-size: 2.25rem; border-radius: 50%; color: var(--accent-ink); background: var(--accent); font-weight: 750; }
+.identity-copy { display: grid; line-height: 1.2; }
+.identity-copy strong { color: var(--ink); font-size: 0.82rem; }
+.identity-copy small { margin-block-start: 0.2rem; color: var(--ink-muted); font-size: 0.66rem; letter-spacing: 0.06em; }
+.identity button { min-height: 2.75rem; padding-inline: 0.8rem; border: 1px solid var(--line); border-radius: 0.55rem; color: var(--ink); background: var(--surface-raised); cursor: pointer; }
+main { padding: clamp(1.25rem, 3vw, 2.75rem); outline: none; }
+.bottom-nav { display: none; }
+.skip-link { position: fixed; inset: 0 auto auto 1rem; z-index: 10; padding: 0.65rem 0.85rem; color: var(--nav); background: var(--nav-ink); transform: translateY(-120%); }
+.skip-link:focus { transform: translateY(0); }
+a:focus-visible, button:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
+@media (max-width: 760px) {
+  .shell { display: block; padding-block-end: calc(4.5rem + env(safe-area-inset-bottom)); }
+  .sidebar { display: none; }
+  header { min-height: 4rem; padding-inline: 1rem; }
+  .context span, .identity-copy, .identity button { display: none; }
+  main { padding: 1.25rem 1rem; }
+  .bottom-nav { position: fixed; z-index: 5; inset: auto 0 0; min-height: 4.25rem; display: flex; justify-content: space-around; gap: 0; margin: 0; padding: 0.3rem 0.5rem calc(0.3rem + env(safe-area-inset-bottom)); border-block-start: 1px solid var(--line); background: var(--surface-raised); }
+  .bottom-nav a, .bottom-nav button { min-width: 4.5rem; min-height: 3.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem; padding: 0.2rem; border: 0; border-radius: 0.45rem; color: var(--ink-muted); background: transparent; font: inherit; font-size: 0.68rem; text-decoration: none; cursor: pointer; }
+  .bottom-nav a.active { color: var(--accent); background: var(--accent-surface); }
+  .bottom-nav svg { inline-size: 1.2rem; block-size: 1.2rem; }
+}

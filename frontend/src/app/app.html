@@ -1,0 +1,5 @@
+@if (auth.restoring()) {
+  <app-loading-screen />
+} @else {
+  <router-outlet />
+}

@@ -11,11 +11,13 @@ DevOps Store est un laboratoire DevSecOps autour d'un catalogue de produits. Le 
 reste volontairement simple afin de concentrer le travail sur la qualité, la sécurité, la livraison
 et l'observabilité.
 
-À ce stade, seules les phases 0 et 1 sont implémentées :
+À ce stade, le backend et le socle sécurisé du frontend sont implémentés :
 
-- le backend Spring Boot et ses tests sont opérationnels dans `backend/` ;
-- le frontend, Docker Compose, l'infrastructure, les pipelines et la plateforme d'observabilité
-  sont décrits dans `docs/IMPLEMENTATION_PLAN.md`, mais ne sont pas encore présents ;
+- le backend Spring Boot, l'identité, le RBAC et leurs tests sont opérationnels dans `backend/` ;
+- `frontend/` contient Angular 22, la session en mémoire, les guards, le login et le shell
+  responsive ; le CRUD produits et l'administration des utilisateurs restent à construire ;
+- Docker Compose, l'infrastructure, les pipelines et la plateforme d'observabilité sont décrits
+  dans `docs/IMPLEMENTATION_PLAN.md`, mais ne sont pas encore présents ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
   (`frontend/package.json`, `Makefile`, fichiers Compose, etc.) n'existent pas.
 
@@ -36,10 +38,11 @@ Avant une modification importante, consulter :
 - Micrometer avec registre Prometheus et logs structurés Logstash ;
 - springdoc OpenAPI 3.0.3 ;
 - JUnit Jupiter, AssertJ, Mockito et Testcontainers PostgreSQL 2.0.5.
+- Angular 22, TypeScript 6, Node.js 24, npm 11, Vitest, ESLint et Playwright ;
+- session Angular par Signals, JWT en mémoire, refresh rotatif et navigation par rôle.
 
 ### Cible planifiée
 
-- Angular 22, TypeScript 6, Node.js 24 et npm 11 ;
 - Docker, Docker Compose, GitHub Actions, SonarQube, Trivy et JFrog Artifactory ;
 - Terraform, Kubernetes/Minikube, Prometheus, Grafana, Loki et Grafana Alloy.
 
@@ -74,11 +77,28 @@ Le backend lit les variables suivantes, avec des valeurs locales par défaut :
 - `DB_USERNAME` ;
 - `DB_PASSWORD` ;
 - `CORS_ALLOWED_ORIGIN`.
+- `JWT_SECRET` et `JWT_ISSUER` ;
+- `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` et `BOOTSTRAP_ADMIN_NAME` ;
+- `AUTH_COOKIE_SECURE`.
 
 Ne jamais versionner de secret réel. Ajouter les exemples sans secret dans un fichier
 `.env.example` si nécessaire et conserver les valeurs sensibles hors de Git.
 
 ## Commandes de build et d'exécution
+
+### Frontend Angular
+
+Exécuter les commandes npm depuis `frontend/` :
+
+```bash
+npm start
+npm run lint
+npm run test:ci
+npm run build
+npm run e2e
+```
+
+`npm run e2e` démarre le serveur Angular défini dans `playwright.config.ts` lorsque nécessaire.
 
 Exécuter les commandes Maven depuis `backend/`.
 

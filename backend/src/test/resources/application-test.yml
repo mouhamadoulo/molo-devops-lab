@@ -1,0 +1,12 @@
+app:
+  identity:
+    bootstrap-admin-email: integration.admin@example.com
+    bootstrap-admin-password: local-integration-test-password
+    bootstrap-admin-name: Integration Admin
+    jwt:
+      issuer: https://devops-store.test
+      secret: local-integration-test-jwt-secret-with-at-least-32-bytes
+      access-token-ttl: 15m
+    auth:
+      refresh-token-ttl: 7d
+      cookie-secure: false

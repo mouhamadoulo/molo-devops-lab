@@ -2,13 +2,18 @@ package com.molo.devopsstore.product.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.molo.devopsstore.identity.application.AccessTokenService;
+import com.molo.devopsstore.identity.domain.AppUser;
+import com.molo.devopsstore.identity.domain.UserRole;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Container;
@@ -17,6 +22,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
+@ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ProductApiIntegrationTest {
 
@@ -34,6 +40,9 @@ class ProductApiIntegrationTest {
     @Value("${local.server.port}")
     private int port;
 
+    @Autowired
+    private AccessTokenService accessTokenService;
+
     private final HttpClient httpClient = HttpClient.newHttpClient();
 
     @Test
@@ -41,6 +50,7 @@ class ProductApiIntegrationTest {
         var baseUri = "http://localhost:" + port;
         var createRequest = HttpRequest.newBuilder(URI.create(baseUri + "/api/v1/products"))
                 .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + adminAccessToken())
                 .header("Origin", "http://localhost:4200")
                 .header("X-Request-ID", "api-integration-1")
                 .POST(HttpRequest.BodyPublishers.ofString("""
@@ -66,13 +76,19 @@ class ProductApiIntegrationTest {
 
         var productLocation = created.headers().firstValue("Location").orElseThrow();
         var product = httpClient.send(
-                HttpRequest.newBuilder(URI.create(baseUri + productLocation)).GET().build(),
+                HttpRequest.newBuilder(URI.create(baseUri + productLocation))
+                        .header("Authorization", "Bearer " + adminAccessToken())
+                        .GET()
+                        .build(),
                 HttpResponse.BodyHandlers.ofString());
         assertThat(product.statusCode()).isEqualTo(200);
         assertThat(product.body()).contains("Clavier mécanique");
 
         var metrics = httpClient.send(
-                HttpRequest.newBuilder(URI.create(baseUri + "/actuator/prometheus")).GET().build(),
+                HttpRequest.newBuilder(URI.create(baseUri + "/actuator/prometheus"))
+                        .header("Authorization", "Bearer " + adminAccessToken())
+                        .GET()
+                        .build(),
                 HttpResponse.BodyHandlers.ofString());
         assertThat(metrics.statusCode()).isEqualTo(200);
         assertThat(metrics.body()).contains("products_created_events_total");
@@ -84,7 +100,10 @@ class ProductApiIntegrationTest {
         assertThat(health.body()).contains("\"status\":\"UP\"");
 
         var openApi = httpClient.send(
-                HttpRequest.newBuilder(URI.create(baseUri + "/v3/api-docs")).GET().build(),
+                HttpRequest.newBuilder(URI.create(baseUri + "/v3/api-docs"))
+                        .header("Authorization", "Bearer " + adminAccessToken())
+                        .GET()
+                        .build(),
                 HttpResponse.BodyHandlers.ofString());
         assertThat(openApi.statusCode()).isEqualTo(200);
         assertThat(openApi.body()).contains("/api/v1/products");
@@ -104,5 +123,13 @@ class ProductApiIntegrationTest {
         assertThat(preflight.statusCode()).isEqualTo(200);
         assertThat(preflight.headers().firstValue("Access-Control-Allow-Origin"))
                 .contains("http://localhost:4200");
+    }
+
+    private String adminAccessToken() {
+        return accessTokenService.issue(AppUser.create(
+                "product.integration.admin@example.com",
+                "Product Integration Admin",
+                "bcrypt-hash",
+                UserRole.ADMIN));
     }
 }

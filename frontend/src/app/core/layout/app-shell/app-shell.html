@@ -1,0 +1,52 @@
+<a class="skip-link" href="#main-content">Aller au contenu</a>
+<div class="shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/products" aria-label="DevOps Store, accueil">
+      <span class="brand-mark" aria-hidden="true">DS</span><span>DevOps Store</span>
+    </a>
+    <nav aria-label="Navigation principale">
+      <a routerLink="/products" routerLinkActive="active">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9Zm8 4.5 8-4.5M12 12 4 7.5M12 12v9"/></svg>
+        Produits
+      </a>
+      @if (canManageUsers()) {
+        <a routerLink="/users" routerLinkActive="active">
+          <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 18.5V20M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM18 8v6M21 11h-6"/></svg>
+          Utilisateurs
+        </a>
+      }
+    </nav>
+    <div class="sidebar-foot">Environnement local</div>
+  </aside>
+
+  <div class="workspace">
+    <header>
+      <div class="context"><span>Console</span><strong>Catalogue</strong></div>
+      @if (user(); as currentUser) {
+        <div class="identity">
+          <span class="avatar" aria-hidden="true">{{ currentUser.displayName.slice(0, 1) }}</span>
+          <span class="identity-copy"><strong>{{ currentUser.displayName }}</strong><small>{{ currentUser.role }}</small></span>
+          <button type="button" (click)="logout()">Se déconnecter</button>
+        </div>
+      }
+    </header>
+    <main id="main-content" tabindex="-1"><router-outlet /></main>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Navigation mobile">
+    <a routerLink="/products" routerLinkActive="active">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 7.5 12 3l8 4.5v9L12 21l-8-4.5v-9ZM12 12v9"/></svg>
+      Produits
+    </a>
+    @if (canManageUsers()) {
+      <a routerLink="/users" routerLinkActive="active">
+        <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-3A4.5 4.5 0 0 0 4 18.5V20M10 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM18 8v6M21 11h-6"/></svg>
+        Utilisateurs
+      </a>
+    }
+    <button type="button" (click)="logout()">
+      <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5M15 12H3M14 4h5a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-5"/></svg>
+      Quitter
+    </button>
+  </nav>
+</div>
