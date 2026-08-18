@@ -1,7 +1,7 @@
 # Design — Console produits sécurisée
 
 - **Date :** 18 août 2026
-- **Statut :** validé en conversation, en attente de revue du document
+- **Statut :** validé en conversation
 - **Périmètre :** Angular 22, authentification JWT Spring Boot, rôles et images MinIO
 
 ## Contexte
@@ -384,6 +384,12 @@ n'est versionné.
 
 Un `docker-compose.yml` minimal démarre PostgreSQL et MinIO pour le développement. La phase Docker
 ultérieure y ajoutera les images frontend et backend sans créer une seconde stack concurrente.
+
+> **Jalon de licence ajouté après validation :** le dépôt communautaire MinIO a été archivé en
+> avril 2026 et sa dernière image précompilée n'est plus une base acceptable pour ce laboratoire
+> DevSecOps. L'implémentation du stockage doit donc attendre une décision explicite sur AIStor Free
+> single-node maintenu et sa licence, conservée hors Git, ou sur une autre implémentation S3
+> maintenue. Le contrat applicatif reste compatible S3 et aucune substitution n'est automatique.
 
 ## Tests
 
