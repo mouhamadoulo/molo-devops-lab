@@ -7,8 +7,14 @@ import com.molo.devopsstore.identity.application.InvalidSessionException;
 import com.molo.devopsstore.identity.application.InvalidUserOperationException;
 import com.molo.devopsstore.identity.application.InvalidUserSortException;
 import com.molo.devopsstore.identity.application.UserNotFoundException;
+import com.molo.devopsstore.product.application.ImageLimitExceededException;
+import com.molo.devopsstore.product.application.InvalidImageException;
+import com.molo.devopsstore.product.application.InvalidImageOrderException;
 import com.molo.devopsstore.product.application.InvalidProductSortException;
+import com.molo.devopsstore.product.application.ProductImageNotFoundException;
 import com.molo.devopsstore.product.application.ProductNotFoundException;
+import com.molo.devopsstore.product.application.StorageException;
+import java.net.URI;
 import java.util.Map;
 import java.util.TreeMap;
 import org.slf4j.MDC;
@@ -60,12 +66,61 @@ public class ApiExceptionHandler {
 
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleNotFound(ProductNotFoundException exception) {
-        return problem(HttpStatus.NOT_FOUND, "Product not found", exception.getMessage());
+        return problem(
+                HttpStatus.NOT_FOUND,
+                "Product not found",
+                exception.getMessage(),
+                "/problems/product-not-found");
     }
 
     @ExceptionHandler(InvalidProductSortException.class)
     public ResponseEntity<ProblemDetail> handleInvalidSort(InvalidProductSortException exception) {
         return problem(HttpStatus.BAD_REQUEST, "Invalid product sort", exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidImageException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidImage(InvalidImageException exception) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
+                "Invalid product image",
+                exception.getMessage(),
+                "/problems/invalid-image");
+    }
+
+    @ExceptionHandler(ImageLimitExceededException.class)
+    public ResponseEntity<ProblemDetail> handleImageLimit(ImageLimitExceededException exception) {
+        return problem(
+                HttpStatus.CONFLICT,
+                "Product image limit exceeded",
+                exception.getMessage(),
+                "/problems/image-limit-exceeded");
+    }
+
+    @ExceptionHandler(InvalidImageOrderException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidImageOrder(InvalidImageOrderException exception) {
+        return problem(
+                HttpStatus.BAD_REQUEST,
+                "Invalid product image order",
+                exception.getMessage(),
+                "/problems/invalid-image-order");
+    }
+
+    @ExceptionHandler(ProductImageNotFoundException.class)
+    public ResponseEntity<ProblemDetail> handleImageNotFound(ProductImageNotFoundException exception) {
+        return problem(
+                HttpStatus.NOT_FOUND,
+                "Product image not found",
+                exception.getMessage(),
+                "/problems/product-image-not-found");
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<ProblemDetail> handleStorage(StorageException exception) {
+        return problem(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                "Object storage unavailable",
+                exception.getMessage(),
+                "/problems/object-storage-unavailable");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -77,20 +132,36 @@ public class ApiExceptionHandler {
         var detail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Request validation failed");
         detail.setTitle("Validation failed");
         detail.setProperty("errors", errors);
+        addRequestId(detail);
         return ResponseEntity.badRequest()
                 .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .body(detail);
     }
 
     private ResponseEntity<ProblemDetail> problem(HttpStatus status, String title, String message) {
+        return problem(status, title, message, null);
+    }
+
+    private ResponseEntity<ProblemDetail> problem(
+            HttpStatus status,
+            String title,
+            String message,
+            String type) {
         var detail = ProblemDetail.forStatusAndDetail(status, message);
         detail.setTitle(title);
+        if (type != null) {
+            detail.setType(URI.create(type));
+        }
+        addRequestId(detail);
+        return ResponseEntity.status(status)
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .body(detail);
+    }
+
+    private void addRequestId(ProblemDetail detail) {
         var requestId = MDC.get("requestId");
         if (requestId != null) {
             detail.setProperty("requestId", requestId);
         }
-        return ResponseEntity.status(status)
-                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .body(detail);
     }
 }

@@ -1,0 +1,81 @@
+name: devops-store
+
+services:
+  postgres:
+    image: postgres:18.4-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-devops_store}
+      POSTGRES_USER: ${DB_USERNAME:-devops_store}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-devops_store}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - application
+    restart: unless-stopped
+
+  object-storage-permissions:
+    image: quay.io/minio/aistor/minio:RELEASE.2026-04-14T21-32-45Z@sha256:3fe2c9acc9bf79ce982fa61d4befb97556a34e44e278395152ed54de471bb95d
+    user: "0:0"
+    entrypoint: ["/bin/chown", "-R", "1000:1000", "/mnt/data"]
+    volumes:
+      - object-storage-data:/mnt/data
+    networks:
+      - application
+    restart: "no"
+
+  object-storage:
+    image: quay.io/minio/aistor/minio:RELEASE.2026-04-14T21-32-45Z@sha256:3fe2c9acc9bf79ce982fa61d4befb97556a34e44e278395152ed54de471bb95d
+    user: "1000:1000"
+    command:
+      - minio
+      - server
+      - /mnt/data
+      - --console-address
+      - :9001
+      - --license
+      - /run/secrets/minio.license
+    environment:
+      HOME: /tmp
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-devops_store}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?Set MINIO_SECRET_KEY in .env}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - object-storage-data:/mnt/data
+      - type: bind
+        source: ${MINIO_LICENSE_FILE:-./minio.license}
+        target: /run/secrets/minio.license
+        read_only: true
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    depends_on:
+      object-storage-permissions:
+        condition: service_completed_successfully
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - application
+    restart: unless-stopped
+
+networks:
+  application:
+    name: devops-store-application
+
+volumes:
+  postgres-data:
+  object-storage-data:

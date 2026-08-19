@@ -33,11 +33,14 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 
 ---
 
-## État du dépôt au 18 août 2026
+## État du dépôt au 19 août 2026
 
-- Le dépôt Git contient le backend, l'identité/RBAC et le socle Angular sécurisé.
+- Le dépôt Git contient le backend, l'identité/RBAC, la galerie privée d'images produits et le
+  socle Angular sécurisé.
 - Le login, la restauration de session, les guards et le shell responsive sont implémentés ; le
   CRUD produits du frontend reste planifié.
+- Un Compose minimal fournit PostgreSQL et AIStor Free pour le développement des images produits ;
+  les images Docker du backend et du frontend restent planifiées pour la phase 4.
 - Docker 29.2.1, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0,
   Maven 3.9.13, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
@@ -62,6 +65,7 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | Springdoc OpenAPI | 3.0.3 | Branche 3.x compatible Spring Boot 4 |
 | Testcontainers | 2.0.5 | Modules JUnit Jupiter et PostgreSQL |
 | PostgreSQL | 18.4 | Version courante supportée jusqu'en 2030 |
+| MinIO AIStor Free | RELEASE.2026-04-14T21-32-45Z | Single-node licencié, corrigé pour GHSA-xh8f-g2qw-gcm7 |
 | Flyway | BOM Spring Boot 4.1 | Ajouter explicitement `flyway-database-postgresql` |
 | SonarQube Community | 26.7.0.124771-community | Support Java 25 ; scan TypeScript 6 exigé comme test d'acceptation |
 | Trivy | 0.72.0 | Version immuable postérieure à l'incident de mars 2026 |
@@ -119,7 +123,10 @@ uniquement après lecture des notes de version et relance de toutes les validati
 
 ### Infrastructure et DevSecOps
 
-- `docker-compose.yml` lance frontend, backend et PostgreSQL.
+- `docker-compose.yml` lance d'abord PostgreSQL et AIStor Free ; la phase 4 y ajoutera frontend et
+  backend sans créer une stack concurrente.
+- La licence AIStor Free est acceptée pour ce laboratoire single-node, montée en lecture seule et
+  exclue de Git ; cette édition ne fournit ni haute disponibilité ni SLA/SLO.
 - `docker-compose.devops.yml` utilise les profils `quality`, `artifacts` et `observability`
   pour éviter de consommer toutes les ressources simultanément.
 - Terraform configure les repositories JFrog ; il ne duplique ni Compose ni les manifestes K8s.

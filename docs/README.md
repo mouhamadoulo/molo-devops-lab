@@ -14,6 +14,7 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [Plan images produits S3](superpowers/plans/2026-08-18-product-images-s3.md) | Métadonnées, stockage privé, galerie et cohérence |
 | [Plan console produits Angular](superpowers/plans/2026-08-18-angular-product-console.md) | Catalogue responsive, formulaires, galerie et utilisateurs |
 | [Contexte produit](../PRODUCT.md) | Public, personnalité, anti-références et principes d'accessibilité de la console |
+| [Décision stockage objet](architecture/object-storage-decision.md) | AIStor Free local, licence, sécurité et portabilité S3 |
 
 ## Architecture
 

@@ -61,7 +61,8 @@ class ProductControllerTest {
                 4,
                 true,
                 now,
-                now));
+                now,
+                null));
 
         mockMvc.perform(post("/api/v1/products")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -86,7 +87,7 @@ class ProductControllerTest {
         var now = Instant.parse("2026-08-18T10:00:00Z");
         var product = new ProductResponse(
                 1L, "MacBook Air", "Portable léger", ProductCategory.LAPTOP,
-                new BigDecimal("1299.00"), 3, true, now, now);
+                new BigDecimal("1299.00"), 3, true, now, now, null);
         when(productService.list(eq("mac"), eq(ProductCategory.LAPTOP), eq(true), any(Pageable.class)))
                 .thenReturn(new PageResponse<>(List.of(product), 0, 20, 1, 1, true));
 
@@ -107,7 +108,7 @@ class ProductControllerTest {
         var now = Instant.parse("2026-08-18T10:00:00Z");
         when(productService.getById(3L)).thenReturn(new ProductResponse(
                 3L, "Écouteurs", "Audio sans fil", ProductCategory.AUDIO,
-                new BigDecimal("99.90"), 7, true, now, now));
+                new BigDecimal("99.90"), 7, true, now, now, null));
 
         mockMvc.perform(get("/api/v1/products/3"))
                 .andExpect(status().isOk())
@@ -120,7 +121,7 @@ class ProductControllerTest {
         var now = Instant.parse("2026-08-18T10:00:00Z");
         when(productService.update(eq(5L), any())).thenReturn(new ProductResponse(
                 5L, "Dock USB-C", "Station d'accueil", ProductCategory.ACCESSORY,
-                new BigDecimal("89.90"), 12, true, now, now));
+                new BigDecimal("89.90"), 12, true, now, now, null));
 
         mockMvc.perform(put("/api/v1/products/5")
                         .contentType(MediaType.APPLICATION_JSON)

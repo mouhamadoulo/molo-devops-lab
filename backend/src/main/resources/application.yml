@@ -18,10 +18,23 @@ spring:
       pageable:
         default-page-size: 20
         max-page-size: 100
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 6MB
 
 app:
   cors:
     allowed-origin: ${CORS_ALLOWED_ORIGIN:http://localhost:4200}
+  storage:
+    initialize-bucket: ${MINIO_INITIALIZE_BUCKET:true}
+    orphan-min-age: ${MINIO_ORPHAN_MIN_AGE:24h}
+    orphan-reconciliation-interval: ${MINIO_ORPHAN_RECONCILIATION_INTERVAL:1h}
+    minio:
+      endpoint: ${MINIO_ENDPOINT:http://localhost:9000}
+      access-key: ${MINIO_ACCESS_KEY:devops_store}
+      secret-key: ${MINIO_SECRET_KEY:}
+      bucket: ${MINIO_BUCKET:product-images}
   identity:
     bootstrap-admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
     bootstrap-admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:}

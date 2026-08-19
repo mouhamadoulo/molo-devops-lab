@@ -2,15 +2,21 @@ package com.molo.devopsstore.product.application;
 
 import com.molo.devopsstore.product.api.dto.CreateProductRequest;
 import com.molo.devopsstore.product.api.dto.PageResponse;
+import com.molo.devopsstore.product.api.dto.ProductImageResponse;
 import com.molo.devopsstore.product.api.dto.ProductResponse;
 import com.molo.devopsstore.product.api.dto.UpdateProductRequest;
 import com.molo.devopsstore.product.domain.Product;
 import com.molo.devopsstore.product.domain.ProductCategory;
+import com.molo.devopsstore.product.infrastructure.ProductImageRepository;
 import com.molo.devopsstore.product.infrastructure.ProductRepository;
 import com.molo.devopsstore.product.infrastructure.ProductSpecifications;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,16 +28,25 @@ public class ProductService {
             "name", "price", "category", "stockQuantity", "available", "createdAt", "updatedAt");
 
     private final ProductRepository productRepository;
+    private final ProductImageRepository imageRepository;
     private final ProductMapper productMapper;
+    private final ProductImageMapper productImageMapper;
     private final Counter productsCreated;
+    private final ApplicationEventPublisher eventPublisher;
 
     public ProductService(
             ProductRepository productRepository,
+            ProductImageRepository imageRepository,
             ProductMapper productMapper,
-            MeterRegistry meterRegistry) {
+            ProductImageMapper productImageMapper,
+            MeterRegistry meterRegistry,
+            ApplicationEventPublisher eventPublisher) {
         this.productRepository = productRepository;
+        this.imageRepository = imageRepository;
         this.productMapper = productMapper;
+        this.productImageMapper = productImageMapper;
         this.productsCreated = meterRegistry.counter("products.created.events");
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -50,7 +65,11 @@ public class ProductService {
 
     @Transactional(readOnly = true)
     public ProductResponse getById(long id) {
-        return productMapper.toResponse(findProduct(id));
+        var product = findProduct(id);
+        var primaryImage = imageRepository.findByProductIdAndPrimaryTrue(id)
+                .map(productImageMapper::toResponse)
+                .orElse(null);
+        return productMapper.toResponse(product, primaryImage);
     }
 
     @Transactional(readOnly = true)
@@ -62,7 +81,19 @@ public class ProductService {
         validateSort(pageable);
         var products = productRepository.findAll(
                 ProductSpecifications.matching(search, category, available), pageable);
-        return PageResponse.from(products.map(productMapper::toResponse));
+        var productIds = products.stream()
+                .map(Product::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        var primaryImages = productIds.isEmpty()
+                ? Map.<Long, ProductImageResponse>of()
+                : imageRepository.findByProductIdInAndPrimaryTrue(productIds).stream()
+                        .collect(Collectors.toMap(
+                                image -> image.getProduct().getId(),
+                                productImageMapper::toResponse));
+        return PageResponse.from(products.map(product -> productMapper.toResponse(
+                product,
+                product.getId() == null ? null : primaryImages.get(product.getId()))));
     }
 
     @Transactional
@@ -75,12 +106,19 @@ public class ProductService {
                 request.price(),
                 request.stockQuantity(),
                 request.available());
-        return productMapper.toResponse(product);
+        var primaryImage = imageRepository.findByProductIdAndPrimaryTrue(id)
+                .map(productImageMapper::toResponse)
+                .orElse(null);
+        return productMapper.toResponse(product, primaryImage);
     }
 
     @Transactional
     public void delete(long id) {
-        productRepository.delete(findProduct(id));
+        var product = findProduct(id);
+        imageRepository.findByProductIdOrderByPosition(id).stream()
+                .map(image -> new ObjectDeletionRequested(image.getObjectKey()))
+                .forEach(eventPublisher::publishEvent);
+        productRepository.delete(product);
     }
 
     private Product findProduct(long id) {

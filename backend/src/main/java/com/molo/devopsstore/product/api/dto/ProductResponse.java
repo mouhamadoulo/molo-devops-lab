@@ -13,5 +13,6 @@ public record ProductResponse(
         int stockQuantity,
         boolean available,
         Instant createdAt,
-        Instant updatedAt) {
+        Instant updatedAt,
+        ProductImageResponse primaryImage) {
 }

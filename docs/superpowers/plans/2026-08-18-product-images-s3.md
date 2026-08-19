@@ -34,10 +34,10 @@
 - Modify: AGENTS.md
 - Create: docs/architecture/object-storage-decision.md
 
-- [ ] Consigner la décision explicite du propriétaire sur AIStor Free, sa licence single-node et l'absence de SLA.
-- [ ] Ajouter minio.license et tout chemin local de licence à .gitignore ; documenter MINIO_LICENSE_FILE sans valeur réelle.
-- [ ] Écrire docker-compose.yml avec postgres et service object-storage épinglé ; monter la licence en lecture seule ; volume de données nommé ; ports 9000/9001 ; healthcheck.
-- [ ] Vérifier :
+- [x] Consigner la décision explicite du propriétaire sur AIStor Free, sa licence single-node et l'absence de SLA.
+- [x] Ajouter minio.license et tout chemin local de licence à .gitignore ; documenter MINIO_LICENSE_FILE sans valeur réelle.
+- [x] Écrire docker-compose.yml avec postgres et service object-storage épinglé ; monter la licence en lecture seule ; volume de données nommé ; ports 9000/9001 ; healthcheck.
+- [x] Vérifier :
 
 ~~~powershell
 docker compose config
@@ -46,8 +46,8 @@ docker compose ps
 docker compose logs --tail 50 object-storage
 ~~~
 
-- [ ] Créer un bucket privé manuellement via le client uniquement pour ce test ; vérifier PUT/GET puis le supprimer. La création applicative idempotente sera faite Task 3.
-- [ ] Exécuter git diff --check et vérifier que git status n'affiche ni licence ni données.
+- [x] Créer un bucket privé manuellement via le client uniquement pour ce test ; vérifier PUT/GET puis le supprimer. La création applicative idempotente sera faite Task 3.
+- [x] Exécuter git diff --check et vérifier que git status n'affiche ni licence ni données.
 - [ ] Commit : git commit -m "build: add maintained S3 service".
 
 ---
@@ -61,12 +61,12 @@ docker compose logs --tail 50 object-storage
 - Create: backend/src/main/java/com/molo/devopsstore/product/infrastructure/ProductImageRepository.java
 - Create: backend/src/test/java/com/molo/devopsstore/product/infrastructure/ProductImageRepositoryTest.java
 
-- [ ] Écrire les tests PostgreSQL : cascade produit, object_key unique, position 0..4, position unique par produit et au plus une image principale.
-- [ ] Lancer et constater l'échec.
-- [ ] Ajouter io.minio:minio:9.0.1 et un décodeur ImageIO WebP maintenu, avec version explicite.
-- [ ] V4 crée product_images avec id, product_id FK cascade, object_key, content_type, size_bytes, width, height, position, is_primary, created_at ; ajouter contraintes et index partiel.
-- [ ] Implémenter ProductImage encapsulée avec moveTo et makePrimary.
-- [ ] Faire passer test ciblé puis toute la suite backend.
+- [x] Écrire les tests PostgreSQL : cascade produit, object_key unique, position 0..4, position unique par produit et au plus une image principale.
+- [x] Lancer et constater l'échec.
+- [x] Ajouter io.minio:minio:9.0.1 et un décodeur ImageIO WebP maintenu, avec version explicite.
+- [x] V4 crée product_images avec id, product_id FK cascade, object_key, content_type, size_bytes, width, height, position, is_primary, created_at ; ajouter contraintes et index partiel.
+- [x] Implémenter ProductImage encapsulée avec moveTo et makePrimary.
+- [x] Faire passer test ciblé puis toute la suite backend.
 - [ ] Commit : git commit -m "feat: persist product image metadata".
 
 ---
@@ -82,12 +82,12 @@ docker compose logs --tail 50 object-storage
 - Create: backend/src/test/java/com/molo/devopsstore/product/infrastructure/MinioObjectStorageIntegrationTest.java
 - Create: backend/src/test/java/com/molo/devopsstore/testsupport/S3ContainerSupport.java
 
-- [ ] Définir le port avec ensureBucket, put, delete et presignGet(Duration).
-- [ ] Écrire le test d'intégration contre le conteneur AIStor épinglé : bucket créé idempotemment, round-trip, suppression et URL GET valable cinq minutes.
-- [ ] Faire échouer le test avant l'adaptateur.
-- [ ] S3ContainerSupport lit MINIO_LICENSE_FILE, monte le fichier en lecture seule et échoue clairement si absent ; aucune licence factice n'est ajoutée.
-- [ ] Binder MINIO_ENDPOINT/ACCESS_KEY/SECRET_KEY/BUCKET. Les logs n'exposent jamais les credentials ni les URLs signées.
-- [ ] Implémenter MinioObjectStorage et faire passer le test.
+- [x] Définir le port avec ensureBucket, put, delete et presignGet(Duration).
+- [x] Écrire le test d'intégration contre le conteneur AIStor épinglé : bucket créé idempotemment, round-trip, suppression et URL GET valable cinq minutes.
+- [x] Faire échouer le test avant l'adaptateur.
+- [x] S3ContainerSupport lit MINIO_LICENSE_FILE, monte le fichier en lecture seule et échoue clairement si absent ; aucune licence factice n'est ajoutée.
+- [x] Binder MINIO_ENDPOINT/ACCESS_KEY/SECRET_KEY/BUCKET. Les logs n'exposent jamais les credentials ni les URLs signées.
+- [x] Implémenter MinioObjectStorage et faire passer le test.
 - [ ] Commit : git commit -m "feat: add S3 storage adapter".
 
 ---
@@ -100,12 +100,12 @@ docker compose logs --tail 50 object-storage
 - Create: backend/src/test/java/com/molo/devopsstore/product/application/ProductImageServiceTest.java
 - Create: backend/src/test/resources/images/{valid.jpg,valid.png,valid.webp,oversized-dimensions.png,animated.webp}
 
-- [ ] Tester signatures réelles, fichiers tronqués, faux content-type, SVG, animé, >5 MiB, dimensions >4096 et sixième image.
-- [ ] Tester que l'échec repository après put déclenche delete par compensation.
-- [ ] Lancer et constater l'échec.
-- [ ] ImageInspector décode le flux avec ImageIO/plugins WebP, impose une limite en streaming et retourne type/dimensions fiables.
-- [ ] ProductImageService génère une UUID, choisit la première image comme principale et verrouille les images du produit avant de compter/positionner.
-- [ ] Faire passer tests ciblés et régression.
+- [x] Tester signatures réelles, fichiers tronqués, faux content-type, SVG, animé, >5 MiB, dimensions >4096 et sixième image.
+- [x] Tester que l'échec repository après put déclenche delete par compensation.
+- [x] Lancer et constater l'échec.
+- [x] ImageInspector décode le flux avec ImageIO/plugins WebP, impose une limite en streaming et retourne type/dimensions fiables.
+- [x] ProductImageService génère une UUID, choisit la première image comme principale et verrouille les images du produit avant de compter/positionner.
+- [x] Faire passer tests ciblés et régression.
 - [ ] Commit : git commit -m "feat: validate and upload product images".
 
 ---
@@ -119,11 +119,11 @@ docker compose logs --tail 50 object-storage
 - Modify: backend/src/main/java/com/molo/devopsstore/product/api/ApiExceptionHandler.java
 - Create: backend/src/test/java/com/molo/devopsstore/product/api/ProductImageApiIntegrationTest.java
 
-- [ ] Tester GET pour tous rôles ; POST/PUT/DELETE pour EDITOR+ADMIN ; 403 VIEWER.
-- [ ] Tester multipart, ordre contenant exactement les IDs existants, principale unique, suppression principale qui promeut la première restante, produit/image inconnus.
-- [ ] Implémenter les cinq routes prévues par la spécification avec Problem Details typés et requestId.
-- [ ] Les URLs signées ne sont émises qu'après vérification du droit de lecture et expirent après cinq minutes.
-- [ ] Faire passer tests ciblés puis clean verify.
+- [x] Tester GET pour tous rôles ; POST/PUT/DELETE pour EDITOR+ADMIN ; 403 VIEWER.
+- [x] Tester multipart, ordre contenant exactement les IDs existants, principale unique, suppression principale qui promeut la première restante, produit/image inconnus.
+- [x] Implémenter les cinq routes prévues par la spécification avec Problem Details typés et requestId.
+- [x] Les URLs signées ne sont émises qu'après vérification du droit de lecture et expirent après cinq minutes.
+- [x] Faire passer tests ciblés puis clean verify.
 - [ ] Commit : git commit -m "feat: expose product image gallery".
 
 ---
@@ -137,18 +137,18 @@ docker compose logs --tail 50 object-storage
 - Create: backend/src/test/java/com/molo/devopsstore/product/application/ObjectDeletionListenerTest.java
 - Create: backend/src/test/java/com/molo/devopsstore/product/application/OrphanObjectReconcilerTest.java
 
-- [ ] Tester que delete objet se produit après commit, jamais après rollback, et qu'un échec est retenté sans rendre l'objet accessible.
-- [ ] Tester la suppression produit avec plusieurs images et la réconciliation d'un objet orphelin.
-- [ ] Publier l'événement dans la transaction et traiter avec TransactionalEventListener AFTER_COMMIT.
-- [ ] Ajouter retry borné et métriques ; la réconciliation compare par préfixe et ne supprime que les objets plus anciens qu'une fenêtre de sécurité.
-- [ ] Faire passer clean verify, docker compose config et git diff --check.
-- [ ] Mettre à jour README/docs/AGENTS/.env.example.
+- [x] Tester que delete objet se produit après commit, jamais après rollback, et qu'un échec est retenté sans rendre l'objet accessible.
+- [x] Tester la suppression produit avec plusieurs images et la réconciliation d'un objet orphelin.
+- [x] Publier l'événement dans la transaction et traiter avec TransactionalEventListener AFTER_COMMIT.
+- [x] Ajouter retry borné et métriques ; la réconciliation compare par préfixe et ne supprime que les objets plus anciens qu'une fenêtre de sécurité.
+- [x] Faire passer clean verify, docker compose config et git diff --check.
+- [x] Mettre à jour README/docs/AGENTS/.env.example.
 - [ ] Commit : git commit -m "feat: reconcile product image storage".
 
 ## Acceptance Gate
 
-- [ ] La décision/licence du runtime S3 est explicite et aucun fichier de licence n'est suivi.
-- [ ] PostgreSQL et le stockage objet passent les tests d'intégration.
-- [ ] Les limites type/taille/dimensions/nombre sont testées.
-- [ ] Upload, compensation, ordre, principale, suppression et nettoyage après commit passent.
-- [ ] La matrice de rôles des images passe.
+- [x] La décision/licence du runtime S3 est explicite et aucun fichier de licence n'est suivi.
+- [x] PostgreSQL et le stockage objet passent les tests d'intégration.
+- [x] Les limites type/taille/dimensions/nombre sont testées.
+- [x] Upload, compensation, ordre, principale, suppression et nettoyage après commit passent.
+- [x] La matrice de rôles des images passe.

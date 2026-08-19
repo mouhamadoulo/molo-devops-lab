@@ -13,11 +13,12 @@ et l'observabilité.
 
 À ce stade, le backend et le socle sécurisé du frontend sont implémentés :
 
-- le backend Spring Boot, l'identité, le RBAC et leurs tests sont opérationnels dans `backend/` ;
+- le backend Spring Boot, l'identité, le RBAC, la galerie privée d'images produits et leurs tests
+  sont opérationnels dans `backend/` ;
 - `frontend/` contient Angular 22, la session en mémoire, les guards, le login et le shell
   responsive ; le CRUD produits et l'administration des utilisateurs restent à construire ;
-- Docker Compose, l'infrastructure, les pipelines et la plateforme d'observabilité sont décrits
-  dans `docs/IMPLEMENTATION_PLAN.md`, mais ne sont pas encore présents ;
+- un `docker-compose.yml` minimal fournit PostgreSQL et AIStor Free ; les images Docker du
+  frontend/backend, les pipelines et l'observabilité restent planifiés ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
   (`frontend/package.json`, `Makefile`, fichiers Compose, etc.) n'existent pas.
 
@@ -40,6 +41,8 @@ Avant une modification importante, consulter :
 - JUnit Jupiter, AssertJ, Mockito et Testcontainers PostgreSQL 2.0.5.
 - Angular 22, TypeScript 6, Node.js 24, npm 11, Vitest, ESLint et Playwright ;
 - session Angular par Signals, JWT en mémoire, refresh rotatif et navigation par rôle.
+- Docker Compose 5.1 avec PostgreSQL 18.4 et AIStor Free single-node épinglé.
+- MinIO Java 9, validation JPEG/PNG/WebP et stockage privé par URL présignée.
 
 ### Cible planifiée
 
@@ -69,6 +72,15 @@ L'API Products est versionnée sous `/api/v1/products`. Les erreurs HTTP utilise
 avec le type `application/problem+json`. Les endpoints Actuator exposés sont limités à `health`,
 `info` et `prometheus`.
 
+Les métadonnées de galerie restent dans PostgreSQL et les objets dans AIStor. Une suppression
+publie un événement traité uniquement après commit, avec trois tentatives bornées. Un reconciler
+planifié compare le préfixe `products/` aux clés référencées et ne supprime que les orphelins plus
+anciens que la fenêtre de sécurité configurée.
+
+Au démarrage normal, `ObjectStorageInitializer` crée le bucket de manière idempotente. Les tests
+Spring génériques désactivent ce démarrage externe avec `app.storage.initialize-bucket=false` ; le
+test AIStor dédié vérifie l'initialisation réelle.
+
 ## Configuration locale
 
 Le backend lit les variables suivantes, avec des valeurs locales par défaut :
@@ -80,6 +92,10 @@ Le backend lit les variables suivantes, avec des valeurs locales par défaut :
 - `JWT_SECRET` et `JWT_ISSUER` ;
 - `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` et `BOOTSTRAP_ADMIN_NAME` ;
 - `AUTH_COOKIE_SECURE`.
+- `MINIO_LICENSE_FILE`, `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` et
+  `MINIO_BUCKET`.
+- `MINIO_INITIALIZE_BUCKET`, `MINIO_ORPHAN_MIN_AGE` et
+  `MINIO_ORPHAN_RECONCILIATION_INTERVAL`.
 
 Ne jamais versionner de secret réel. Ajouter les exemples sans secret dans un fichier
 `.env.example` si nécessaire et conserver les valeurs sensibles hors de Git.
@@ -121,6 +137,16 @@ Set-Location backend
 `spring-boot:run` nécessite un PostgreSQL accessible. Utiliser les variables de configuration
 ci-dessus si la base ne correspond pas aux valeurs locales par défaut.
 
+Le socle PostgreSQL et stockage objet se lance depuis la racine après création d'un `.env` local
+et téléchargement de la licence AIStor Free :
+
+```powershell
+docker compose up -d postgres object-storage
+docker compose ps
+```
+
+Le fichier de licence reste hors Git. AIStor Free est limité au single-node sans SLA/SLO.
+
 ## Tests
 
 La validation complète est :
@@ -143,6 +169,10 @@ Pour les seuls tests ou une classe ciblée :
 ./mvnw test
 ./mvnw -Dtest=ProductServiceTest test
 ```
+
+La suite complète inclut `MinioObjectStorageIntegrationTest`. `MINIO_LICENSE_FILE` doit pointer
+vers une licence AIStor locale lisible ; le test l'installe en lecture seule dans un conteneur
+éphémère et n'en journalise jamais le contenu.
 
 Les tests de repository et d'intégration HTTP démarrent PostgreSQL avec Testcontainers ; Docker
 doit donc être disponible. Ne pas remplacer PostgreSQL par H2 et ne pas mocker la base lorsqu'un

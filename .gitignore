@@ -11,6 +11,7 @@ progress.md
 !.env.example
 *.key
 *.pem
+minio.license
 
 # IDE and operating system
 .idea/

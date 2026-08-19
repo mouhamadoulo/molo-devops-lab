@@ -8,26 +8,33 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.molo.devopsstore.product.api.dto.CreateProductRequest;
+import com.molo.devopsstore.product.api.dto.ProductImageResponse;
 import com.molo.devopsstore.product.api.dto.UpdateProductRequest;
 import com.molo.devopsstore.product.domain.Product;
 import com.molo.devopsstore.product.domain.ProductCategory;
+import com.molo.devopsstore.product.domain.ProductImage;
+import com.molo.devopsstore.product.infrastructure.ProductImageRepository;
 import com.molo.devopsstore.product.infrastructure.ProductRepository;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.micrometer.prometheusmetrics.PrometheusConfig;
 import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
 import java.math.BigDecimal;
-import java.util.Optional;
+import java.net.URI;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class ProductServiceTest {
@@ -35,13 +42,28 @@ class ProductServiceTest {
     @Mock
     private ProductRepository productRepository;
 
+    @Mock
+    private ProductImageRepository imageRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    @Mock
+    private ProductImageMapper productImageMapper;
+
     private SimpleMeterRegistry meterRegistry;
     private ProductService productService;
 
     @BeforeEach
     void setUp() {
         meterRegistry = new SimpleMeterRegistry();
-        productService = new ProductService(productRepository, new ProductMapper(), meterRegistry);
+        productService = new ProductService(
+                productRepository,
+                imageRepository,
+                new ProductMapper(),
+                productImageMapper,
+                meterRegistry,
+                eventPublisher);
     }
 
     @Test
@@ -167,6 +189,37 @@ class ProductServiceTest {
     }
 
     @Test
+    void listsProductsWithOnlyTheirPrimaryImageUsingOneBatchQuery() {
+        var first = Product.create(
+                "First", "First product", ProductCategory.OTHER,
+                BigDecimal.ONE, 1, true);
+        var second = Product.create(
+                "Second", "Second product", ProductCategory.OTHER,
+                BigDecimal.TEN, 2, true);
+        ReflectionTestUtils.setField(first, "id", 1L);
+        ReflectionTestUtils.setField(second, "id", 2L);
+        var primary = ProductImage.create(
+                first, "products/1/primary", "image/png", 100, 2, 2, 0, true);
+        var primaryResponse = new ProductImageResponse(
+                10L, "image/png", 100, 2, 2, 0, true,
+                URI.create("https://objects.test/products/1/primary?expires=300"));
+        var pageable = PageRequest.of(0, 20, Sort.by("name"));
+        when(productRepository.findAll(
+                        org.mockito.ArgumentMatchers.<Specification<Product>>any(),
+                        any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(first, second), pageable, 2));
+        when(imageRepository.findByProductIdInAndPrimaryTrue(Set.of(1L, 2L)))
+                .thenReturn(List.of(primary));
+        when(productImageMapper.toResponse(primary)).thenReturn(primaryResponse);
+
+        var response = productService.list(null, null, null, pageable);
+
+        assertThat(response.content().get(0).primaryImage()).isEqualTo(primaryResponse);
+        assertThat(response.content().get(1).primaryImage()).isNull();
+        verify(imageRepository).findByProductIdInAndPrimaryTrue(Set.of(1L, 2L));
+    }
+
+    @Test
     void rejectsAnUnsupportedSortProperty() {
         var pageable = PageRequest.of(0, 20, Sort.by("description").ascending());
 
@@ -180,7 +233,13 @@ class ProductServiceTest {
     @Test
     void exportsTheRequiredProductCreationMetricName() {
         var prometheusRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
-        var service = new ProductService(productRepository, new ProductMapper(), prometheusRegistry);
+        var service = new ProductService(
+                productRepository,
+                imageRepository,
+                new ProductMapper(),
+                productImageMapper,
+                prometheusRegistry,
+                eventPublisher);
         var request = new CreateProductRequest(
                 "Souris", "Souris de test", ProductCategory.ACCESSORY,
                 new BigDecimal("49.90"), 3, true);

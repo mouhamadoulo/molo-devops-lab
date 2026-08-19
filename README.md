@@ -5,9 +5,9 @@ DevSecOps de bout en bout. Le périmètre métier reste volontairement limité a
 recherche, aux filtres et à la pagination afin de concentrer l'apprentissage sur la chaîne de
 livraison.
 
-> État actuel : l'API Products, l'authentification JWT avec refresh rotatif, le RBAC et le socle
-> Angular sécurisé sont opérationnels. Le CRUD produits dans la console reste à construire selon
-> le [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
+> État actuel : l'API Products, sa galerie privée S3, l'authentification JWT avec refresh rotatif,
+> le RBAC et le socle Angular sécurisé sont opérationnels. Le CRUD produits dans la console reste
+> à construire selon le [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
 
@@ -15,6 +15,7 @@ livraison.
 flowchart LR
     UI[Angular 22] --> API[Spring Boot 4 / Java 25]
     API --> DB[(PostgreSQL 18)]
+    API --> S3[(AIStor Free / S3 privé)]
     CI[GitHub Actions] --> QA[Tests / SonarQube / Trivy]
     QA --> ART[JFrog Artifactory]
     ART --> K8S[Minikube / Kubernetes]
@@ -25,7 +26,7 @@ flowchart LR
 
 | Zone | Technologies |
 |---|---|
-| Application | Angular 22, TypeScript 6, Java 25, Spring Boot 4.1, PostgreSQL 18 |
+| Application | Angular 22, TypeScript 6, Java 25, Spring Boot 4.1, PostgreSQL 18, AIStor Free |
 | Build et tests | npm, Maven, Vitest, JUnit 5, Mockito, Testcontainers |
 | DevSecOps | GitHub Actions, SonarQube Community Build, Trivy, JFrog Artifactory |
 | Infrastructure | Docker Compose, Terraform, Kubernetes, Minikube |
@@ -37,6 +38,7 @@ flowchart LR
 - Docker et Docker Compose ;
 - Node.js 24 et npm 11 ;
 - JDK 25, ou Docker pour utiliser l'image Maven/JDK 25 de référence ;
+- une licence locale AIStor Free pour les tests et le stockage objet, jamais versionnée ;
 - Git ;
 - Terraform, kubectl, Minikube et GNU Make pour les phases d'infrastructure.
 
@@ -60,14 +62,17 @@ npm start
 ```
 
 Les contrôles frontend disponibles sont `npm run lint`, `npm run test:ci`, `npm run build` et
-`npm run e2e`. Le backend local exige PostgreSQL ainsi que les variables d'identité documentées
-dans [`.env.example`](.env.example).
+`npm run e2e`. Le backend local exige PostgreSQL, AIStor Free ainsi que les variables d'identité
+et de stockage documentées dans [`.env.example`](.env.example).
 
-Le démarrage en une commande sera disponible à partir de la phase Docker :
+Après avoir créé un `.env` local, renseigné `MINIO_SECRET_KEY` et placé la licence au chemin
+`MINIO_LICENSE_FILE`, les dépendances de données démarrent depuis la racine :
 
 ```bash
-docker compose up -d
+docker compose up -d postgres object-storage
 ```
+
+Les images Docker du backend et du frontend restent prévues pour une phase ultérieure.
 
 ## URLs prévues
 
@@ -76,7 +81,9 @@ docker compose up -d
 | Frontend | <http://localhost:4200> |
 | Backend | <http://localhost:8080> |
 | Swagger UI | <http://localhost:8080/swagger-ui.html> |
-| SonarQube | <http://localhost:9000> |
+| Stockage objet S3 | <http://localhost:9000> |
+| Console AIStor | <http://localhost:9001> |
+| SonarQube | <http://localhost:9000> (planifié ; port partagé avec AIStor, services non simultanés sans reconfiguration) |
 | JFrog | <http://localhost:8082> |
 | Prometheus | <http://localhost:9090> |
 | Grafana | <http://localhost:3000> |
