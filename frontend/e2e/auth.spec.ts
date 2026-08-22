@@ -20,6 +20,13 @@ test('logs in and exposes admin navigation in the desktop shell', async ({ page 
   await expect(page.getByText('Ada Admin')).toBeVisible();
 });
 
+test('opens the product catalogue after logging in from the application root', async ({ page }) => {
+  await login(page, '/');
+
+  await expect(page).toHaveURL(/\/products$/);
+  await expect(page.getByRole('heading', { name: 'Produits' })).toBeVisible();
+});
+
 test('uses bottom navigation on a mobile viewport', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await login(page);

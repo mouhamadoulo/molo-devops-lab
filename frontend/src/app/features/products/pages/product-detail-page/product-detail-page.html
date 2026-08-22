@@ -1,0 +1,67 @@
+<nav class="breadcrumb" aria-label="Fil d’Ariane">
+  <a routerLink="/products">Produits</a>
+  <span aria-hidden="true">/</span>
+  <span aria-current="page">Détail</span>
+</nav>
+
+<app-page-header
+  eyebrow="Fiche produit"
+  [title]="product()?.name ?? 'Chargement du produit'"
+  description="Informations commerciales, disponibilité et traçabilité du catalogue."
+>
+  @if (product(); as currentProduct) {
+    <div class="header-actions">
+      @if (canEdit()) {
+        <a class="secondary-action" data-edit-product [routerLink]="['edit']">Modifier</a>
+      }
+      @if (canDelete()) {
+        <button class="danger-action" type="button" data-delete-product (click)="deleteProduct()">Supprimer</button>
+      }
+    </div>
+  }
+</app-page-header>
+
+<section class="detail-shell" aria-labelledby="product-information">
+  <app-data-state
+    [state]="status()"
+    [error]="error()"
+    loadingLabel="Chargement du produit"
+    successLabel="Produit chargé"
+    (retry)="load()"
+  >
+    @if (product(); as currentProduct) {
+      <div class="detail-layout">
+        <div class="product-media">
+          @if (currentProduct.primaryImage) {
+            <img [src]="currentProduct.primaryImage.url" [alt]="'Image principale de ' + currentProduct.name" width="640" height="480">
+          } @else {
+            <span aria-hidden="true">{{ currentProduct.name.slice(0, 2).toUpperCase() }}</span>
+            <p>Aucune image principale</p>
+          }
+        </div>
+
+        <div class="product-information">
+          <div class="section-heading">
+            <div>
+              <p>{{ categoryLabels[currentProduct.category] }}</p>
+              <h2 id="product-information">Informations produit</h2>
+            </div>
+            <span class="availability" [class.unavailable]="!currentProduct.available">
+              <span aria-hidden="true"></span>
+              {{ currentProduct.available ? 'Disponible' : 'Indisponible' }}
+            </span>
+          </div>
+
+          <p class="description">{{ currentProduct.description || 'Aucune description renseignée.' }}</p>
+
+          <dl>
+            <div><dt>Prix</dt><dd>{{ currentProduct.price | currency:'EUR':'symbol':'1.2-2':'fr-FR' }}</dd></div>
+            <div><dt>Stock</dt><dd>{{ currentProduct.stockQuantity }} unité{{ currentProduct.stockQuantity > 1 ? 's' : '' }}</dd></div>
+            <div><dt>Créé le</dt><dd>{{ currentProduct.createdAt | date:'dd MMM y':'UTC':'fr-FR' }}</dd></div>
+            <div><dt>Mis à jour le</dt><dd>{{ currentProduct.updatedAt | date:'dd MMM y':'UTC':'fr-FR' }}</dd></div>
+          </dl>
+        </div>
+      </div>
+    }
+  </app-data-state>
+</section>

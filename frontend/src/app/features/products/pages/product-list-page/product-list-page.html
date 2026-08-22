@@ -1,0 +1,48 @@
+<app-page-header title="Produits" description="Consultez le stock, la disponibilité et les informations essentielles du catalogue.">
+  @if (canCreate()) {
+    <a class="primary-action" routerLink="new">Créer un produit</a>
+  }
+</app-page-header>
+
+<section class="catalogue" aria-labelledby="catalogue-results">
+  <app-product-filters [query]="store.query()" (filtersChange)="updateFilters($event)" />
+  @if (hasActiveFilters()) {
+    <app-active-filter-chips [query]="store.query()" (filtersChange)="updateFilters($event)" />
+  }
+
+  <div class="results-bar">
+    <div>
+      <h2 id="catalogue-results">Catalogue</h2>
+      <p aria-live="polite">{{ store.totalElements() }} {{ store.totalElements() > 1 ? 'produits' : 'produit' }}</p>
+    </div>
+  </div>
+
+  <app-data-state
+    [state]="store.status()"
+    [error]="store.error()"
+    loadingLabel="Chargement du catalogue"
+    [emptyTitle]="hasActiveFilters() ? 'Aucun résultat' : 'Aucun produit'"
+    [emptyMessage]="hasActiveFilters() ? 'Modifiez ou effacez les filtres pour élargir la recherche.' : 'Créez le premier produit pour démarrer le catalogue.'"
+    successLabel="Catalogue chargé"
+    (retry)="store.reload()"
+  >
+    <app-product-table
+      [products]="store.products()"
+      [query]="store.query()"
+      (sortChange)="updateFilters($event)"
+    />
+    <app-product-cards [products]="store.products()" />
+  </app-data-state>
+
+  @if (store.page()) {
+    <mat-paginator
+      aria-label="Pagination du catalogue"
+      [length]="store.totalElements()"
+      [pageIndex]="store.query().page"
+      [pageSize]="store.query().size"
+      [pageSizeOptions]="[10, 20, 40, 80]"
+      [showFirstLastButtons]="true"
+      (page)="updatePagination($event)"
+    />
+  }
+</section>

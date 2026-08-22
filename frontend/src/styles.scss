@@ -1,3 +1,5 @@
+@use './styles/theme';
+
 :root {
   --nav: oklch(24% 0.055 255);
   --nav-ink: oklch(97% 0.006 250);

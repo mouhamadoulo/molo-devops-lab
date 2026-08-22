@@ -9,8 +9,13 @@ export const routes: Routes = [
     loadComponent: () => import('./core/layout/app-shell/app-shell').then((module) => module.AppShell),
     children: [
       {
+        path: '',
+        redirectTo: 'products',
+        pathMatch: 'full'
+      },
+      {
         path: 'products',
-        loadComponent: () => import('./features/products/pages/products-page').then((module) => module.ProductsPage)
+        loadChildren: () => import('./features/products/products.routes').then((module) => module.PRODUCT_ROUTES)
       },
       {
         path: 'users',
@@ -27,10 +32,5 @@ export const routes: Routes = [
   {
     path: 'forbidden',
     loadComponent: () => import('./features/errors/forbidden-page/forbidden-page').then((module) => module.ForbiddenPage)
-  },
-  {
-    path: '',
-    redirectTo: 'products',
-    pathMatch: 'full'
   }
 ];

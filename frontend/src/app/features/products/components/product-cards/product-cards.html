@@ -1,0 +1,25 @@
+<div class="cards" data-mobile-cards>
+  @for (product of products(); track product.id) {
+    <article>
+      <div class="topline">
+        @if (product.primaryImage) {
+          <picture>
+            <img [src]="product.primaryImage.url" alt="" width="64" height="64" loading="lazy" decoding="async">
+          </picture>
+        } @else {
+          <span class="placeholder" aria-hidden="true">{{ product.name.slice(0, 2).toUpperCase() }}</span>
+        }
+        <div>
+          <span class="category">{{ categoryLabels[product.category] }}</span>
+          <h2><a [routerLink]="[product.id]">{{ product.name }}</a></h2>
+        </div>
+      </div>
+      <dl>
+        <div><dt>Prix</dt><dd>{{ product.price | currency:'EUR':'symbol':'1.2-2':'fr-FR' }}</dd></div>
+        <div><dt>Stock</dt><dd>{{ product.stockQuantity }}</dd></div>
+        <div><dt>État</dt><dd>{{ product.available ? 'Disponible' : 'Indisponible' }}</dd></div>
+      </dl>
+      <a class="details" [routerLink]="[product.id]">Consulter le produit</a>
+    </article>
+  }
+</div>

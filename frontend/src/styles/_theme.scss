@@ -1,0 +1,28 @@
+@use '@angular/material' as mat;
+
+$devops-store-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$azure-palette,
+    tertiary: mat.$blue-palette,
+  ),
+  density: (
+    scale: -1,
+  ),
+));
+
+@include mat.core();
+
+:root {
+  @include mat.core-theme($devops-store-theme);
+  @include mat.form-field-theme($devops-store-theme);
+  @include mat.input-theme($devops-store-theme);
+  @include mat.select-theme($devops-store-theme);
+  @include mat.chips-theme($devops-store-theme);
+  @include mat.paginator-theme($devops-store-theme);
+  @include mat.button-theme($devops-store-theme);
+  @include mat.icon-button-theme($devops-store-theme);
+  @include mat.tooltip-theme($devops-store-theme);
+  @include mat.dialog-theme($devops-store-theme);
+  @include mat.snack-bar-theme($devops-store-theme);
+}

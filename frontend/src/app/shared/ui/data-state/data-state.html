@@ -1,0 +1,44 @@
+@switch (state()) {
+  @case ('loading') {
+    <section class="state state-loading" data-state="loading" role="status" aria-live="polite">
+      <span class="visually-hidden">{{ loadingLabel() }}</span>
+      <div class="skeleton" aria-hidden="true">
+        @for (row of [1, 2, 3, 4]; track row) {
+          <div class="skeleton-row" data-skeleton-row>
+            <span class="skeleton-media"></span>
+            <span class="skeleton-copy"></span>
+            <span class="skeleton-value"></span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+  @case ('error') {
+    <section class="state state-error" data-state="error" role="alert">
+      <span class="state-symbol" aria-hidden="true">!</span>
+      <div>
+        <h2>{{ error()?.title ?? 'Chargement impossible' }}</h2>
+        <p>{{ error()?.detail ?? 'Réessayez dans quelques instants.' }}</p>
+        @if (error()?.requestId; as requestId) {
+          <small>Référence support : {{ requestId }}</small>
+        }
+      </div>
+      <button type="button" data-retry (click)="retry.emit()">Réessayer</button>
+    </section>
+  }
+  @case ('empty') {
+    <section class="state state-empty" data-state="empty" role="status" aria-live="polite">
+      <span class="state-symbol" aria-hidden="true">0</span>
+      <div>
+        <h2>{{ emptyTitle() }}</h2>
+        <p>{{ emptyMessage() }}</p>
+      </div>
+    </section>
+  }
+  @case ('success') {
+    <section class="success" data-state="success" role="status" aria-live="polite">
+      <span class="visually-hidden">{{ successLabel() }}</span>
+      <ng-content />
+    </section>
+  }
+}

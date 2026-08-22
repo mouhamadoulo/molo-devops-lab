@@ -1,0 +1,83 @@
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <div class="form-grid">
+    <mat-form-field appearance="outline" class="field-wide">
+      <mat-label>Nom du produit</mat-label>
+      <input id="name" matInput formControlName="name" autocomplete="off" maxlength="150">
+      <mat-hint align="end">{{ form.controls.name.value.length }} / 150</mat-hint>
+      @if (form.controls.name.hasError('required') && form.controls.name.touched) {
+        <mat-error>Le nom est requis.</mat-error>
+      } @else if (form.controls.name.hasError('maxlength') && form.controls.name.touched) {
+        <mat-error>Le nom ne peut pas dépasser 150 caractères.</mat-error>
+      } @else if (form.controls.name.getError('server'); as serverError) {
+        <mat-error>{{ serverError }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="field-wide">
+      <mat-label>Description</mat-label>
+      <textarea id="description" matInput formControlName="description" rows="5" maxlength="2000"></textarea>
+      <mat-hint align="end">{{ form.controls.description.value.length }} / 2 000</mat-hint>
+      @if (form.controls.description.hasError('maxlength') && form.controls.description.touched) {
+        <mat-error>La description est limitée à 2 000 caractères maximum.</mat-error>
+      } @else if (form.controls.description.getError('server'); as serverError) {
+        <mat-error>{{ serverError }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Catégorie</mat-label>
+      <mat-select id="category" formControlName="category">
+        @for (category of categories; track category) {
+          <mat-option [value]="category">{{ categoryLabels[category] }}</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.category.getError('server'); as serverError) {
+        <mat-error>{{ serverError }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Prix TTC</mat-label>
+      <input id="price" matInput type="number" formControlName="price" min="0" step="0.01" inputmode="decimal">
+      <span matTextSuffix>€</span>
+      @if (form.controls.price.hasError('min') && form.controls.price.touched) {
+        <mat-error>Le prix doit être positif ou nul.</mat-error>
+      } @else if (form.controls.price.hasError('required') && form.controls.price.touched) {
+        <mat-error>Le prix est requis.</mat-error>
+      } @else if (form.controls.price.hasError('digits') && form.controls.price.touched) {
+        <mat-error>Le prix est limité à 10 chiffres entiers et 2 décimales.</mat-error>
+      } @else if (form.controls.price.getError('server'); as serverError) {
+        <mat-error>{{ serverError }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Stock</mat-label>
+      <input id="stockQuantity" matInput type="number" formControlName="stockQuantity" min="0" step="1" inputmode="numeric">
+      @if (form.controls.stockQuantity.hasError('min') && form.controls.stockQuantity.touched) {
+        <mat-error>Le stock doit être positif ou nul.</mat-error>
+      } @else if (form.controls.stockQuantity.hasError('required') && form.controls.stockQuantity.touched) {
+        <mat-error>Le stock est requis.</mat-error>
+      } @else if (form.controls.stockQuantity.hasError('integer') && form.controls.stockQuantity.touched) {
+        <mat-error>Le stock doit être un nombre entier.</mat-error>
+      } @else if (form.controls.stockQuantity.getError('server'); as serverError) {
+        <mat-error>{{ serverError }}</mat-error>
+      }
+    </mat-form-field>
+
+    <label class="availability-control">
+      <input type="checkbox" formControlName="available">
+      <span>
+        <strong>Produit disponible</strong>
+        <small>Le produit peut être proposé dans le catalogue.</small>
+      </span>
+    </label>
+  </div>
+
+  <div class="form-actions">
+    <button matButton="outlined" type="button" (click)="cancelled.emit()">Annuler</button>
+    <button matButton="filled" type="submit" [disabled]="submitting()">
+      {{ submitting() ? 'Enregistrement en cours' : submitLabel() }}
+    </button>
+  </div>
+</form>

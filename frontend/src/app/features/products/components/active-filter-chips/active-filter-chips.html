@@ -1,0 +1,24 @@
+<div class="active-filters" aria-label="Filtres actifs">
+  <span class="label">Filtres actifs</span>
+  <mat-chip-set aria-label="Filtres appliqués au catalogue">
+    @if (query().search) {
+      <mat-chip>
+        Recherche : {{ query().search }}
+        <button type="button" matChipRemove data-clear-search [attr.aria-label]="'Retirer la recherche ' + query().search" (click)="clearSearch()">×</button>
+      </mat-chip>
+    }
+    @if (query().category; as category) {
+      <mat-chip>
+        {{ categoryLabels[category] }}
+        <button type="button" matChipRemove data-clear-category [attr.aria-label]="'Retirer la catégorie ' + categoryLabels[category]" (click)="clearCategory()">×</button>
+      </mat-chip>
+    }
+    @if (query().available !== null) {
+      <mat-chip>
+        {{ query().available ? 'Disponible' : 'Indisponible' }}
+        <button type="button" matChipRemove data-clear-availability [attr.aria-label]="'Retirer le filtre ' + (query().available ? 'disponible' : 'indisponible')" (click)="clearAvailability()">×</button>
+      </mat-chip>
+    }
+  </mat-chip-set>
+  <button type="button" class="clear-all" data-clear-all (click)="clearAll()">Tout effacer</button>
+</div>

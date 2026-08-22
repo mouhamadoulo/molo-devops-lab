@@ -1,0 +1,84 @@
+:host {
+  display: block;
+}
+
+.primary-action {
+  min-block-size: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 1rem;
+  border-radius: 0.55rem;
+  color: var(--accent-ink);
+  background: var(--accent);
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.primary-action:hover {
+  background: var(--accent-hover);
+}
+
+.primary-action:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.catalogue {
+  display: grid;
+  gap: 1rem;
+  margin-block-start: 2rem;
+}
+
+.results-bar {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.results-bar h2,
+.results-bar p {
+  margin: 0;
+}
+
+.results-bar h2 {
+  font-size: 1.15rem;
+}
+
+.results-bar p {
+  margin-block-start: 0.25rem;
+  color: var(--ink-muted);
+  font-size: 0.82rem;
+}
+
+:host ::ng-deep .mat-mdc-paginator {
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  color: var(--ink);
+  background: var(--surface);
+}
+
+:host ::ng-deep .mat-mdc-paginator-container {
+  min-block-size: 3.5rem;
+}
+
+:host ::ng-deep .mat-mdc-icon-button:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .results-bar {
+    align-items: flex-start;
+  }
+
+  :host ::ng-deep .mat-mdc-paginator-container {
+    justify-content: center;
+    padding-block: 0.5rem;
+  }
+
+  :host ::ng-deep .mat-mdc-paginator-range-label {
+    margin-inline: 0.5rem;
+  }
+}

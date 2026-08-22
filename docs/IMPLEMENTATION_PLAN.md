@@ -333,14 +333,13 @@ suppression et filtres.
 
 - [x] Générer Angular CLI 22 sans NgModule, avec routing, SCSS, npm et sans dépôt Git imbriqué.
 - [x] Activer le mode TypeScript strict et conserver le builder application esbuild.
-- [ ] Définir les modèles `Product`, `ProductCategory`, requests et `PageResponse<T>`.
-- [ ] Créer `ProductsApi` pour le contrat HTTP et `ProductsStore` pour les Signals d'état.
-- [ ] Lazy-loader `products.routes.ts` depuis `app.routes.ts`.
-- [ ] Créer pages liste, détail et formulaire, puis composants filtres, carte/table et confirmation.
-- [x] Utiliser `@if`, `computed` et des formulaires réactifs typés dans le socle livré ; `@for` et
-  `@switch` seront ajoutés avec les écrans de catalogue.
-- [ ] Implémenter états loading/error/empty/success et messages d'erreur accessibles.
-- [ ] Utiliser `/api` comme base relative afin que Nginx fasse le reverse proxy en production.
+- [x] Définir les modèles `Product`, `ProductCategory`, requests et `PageResponse<T>`.
+- [x] Créer `ProductsApi` pour le contrat HTTP et `ProductsStore` pour les Signals d'état.
+- [x] Lazy-loader `products.routes.ts` depuis `app.routes.ts`.
+- [x] Créer pages liste, détail et formulaire, puis composants filtres, carte/table et confirmation.
+- [x] Utiliser `@if`, `@for`, `@switch`, `computed` et des formulaires réactifs typés.
+- [x] Implémenter états loading/error/empty/success et messages d'erreur accessibles.
+- [x] Utiliser `/api` comme base relative afin que Nginx fasse le reverse proxy en production.
 - [x] Ajouter des budgets de bundle et refuser les dépendances CommonJS non justifiées.
 
 **Incrément sécurité livré :** login accessible, access token uniquement en mémoire, refresh
@@ -359,9 +358,9 @@ npm run build
 **Critères d'acceptation :**
 
 - [ ] Les parcours CRUD principaux fonctionnent contre l'API locale.
-- [ ] Recherche, catégorie, disponibilité, page et tri sont reflétés dans la requête HTTP.
-- [ ] Aucun `any`, NgModule, `HttpClientTestingModule` déprécié ou subscription persistante inutile.
-- [ ] Navigation clavier, labels, focus, contrastes et annonces d'erreur sont utilisables.
+- [x] Recherche, catégorie, disponibilité, page et tri sont reflétés dans la requête HTTP.
+- [x] Aucun `any`, NgModule, `HttpClientTestingModule` déprécié ou subscription persistante inutile.
+- [x] Navigation clavier, labels, focus, contrastes et annonces d'erreur sont utilisables.
 
 **Dépendances :** phases 0 et 1, Node 24.18 et npm 11.16.
 

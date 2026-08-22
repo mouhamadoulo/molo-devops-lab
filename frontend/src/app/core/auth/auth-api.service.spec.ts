@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, withNoXsrfProtection } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { environment } from '../../../environments/environment';
@@ -13,7 +13,7 @@ describe('AuthApiService', () => {
     TestBed.configureTestingModule({
       providers: [
         AuthApiService,
-        provideHttpClient(),
+        provideHttpClient(withNoXsrfProtection()),
         provideHttpClientTesting(),
         { provide: DOCUMENT, useValue: { cookie: 'XSRF-TOKEN=csrf-value' } },
       ],

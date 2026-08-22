@@ -1,0 +1,26 @@
+<section class="filters" aria-label="Filtres du catalogue">
+  <mat-form-field class="search" appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Rechercher</mat-label>
+    <input matInput type="search" [value]="query().search" placeholder="Nom du produit" (input)="onSearch($event)">
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Catégorie</mat-label>
+    <select matNativeControl [value]="query().category ?? ''" (change)="onCategory($event)">
+      <option value="">Toutes</option>
+      @for (category of categories; track category) {
+        <option [value]="category">{{ categoryLabels[category] }}</option>
+      }
+    </select>
+  </mat-form-field>
+  <mat-form-field appearance="outline" subscriptSizing="dynamic">
+    <mat-label>Disponibilité</mat-label>
+    <select matNativeControl [value]="query().available === null ? '' : query().available" (change)="onAvailability($event)">
+      <option value="">Toutes</option>
+      <option value="true">Disponible</option>
+      <option value="false">Indisponible</option>
+    </select>
+  </mat-form-field>
+  @if (query().search || query().category || query().available !== null) {
+    <button type="button" class="clear" (click)="clear()">Effacer les filtres</button>
+  }
+</section>

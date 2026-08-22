@@ -1,0 +1,107 @@
+:host {
+  display: block;
+}
+
+form {
+  padding: clamp(1rem, 2vw, 1.75rem);
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  background: var(--surface);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.availability-control {
+  min-block-size: 3.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 0.55rem;
+  cursor: pointer;
+}
+
+.availability-control:hover {
+  border-color: var(--line-strong);
+  background: var(--canvas);
+}
+
+.availability-control:has(input:focus-visible) {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.availability-control input {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.availability-control span,
+.availability-control small {
+  display: block;
+}
+
+.availability-control strong {
+  font-size: 0.92rem;
+}
+
+.availability-control small {
+  margin-block-start: 0.2rem;
+  color: var(--ink-muted);
+  line-height: 1.35;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-block-start: 1.5rem;
+  padding-block-start: 1.25rem;
+  border-block-start: 1px solid var(--line);
+}
+
+.form-actions button {
+  min-block-size: 2.75rem;
+}
+
+:host ::ng-deep .mat-mdc-form-field {
+  inline-size: 100%;
+}
+
+:host ::ng-deep .mat-mdc-form-field-error {
+  color: var(--danger);
+}
+
+@media (max-width: 700px) {
+  form {
+    padding: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .field-wide {
+    grid-column: auto;
+  }
+
+  .form-actions {
+    display: grid;
+  }
+
+  .form-actions button {
+    inline-size: 100%;
+  }
+}

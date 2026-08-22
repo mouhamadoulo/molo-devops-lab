@@ -1,0 +1,38 @@
+<div class="table-wrap">
+  <table>
+    <caption class="visually-hidden">Catalogue des produits</caption>
+    <thead>
+      <tr>
+        <th scope="col"><button type="button" [attr.aria-label]="sortLabel('name', 'nom')" (click)="sortBy('name')">Produit</button></th>
+        <th scope="col">Catégorie</th>
+        <th scope="col"><button type="button" [attr.aria-label]="sortLabel('price', 'prix')" (click)="sortBy('price')">Prix</button></th>
+        <th scope="col"><button type="button" [attr.aria-label]="sortLabel('stockQuantity', 'stock')" (click)="sortBy('stockQuantity')">Stock</button></th>
+        <th scope="col">État</th>
+        <th scope="col"><span class="visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (product of products(); track product.id) {
+        <tr>
+          <td>
+            <div class="identity">
+              @if (product.primaryImage) {
+                <picture>
+                  <img [src]="product.primaryImage.url" alt="" width="48" height="48" loading="lazy" decoding="async">
+                </picture>
+              } @else {
+                <span class="placeholder" aria-hidden="true">{{ product.name.slice(0, 2).toUpperCase() }}</span>
+              }
+              <a [routerLink]="[product.id]">{{ product.name }}</a>
+            </div>
+          </td>
+          <td>{{ categoryLabels[product.category] }}</td>
+          <td class="number">{{ product.price | currency:'EUR':'symbol':'1.2-2':'fr-FR' }}</td>
+          <td class="number">{{ product.stockQuantity }}</td>
+          <td><span class="availability" [class.unavailable]="!product.available"><span aria-hidden="true"></span>{{ product.available ? 'Disponible' : 'Indisponible' }}</span></td>
+          <td><a class="details" [routerLink]="[product.id]">Consulter</a></td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

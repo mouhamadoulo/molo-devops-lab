@@ -70,12 +70,12 @@
 - Create: frontend/src/app/features/products/pages/product-list-page/product-list-page.spec.ts
 - Create: frontend/e2e/products-list.spec.ts
 
-- [ ] Tester que chaque interaction remplace les query params compatibles ; un nouveau filtre remet page à 0.
-- [ ] Tester table à 1440px, cartes à 390px, skeleton, panne, catalogue vide et résultat filtré vide.
-- [ ] Implémenter recherche debounced, filtres Material, tri accessible et paginator.
-- [ ] Utiliser picture/alt approprié pour l'image principale et un placeholder cohérent.
-- [ ] Tester clavier, libellés, annonce de résultat et persistance de l'URL après reload.
-- [ ] Faire passer lint/test/build et Playwright ciblé.
+- [x] Tester que chaque interaction remplace les query params compatibles ; un nouveau filtre remet page à 0.
+- [x] Tester table à 1440px, cartes à 390px, skeleton, panne, catalogue vide et résultat filtré vide.
+- [x] Implémenter recherche debounced, filtres Material, tri accessible et paginator.
+- [x] Utiliser picture/alt approprié pour l'image principale et un placeholder cohérent.
+- [x] Tester clavier, libellés, annonce de résultat et persistance de l'URL après reload.
+- [x] Faire passer lint/test/build et Playwright ciblé.
 - [ ] Commit : git commit -m "feat: deliver responsive product catalog".
 
 ---
@@ -89,12 +89,12 @@
 - Modify: frontend/src/app/features/products/products.routes.ts
 - Create: frontend/e2e/product-crud.spec.ts
 
-- [ ] Tester formulaire typé : nom requis, description bornée, prix/stock ≥0, catégorie et erreurs serveur par champ.
-- [ ] Tester permissions : VIEWER détail seul, EDITOR créer/modifier, ADMIN supprimer.
-- [ ] Implémenter /products/new, /products/:id et /products/:id/edit.
-- [ ] Ajouter confirmation de suppression, focus restauré et snackbar de succès.
-- [ ] Playwright couvre création, modification, validation 400 et suppression ADMIN.
-- [ ] Faire passer validations frontend et E2E ciblé.
+- [x] Tester formulaire typé : nom requis, description bornée, prix/stock ≥0, catégorie et erreurs serveur par champ.
+- [x] Tester permissions : VIEWER détail seul, EDITOR créer/modifier, ADMIN supprimer.
+- [x] Implémenter /products/new, /products/:id et /products/:id/edit.
+- [x] Ajouter confirmation de suppression, focus restauré et snackbar de succès.
+- [x] Playwright couvre création, modification, validation 400 et suppression ADMIN.
+- [x] Faire passer validations frontend et E2E ciblé.
 - [ ] Commit : git commit -m "feat: add product editing flows".
 
 ---

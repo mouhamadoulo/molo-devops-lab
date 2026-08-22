@@ -1,0 +1,32 @@
+<app-page-header
+  [eyebrow]="editing ? 'Mise à jour' : 'Nouveau produit'"
+  [title]="title()"
+  [description]="editing ? 'Modifiez les informations publiées dans le catalogue.' : 'Renseignez les informations nécessaires pour ajouter un produit au catalogue.'"
+/>
+
+<section class="form-shell" aria-label="Édition du produit">
+  <app-data-state
+    [state]="status()"
+    [error]="loadError()"
+    loadingLabel="Chargement du produit"
+    successLabel="Formulaire produit prêt"
+    (retry)="load()"
+  >
+    @if (apiError(); as error) {
+      <div #errorSummary class="error-summary" role="alert" tabindex="-1">
+        <strong>{{ error.title }}</strong>
+        <span>{{ error.detail }}</span>
+        @if (error.requestId) { <small>Référence support : {{ error.requestId }}</small> }
+      </div>
+    }
+
+    <app-product-form
+      [initialValue]="product()"
+      [apiError]="apiError()"
+      [submitting]="submitting()"
+      [submitLabel]="editing ? 'Enregistrer les modifications' : 'Créer le produit'"
+      (save)="save($event)"
+      (cancelled)="cancel()"
+    />
+  </app-data-state>
+</section>
