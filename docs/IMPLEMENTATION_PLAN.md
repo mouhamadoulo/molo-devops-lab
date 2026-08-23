@@ -33,12 +33,12 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 
 ---
 
-## État du dépôt au 19 août 2026
+## État du dépôt au 23 août 2026
 
-- Le dépôt Git contient le backend, l'identité/RBAC, la galerie privée d'images produits et le
-  socle Angular sécurisé.
-- Le login, la restauration de session, les guards et le shell responsive sont implémentés ; le
-  CRUD produits du frontend reste planifié.
+- Le dépôt Git contient le backend, l'identité/RBAC, la galerie privée d'images produits, le CRUD
+  produits Angular et l'administration des utilisateurs réservée au rôle `ADMIN`.
+- Le login, la restauration de session, les guards, le shell responsive et les parcours desktop
+  et mobile de la console sont implémentés.
 - Un Compose minimal fournit PostgreSQL et AIStor Free pour le développement des images produits ;
   les images Docker du backend et du frontend restent planifiées pour la phase 4.
 - Docker 29.2.1, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0,
@@ -341,10 +341,17 @@ suppression et filtres.
 - [x] Implémenter états loading/error/empty/success et messages d'erreur accessibles.
 - [x] Utiliser `/api` comme base relative afin que Nginx fasse le reverse proxy en production.
 - [x] Ajouter des budgets de bundle et refuser les dépendances CommonJS non justifiées.
+- [x] Livrer l'administration `ADMIN` des utilisateurs : liste paginée et triée, création,
+  modification du nom/rôle, activation, désactivation et réinitialisation du mot de passe.
 
 **Incrément sécurité livré :** login accessible, access token uniquement en mémoire, refresh
 rotatif par cookie HttpOnly, guards d'authentification et de rôle, sidebar desktop, navigation
 basse mobile et page 403. Les tests Vitest et Playwright couvrent ces parcours.
+
+**Incrément administration livré :** `/users` est lazy-loadé et réservé à `ADMIN`. La page utilise
+un store Signals, un tableau desktop, des cartes tactiles mobile et un panneau maître-détail. Les
+erreurs `ProblemDetail`, l'auto-désactivation et la règle du dernier administrateur sont présentées
+sans déplacer l'autorité métier hors du backend.
 
 **Commandes de validation :**
 
@@ -357,7 +364,7 @@ npm run build
 
 **Critères d'acceptation :**
 
-- [ ] Les parcours CRUD principaux fonctionnent contre l'API locale.
+- [x] Les parcours CRUD principaux fonctionnent contre l'API locale.
 - [x] Recherche, catégorie, disponibilité, page et tri sont reflétés dans la requête HTTP.
 - [x] Aucun `any`, NgModule, `HttpClientTestingModule` déprécié ou subscription persistante inutile.
 - [x] Navigation clavier, labels, focus, contrastes et annonces d'erreur sont utilisables.

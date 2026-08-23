@@ -1,0 +1,78 @@
+<app-page-header
+  eyebrow="Administration"
+  title="Utilisateurs"
+  description="Gérez les comptes, leurs rôles et leur accès à la console."
+>
+  <button type="button" class="primary-action" (click)="openCreate($event.currentTarget)">
+    Créer un utilisateur
+  </button>
+</app-page-header>
+
+<div class="users-layout" [class.editor-open]="editorMode() !== null">
+  <section class="users-results" aria-labelledby="users-results-title" [attr.aria-busy]="store.status() === 'loading'">
+    <div class="results-bar">
+      <div>
+        <h2 id="users-results-title">Comptes</h2>
+        <p aria-live="polite">{{ countLabel() }}</p>
+      </div>
+    </div>
+
+    @if (actionError(); as error) {
+      <div class="action-error" role="alert">
+        <strong>{{ error.title }}</strong>
+        <span>{{ error.detail }}</span>
+        @if (error.requestId) {
+          <small>Référence support : {{ error.requestId }}</small>
+        }
+      </div>
+    }
+
+    <app-data-state
+      [state]="store.status()"
+      [error]="store.error()"
+      loadingLabel="Chargement des utilisateurs"
+      emptyTitle="Aucun utilisateur"
+      emptyMessage="Créez le premier compte pour ouvrir l’accès à la console."
+      successLabel="Utilisateurs chargés"
+      (retry)="store.reload()"
+    >
+      <app-user-list
+        [users]="store.users()"
+        [query]="store.query()"
+        [currentUserId]="currentUserId()"
+        [pendingUserId]="pendingUserId()"
+        (sortChange)="updateQuery($event)"
+        (edit)="openEdit($event)"
+        (password)="openPassword($event)"
+        (enabledChange)="changeEnabled($event)"
+      />
+    </app-data-state>
+
+    @if (store.page()) {
+      <mat-paginator
+        aria-label="Pagination des utilisateurs"
+        [length]="store.totalElements()"
+        [pageIndex]="store.query().page"
+        [pageSize]="store.query().size"
+        [pageSizeOptions]="[10, 20, 40, 80]"
+        [showFirstLastButtons]="true"
+        (page)="updatePagination($event)"
+      />
+    }
+  </section>
+
+  @if (editorMode(); as mode) {
+    <app-user-editor-panel
+      [mode]="mode"
+      [user]="selectedUser()"
+      [apiError]="mutationError()"
+      [submitting]="submitting()"
+      (createUser)="createUser($event)"
+      (updateUser)="updateUser($event)"
+      (resetPassword)="resetPassword($event)"
+      (closeRequested)="requestEditorClose($event)"
+    />
+  }
+</div>
+
+<p class="visually-hidden" aria-live="polite">{{ announcement() }}</p>

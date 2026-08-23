@@ -1,0 +1,240 @@
+:host {
+  display: block;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  background: var(--surface);
+}
+
+table {
+  inline-size: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 0.8rem 0.9rem;
+  border-block-end: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+th {
+  color: var(--ink-muted);
+  background: var(--canvas);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+th button {
+  min-block-size: 2.75rem;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+tbody tr:last-child td {
+  border-block-end: 0;
+}
+
+.identity,
+.mobile-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.identity > span:last-child {
+  min-inline-size: 0;
+}
+
+.identity strong,
+.identity small {
+  display: block;
+}
+
+.identity strong {
+  color: var(--ink);
+  font-size: 0.9rem;
+}
+
+.identity small {
+  margin-block-start: 0.2rem;
+  color: var(--ink-muted);
+  font-size: 0.76rem;
+  overflow-wrap: anywhere;
+}
+
+.initials {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  inline-size: 2.4rem;
+  block-size: 2.4rem;
+  border-radius: 50%;
+  color: var(--accent);
+  background: var(--accent-surface);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.role-badge,
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-block-size: 1.75rem;
+  padding-inline: 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink-muted);
+  background: var(--surface-raised);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status span {
+  inline-size: 0.45rem;
+  block-size: 0.45rem;
+  border-radius: 50%;
+  background: oklch(58% 0.14 150);
+}
+
+.status.inactive span {
+  background: var(--line-strong);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.actions button {
+  min-block-size: 2.75rem;
+  padding-inline: 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 0.5rem;
+  color: var(--ink);
+  background: var(--surface-raised);
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.actions button:hover:not(:disabled) {
+  border-color: var(--line-strong);
+  background: var(--canvas);
+}
+
+.actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mobile-users {
+  display: none;
+}
+
+@media (max-width: 760px) {
+  .table-wrap {
+    display: none;
+  }
+
+  .mobile-users {
+    display: grid;
+    gap: 0.8rem;
+  }
+
+  article {
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 0.75rem;
+    background: var(--surface);
+  }
+
+  .mobile-head {
+    align-items: flex-start;
+  }
+
+  .mobile-head div {
+    min-inline-size: 0;
+    flex: 1;
+  }
+
+  .mobile-head h3,
+  .mobile-head p {
+    margin: 0;
+  }
+
+  .mobile-head h3 {
+    color: var(--ink);
+    font-size: 0.95rem;
+  }
+
+  .mobile-head p {
+    margin-block-start: 0.25rem;
+    color: var(--ink-muted);
+    font-size: 0.76rem;
+    overflow-wrap: anywhere;
+  }
+
+  dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0;
+    padding-block: 0.8rem;
+    border-block: 1px solid var(--line);
+  }
+
+  dl div,
+  dt,
+  dd {
+    margin: 0;
+  }
+
+  dt {
+    color: var(--ink-muted);
+    font-size: 0.68rem;
+    font-weight: 750;
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin-block-start: 0.25rem;
+    color: var(--ink);
+    font-size: 0.8rem;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .actions button {
+    min-block-size: 2.75rem;
+  }
+
+  .actions button:last-of-type {
+    grid-column: 1 / -1;
+  }
+}
