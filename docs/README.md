@@ -15,6 +15,7 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [Plan console produits Angular](superpowers/plans/2026-08-18-angular-product-console.md) | Catalogue responsive, formulaires, galerie et utilisateurs |
 | [Contexte produit](../PRODUCT.md) | Public, personnalité, anti-références et principes d'accessibilité de la console |
 | [Décision stockage objet](architecture/object-storage-decision.md) | AIStor Free local, licence, sécurité et portabilité S3 |
+| [Tests et couverture](devops/testing.md) | Pyramide de tests, rapports JaCoCo/LCOV et scénarios manuels critiques |
 
 ## Architecture
 
