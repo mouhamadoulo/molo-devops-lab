@@ -108,13 +108,13 @@
 - Modify: frontend/src/app/features/products/pages/product-detail-page/**
 - Modify: frontend/e2e/product-crud.spec.ts
 
-- [ ] Tester sélection multiple, drop clavier/souris, type, taille, maximum cinq, preview révoquée et progression.
-- [ ] Tester ordre, principale unique, suppression confirmée et rollback visuel après erreur.
-- [ ] Implémenter GET/POST/order/primary/delete ; désactiver mutations pour VIEWER.
-- [ ] Afficher chaque rejet dans aria-live ; la validation serveur reste autoritaire.
-- [ ] Playwright ajoute upload, promotion principale, ordre et suppression.
-- [ ] Faire passer lint/test/build/e2e.
-- [ ] Commit : git commit -m "feat: add product image manager".
+- [x] Tester sélection multiple, drop clavier/souris, type, taille, maximum cinq, preview révoquée et progression.
+- [x] Tester ordre, principale unique, suppression confirmée et rollback visuel après erreur.
+- [x] Implémenter GET/POST/order/primary/delete ; désactiver mutations pour VIEWER.
+- [x] Afficher chaque rejet dans aria-live ; la validation serveur reste autoritaire.
+- [x] Playwright ajoute upload, promotion principale, ordre et suppression.
+- [x] Faire passer lint/test/build/e2e.
+- [x] Commit : git commit -m "feat: add product image manager".
 
 ---
 

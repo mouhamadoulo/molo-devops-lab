@@ -1,0 +1,104 @@
+<section class="gallery" aria-labelledby="product-gallery-title">
+  <header>
+    <div>
+      <p>Visuels produit</p>
+      <h2 id="product-gallery-title">Galerie</h2>
+    </div>
+    <span>{{ images().length }} image{{ images().length > 1 ? 's' : '' }}</span>
+  </header>
+
+  @if (loading()) {
+    <div class="gallery-skeleton" aria-label="Chargement de la galerie"></div>
+  } @else if (error(); as galleryError) {
+    <div class="gallery-error" role="alert">
+      <strong>{{ galleryError.title }}</strong>
+      <span>{{ galleryError.detail }}</span>
+      @if (galleryError.requestId) { <small>RÃ©fÃ©rence support : {{ galleryError.requestId }}</small> }
+      <button type="button" (click)="load()">RÃ©essayer</button>
+    </div>
+  } @else {
+    @if (activeImage(); as image) {
+      <figure class="active-image">
+        <img [src]="image.url" [alt]="image.primary ? 'Image principale de ' + productName() : 'Image de ' + productName()" width="640" height="480">
+        @if (image.primary) { <figcaption>Image principale</figcaption> }
+      </figure>
+
+      <ul class="thumbnail-rail" aria-label="Images du produit">
+        @for (thumbnail of images(); track thumbnail.id; let index = $index) {
+          <li>
+            <button
+              type="button"
+              data-gallery-thumbnail
+              [class.selected]="activeImage()?.id === thumbnail.id"
+              [attr.aria-label]="'Afficher l\'image ' + (index + 1)"
+              [attr.aria-current]="activeImage()?.id === thumbnail.id ? 'true' : null"
+              (click)="selectImage(thumbnail.id)"
+            >
+              <img [src]="thumbnail.url" alt="" width="96" height="72">
+            </button>
+          </li>
+        }
+      </ul>
+    } @else {
+      <div class="empty-gallery">
+        <p>Aucune image pour ce produit</p>
+      </div>
+    }
+  }
+
+  @if (canManage()) {
+    <div class="image-management" data-image-management>
+      <input
+        #fileInput
+        class="visually-hidden"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        (change)="onFileSelection($event)"
+      >
+      <button
+        class="drop-zone"
+        type="button"
+        [disabled]="uploading() || mutating() || images().length >= 5"
+        (click)="fileInput.click()"
+        (dragover)="allowDrop($event)"
+        (drop)="onDrop($event)"
+      >
+        <strong>Ajouter des images</strong>
+        <span>Choisir ou dÃ©poser JPEG, PNG ou WebP, 5 Mo maximum</span>
+      </button>
+
+      @for (upload of pendingUploads(); track upload.id) {
+        <div class="pending-upload">
+          <img [src]="upload.previewUrl" [alt]="'AperÃ§u de ' + upload.name" width="64" height="48">
+          <div>
+            <span>{{ upload.name }}</span>
+            <progress [attr.value]="upload.progress" [attr.aria-label]="'Progression de ' + upload.name" max="100">{{ upload.progress ?? 0 }} %</progress>
+          </div>
+        </div>
+      }
+
+      @if (images().length > 0) {
+        <ol class="image-order" aria-label="Ordre des images">
+          @for (image of images(); track image.id; let index = $index; let first = $first; let last = $last) {
+            <li>
+              <button class="image-selector" type="button" (click)="selectImage(image.id)">
+                Image {{ index + 1 }} @if (image.primary) { <span>(principale)</span> }
+              </button>
+              <div class="order-actions">
+                <button type="button" [disabled]="first || mutating()" [attr.aria-label]="'DÃ©placer l\'image ' + (index + 1) + ' vers la gauche'" (click)="moveImage(image.id, -1)">â†</button>
+                <button type="button" [disabled]="last || mutating()" [attr.aria-label]="'DÃ©placer l\'image ' + (index + 1) + ' vers la droite'" (click)="moveImage(image.id, 1)">â†’</button>
+                <button type="button" [disabled]="image.primary || mutating()" (click)="makePrimary(image.id)">DÃ©finir comme principale</button>
+                <button class="remove-image" type="button" [disabled]="mutating()" [attr.aria-label]="'Supprimer l\'image ' + (index + 1)" (click)="deleteImage(image)">Supprimer</button>
+              </div>
+            </li>
+          }
+        </ol>
+      }
+    </div>
+  }
+
+  <div class="announcements" aria-live="polite" aria-atomic="true">
+    @for (message of announcements(); track $index) { <p>{{ message }}</p> }
+  </div>
+</section>

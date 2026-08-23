@@ -36,7 +36,7 @@ test('creates, validates, updates and deletes a product as an administrator', as
   await expect(page).toHaveURL(/\/products\/9$/);
   await expect(page.getByText('18 unités')).toBeVisible();
 
-  const deleteButton = page.getByRole('button', { name: 'Supprimer' });
+  const deleteButton = page.getByRole('button', { name: 'Supprimer', exact: true });
   await deleteButton.click();
   await expect(page.getByRole('heading', { name: 'Supprimer le produit ?' })).toBeVisible();
   await page.getByRole('button', { name: 'Annuler' }).click();
@@ -59,7 +59,7 @@ test('keeps product detail read-only and guards write routes for a viewer', asyn
   await page.goto('/products/9');
   await expect(page.getByRole('heading', { name: 'Portable Atlas' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Modifier' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Supprimer' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Supprimer', exact: true })).toHaveCount(0);
 
   await page.goto('/products/new');
   await expect(page).toHaveURL(/\/forbidden$/);
@@ -84,18 +84,93 @@ test('allows an editor to create and edit without exposing deletion', async ({ p
 
   await page.goto('/products/9');
   await expect(page.getByRole('link', { name: 'Modifier' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Supprimer' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Supprimer', exact: true })).toHaveCount(0);
+});
+
+test('uploads, promotes, reorders and deletes product images', async ({ page }) => {
+  productApi(page, false);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/products/9');
+
+  await expect(page.getByRole('heading', { name: 'Galerie' })).toBeVisible();
+  await expect(page.getByText('2 images')).toBeVisible();
+
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'clavier.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from('image-content'),
+  });
+  await expect(page.getByText('clavier.png : image ajoutÃ©e')).toBeVisible();
+  await expect(page.getByText('3 images')).toBeVisible();
+
+  const secondImage = page.getByRole('list', { name: 'Ordre des images' }).getByRole('listitem').nth(1);
+  await secondImage.getByRole('button', { name: 'DÃ©finir comme principale' }).click();
+  await expect(secondImage).toContainText('(principale)');
+
+  await page.getByRole('button', { name: "DÃ©placer l'image 3 vers la gauche" }).click();
+  await expect(page.getByText('Nouvel ordre enregistrÃ©.')).toBeVisible();
+
+  const deleteImageButton = page.getByRole('button', { name: "Supprimer l'image 1" });
+  await deleteImageButton.click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Annuler' }).click();
+  await expect(deleteImageButton).toBeFocused();
+
+  await deleteImageButton.click();
+  await expect(page.getByRole('heading', { name: 'Supprimer cette image ?' })).toBeVisible();
+  await page.getByRole('dialog').getByRole('button', { name: 'Supprimer lâ€™image' }).click();
+  await expect(page.getByText('2 images')).toBeVisible();
 });
 
 function productApi(page: Page, rejectFirstCreate = true): { deleted: boolean } {
   const state = { deleted: false };
   let rejectCreate = rejectFirstCreate;
   let current = product();
+  let images = productImages();
 
   void page.route('**/api/v1/products**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
     const isCollection = url.pathname.endsWith('/products');
+    const isImageCollection = url.pathname.endsWith('/products/9/images');
+    const imagePrimary = url.pathname.match(/\/products\/9\/images\/(\d+)\/primary$/);
+    const imageResource = url.pathname.match(/\/products\/9\/images\/(\d+)$/);
+
+    if (request.method() === 'GET' && isImageCollection) {
+      await route.fulfill({ status: 200, json: images });
+      return;
+    }
+
+    if (request.method() === 'POST' && isImageCollection) {
+      const uploaded = productImage(23, images.length, images.length === 0);
+      images = [...images, uploaded];
+      await route.fulfill({ status: 201, json: uploaded });
+      return;
+    }
+
+    if (request.method() === 'PUT' && url.pathname.endsWith('/products/9/images/order')) {
+      const { imageIds } = request.postDataJSON() as { imageIds: number[] };
+      images = imageIds.map((id, position) => ({ ...images.find((image) => image.id === id)!, position }));
+      await route.fulfill({ status: 200, json: images });
+      return;
+    }
+
+    if (request.method() === 'PUT' && imagePrimary) {
+      const primaryId = Number(imagePrimary[1]);
+      images = images.map((image) => ({ ...image, primary: image.id === primaryId }));
+      await route.fulfill({ status: 200, json: images.find(({ id }) => id === primaryId) });
+      return;
+    }
+
+    if (request.method() === 'DELETE' && imageResource) {
+      const deletedId = Number(imageResource[1]);
+      const deletedPrimary = images.find(({ id }) => id === deletedId)?.primary ?? false;
+      images = images.filter(({ id }) => id !== deletedId).map((image, position) => ({ ...image, position }));
+      if (deletedPrimary && images.length > 0) {
+        images = images.map((image, index) => ({ ...image, primary: index === 0 }));
+      }
+      await route.fulfill({ status: 204 });
+      return;
+    }
 
     if (request.method() === 'POST' && isCollection) {
       if (rejectCreate) {
@@ -178,5 +253,22 @@ function pageResponse(content: readonly ReturnType<typeof product>[]) {
     totalElements: content.length,
     totalPages: content.length === 0 ? 0 : 1,
     last: true,
+  };
+}
+
+function productImages() {
+  return [productImage(21, 0, true), productImage(22, 1, false)];
+}
+
+function productImage(id: number, position: number, primary: boolean) {
+  return {
+    id,
+    contentType: 'image/png',
+    sizeBytes: 128,
+    width: 640,
+    height: 480,
+    position,
+    primary,
+    url: `data:image/png;base64,iVBORw0KGgo=`,
   };
 }

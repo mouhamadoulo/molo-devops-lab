@@ -1,10 +1,15 @@
 import { UserRole } from './auth.models';
 
-export type Permission = 'manageUsers' | 'createProduct' | 'editProduct' | 'deleteProduct';
+export type Permission =
+  | 'manageUsers'
+  | 'createProduct'
+  | 'editProduct'
+  | 'deleteProduct'
+  | 'manageProductImages';
 
 const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
-  ADMIN: ['manageUsers', 'createProduct', 'editProduct', 'deleteProduct'],
-  EDITOR: ['createProduct', 'editProduct'],
+  ADMIN: ['manageUsers', 'createProduct', 'editProduct', 'deleteProduct', 'manageProductImages'],
+  EDITOR: ['createProduct', 'editProduct', 'manageProductImages'],
   VIEWER: []
 };
 
