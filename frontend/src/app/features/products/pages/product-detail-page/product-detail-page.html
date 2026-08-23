@@ -31,14 +31,11 @@
   >
     @if (product(); as currentProduct) {
       <div class="detail-layout">
-        <div class="product-media">
-          @if (currentProduct.primaryImage) {
-            <img [src]="currentProduct.primaryImage.url" [alt]="'Image principale de ' + currentProduct.name" width="640" height="480">
-          } @else {
-            <span aria-hidden="true">{{ currentProduct.name.slice(0, 2).toUpperCase() }}</span>
-            <p>Aucune image principale</p>
-          }
-        </div>
+        <app-image-gallery-manager
+          [productId]="currentProduct.id"
+          [productName]="currentProduct.name"
+          [canManage]="canManageImages()"
+        />
 
         <div class="product-information">
           <div class="section-heading">

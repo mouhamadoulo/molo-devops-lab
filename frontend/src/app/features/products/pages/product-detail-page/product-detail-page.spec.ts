@@ -8,6 +8,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthStore } from '../../../../core/auth/auth.store';
 import { ProductDetail } from '../../models/product';
+import { ProductImagesApiService } from '../../services/product-images-api.service';
 import { ProductsApiService } from '../../services/products-api.service';
 import { ProductDetailPage } from './product-detail-page';
 
@@ -32,6 +33,7 @@ describe('ProductDetailPage', () => {
       imports: [ProductDetailPage],
       providers: [
         { provide: ProductsApiService, useValue: api },
+        { provide: ProductImagesApiService, useValue: { list: vi.fn().mockReturnValue(of([])) } },
         { provide: AuthStore, useValue: { role } },
         { provide: MatDialog, useValue: dialog },
         { provide: MatSnackBar, useValue: snackbar },
@@ -53,6 +55,8 @@ describe('ProductDetailPage', () => {
     expect(host.textContent).toContain('Poste de travail mobile');
     expect(host.querySelector('[data-edit-product]')).toBeNull();
     expect(host.querySelector('[data-delete-product]')).toBeNull();
+    expect(host.querySelector('app-image-gallery-manager')).not.toBeNull();
+    expect(host.querySelector('[data-image-management]')).toBeNull();
   });
 
   it('allows editors to modify but reserves deletion for administrators', () => {
@@ -60,6 +64,7 @@ describe('ProductDetailPage', () => {
     fixture.detectChanges();
     expect((fixture.nativeElement as HTMLElement).querySelector('[data-edit-product]')).not.toBeNull();
     expect((fixture.nativeElement as HTMLElement).querySelector('[data-delete-product]')).toBeNull();
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-image-management]')).not.toBeNull();
 
     role.set('ADMIN');
     fixture.detectChanges();

@@ -11,12 +11,13 @@ import { ApiError } from '../../../../core/http/problem-detail';
 import { ConfirmDialog } from '../../../../shared/ui/confirm-dialog/confirm-dialog';
 import { DataState, DataStateKind } from '../../../../shared/ui/data-state/data-state';
 import { PageHeader } from '../../../../shared/ui/page-header/page-header';
+import { ImageGalleryManager } from '../../components/image-gallery-manager/image-gallery-manager';
 import { PRODUCT_CATEGORY_LABELS, ProductDetail } from '../../models/product';
 import { ProductsApiService } from '../../services/products-api.service';
 
 @Component({
   selector: 'app-product-detail-page',
-  imports: [CurrencyPipe, DataState, DatePipe, PageHeader, RouterLink],
+  imports: [CurrencyPipe, DataState, DatePipe, ImageGalleryManager, PageHeader, RouterLink],
   templateUrl: './product-detail-page.html',
   styleUrl: './product-detail-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -37,6 +38,7 @@ export class ProductDetailPage implements OnInit {
   readonly status = computed<DataStateKind>(() => this.loading() ? 'loading' : this.error() ? 'error' : 'success');
   readonly canEdit = computed(() => hasPermission(this.auth.role(), 'editProduct'));
   readonly canDelete = computed(() => hasPermission(this.auth.role(), 'deleteProduct'));
+  readonly canManageImages = computed(() => hasPermission(this.auth.role(), 'manageProductImages'));
   readonly categoryLabels = PRODUCT_CATEGORY_LABELS;
 
   ngOnInit(): void {
