@@ -1,0 +1,132 @@
+<aside class="editor" aria-labelledby="user-editor-title">
+  <div class="editor-head">
+    <div>
+      <p>Administration</p>
+      <h2 #heading id="user-editor-title" tabindex="-1">{{ title() }}</h2>
+      @if (user(); as account) {
+        <span>{{ account.email }}</span>
+      }
+    </div>
+    <button matButton="outlined" type="button" aria-label="Fermer le formulaire" (click)="requestClose()">
+      Fermer
+    </button>
+  </div>
+
+  @if (apiError(); as error) {
+    <div class="form-error" role="alert">
+      <strong>{{ error.title }}</strong>
+      <span>{{ error.detail }}</span>
+      @if (error.requestId) {
+        <small>Référence support : {{ error.requestId }}</small>
+      }
+    </div>
+  }
+
+  @if (mode() === 'password') {
+    <form [formGroup]="passwordForm" (ngSubmit)="submitPassword()" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>Nouveau mot de passe</mat-label>
+        <input id="new-password" matInput type="password" formControlName="password" autocomplete="new-password">
+        <mat-hint>12 caractères minimum</mat-hint>
+        @if (passwordForm.controls.password.hasError('required') && passwordForm.controls.password.touched) {
+          <mat-error>Le mot de passe est requis.</mat-error>
+        } @else if ((passwordForm.controls.password.hasError('minlength') || passwordForm.controls.password.hasError('maxlength')) && passwordForm.controls.password.touched) {
+          <mat-error>Le mot de passe doit contenir entre 12 et 128 caractères.</mat-error>
+        } @else if (passwordForm.controls.password.getError('server'); as serverError) {
+          <mat-error>{{ serverError }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Confirmer le mot de passe</mat-label>
+        <input id="password-confirmation" matInput type="password" formControlName="confirmation" autocomplete="new-password">
+        @if (passwordForm.hasError('passwordMismatch') && passwordForm.controls.confirmation.touched) {
+          <span class="field-error" role="alert">Les mots de passe doivent être identiques.</span>
+        }
+      </mat-form-field>
+
+      <div class="form-actions">
+        <button matButton="outlined" type="button" (click)="requestClose()">Annuler</button>
+        <button matButton="filled" type="submit" [disabled]="submitting()">
+          {{ submitting() ? 'Réinitialisation en cours' : 'Réinitialiser le mot de passe' }}
+        </button>
+      </div>
+    </form>
+  } @else {
+    <form [formGroup]="accountForm" (ngSubmit)="submitAccount()" novalidate>
+      <mat-form-field appearance="outline">
+        <mat-label>Adresse e-mail</mat-label>
+        <input id="user-email" matInput type="email" formControlName="email"
+          [readonly]="mode() === 'edit'" autocomplete="email">
+        @if (accountForm.controls.email.hasError('required') && accountForm.controls.email.touched) {
+          <mat-error>L’adresse e-mail est requise.</mat-error>
+        } @else if (accountForm.controls.email.hasError('email') && accountForm.controls.email.touched) {
+          <mat-error>Saisissez une adresse e-mail valide.</mat-error>
+        } @else if (accountForm.controls.email.getError('server'); as serverError) {
+          <mat-error>{{ serverError }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Nom affiché</mat-label>
+        <input id="display-name" matInput formControlName="displayName" autocomplete="name" maxlength="120">
+        <mat-hint align="end">{{ accountForm.controls.displayName.value.length }} / 120</mat-hint>
+        @if (accountForm.controls.displayName.hasError('required') && accountForm.controls.displayName.touched) {
+          <mat-error>Le nom est requis.</mat-error>
+        } @else if (accountForm.controls.displayName.hasError('maxlength') && accountForm.controls.displayName.touched) {
+          <mat-error>Le nom ne peut pas dépasser 120 caractères.</mat-error>
+        } @else if (accountForm.controls.displayName.getError('server'); as serverError) {
+          <mat-error>{{ serverError }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Rôle</mat-label>
+        <mat-select id="user-role" formControlName="role">
+          @for (role of roles; track role) {
+            <mat-option [value]="role">{{ roleLabels[role] }}</mat-option>
+          }
+        </mat-select>
+        @if (accountForm.controls.role.getError('server'); as serverError) {
+          <mat-error>{{ serverError }}</mat-error>
+        }
+      </mat-form-field>
+
+      @if (mode() === 'create') {
+        <mat-form-field appearance="outline">
+          <mat-label>Mot de passe</mat-label>
+          <input id="create-password" matInput type="password" formControlName="password" autocomplete="new-password">
+          <mat-hint>12 caractères minimum</mat-hint>
+          @if (accountForm.controls.password.hasError('required') && accountForm.controls.password.touched) {
+            <mat-error>Le mot de passe est requis.</mat-error>
+          } @else if ((accountForm.controls.password.hasError('minlength') || accountForm.controls.password.hasError('maxlength')) && accountForm.controls.password.touched) {
+            <mat-error>Le mot de passe doit contenir entre 12 et 128 caractères.</mat-error>
+          } @else if (accountForm.controls.password.getError('server'); as serverError) {
+            <mat-error>{{ serverError }}</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Confirmer le mot de passe</mat-label>
+          <input id="create-password-confirmation" matInput type="password" formControlName="confirmation" autocomplete="new-password">
+          @if (accountForm.hasError('passwordMismatch') && accountForm.controls.confirmation.touched) {
+            <span class="field-error" role="alert">Les mots de passe doivent être identiques.</span>
+          }
+        </mat-form-field>
+      }
+
+      <div class="form-actions">
+        <button matButton="outlined" type="button" (click)="requestClose()">Annuler</button>
+        <button matButton="filled" type="submit" [disabled]="submitting()">
+          @if (submitting()) {
+            Enregistrement en cours
+          } @else if (mode() === 'create') {
+            Créer le compte
+          } @else {
+            Enregistrer les modifications
+          }
+        </button>
+      </div>
+    </form>
+  }
+</aside>

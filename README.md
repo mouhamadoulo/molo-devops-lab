@@ -6,8 +6,9 @@ recherche, aux filtres et à la pagination afin de concentrer l'apprentissage su
 livraison.
 
 > État actuel : l'API Products, sa galerie privée S3, l'authentification JWT avec refresh rotatif,
-> le RBAC et le socle Angular sécurisé sont opérationnels. Le CRUD produits dans la console reste
-> à construire selon le [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
+> le RBAC, le CRUD produits et l'administration Angular des utilisateurs sont opérationnels.
+> Les images applicatives, pipelines et briques d'observabilité restent planifiés dans le
+> [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
 

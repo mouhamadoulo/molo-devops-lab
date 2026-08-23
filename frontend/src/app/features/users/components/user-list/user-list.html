@@ -1,0 +1,80 @@
+<div class="table-wrap">
+  <table aria-label="Utilisateurs administrés">
+    <thead>
+      <tr>
+        <th scope="col">
+          <button type="button" [attr.aria-label]="sortLabel('displayName', 'nom')" (click)="changeSort('displayName')">Utilisateur</button>
+        </th>
+        <th scope="col">
+          <button type="button" [attr.aria-label]="sortLabel('role', 'rôle')" (click)="changeSort('role')">Rôle</button>
+        </th>
+        <th scope="col">
+          <button type="button" [attr.aria-label]="sortLabel('enabled', 'statut')" (click)="changeSort('enabled')">Statut</button>
+        </th>
+        <th scope="col">
+          <button type="button" [attr.aria-label]="sortLabel('createdAt', 'date de création')" (click)="changeSort('createdAt')">Création</button>
+        </th>
+        <th scope="col"><span class="visually-hidden">Actions</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (user of users(); track user.id) {
+        <tr>
+          <td>
+            <div class="identity">
+              <span class="initials" aria-hidden="true">{{ user.displayName.slice(0, 2).toUpperCase() }}</span>
+              <span><strong>{{ user.displayName }}</strong><small>{{ user.email }}</small></span>
+            </div>
+          </td>
+          <td><span class="role-badge">{{ roleLabels[user.role] }}</span></td>
+          <td><span class="status" [class.inactive]="!user.enabled"><span aria-hidden="true"></span>{{ user.enabled ? 'Actif' : 'Inactif' }}</span></td>
+          <td><time [attr.datetime]="user.createdAt">{{ formatDate(user.createdAt) }}</time></td>
+          <td>
+            <div class="actions">
+              <button type="button" [attr.aria-label]="'Modifier ' + user.displayName"
+                [disabled]="isPending(user)" (click)="editAccount(user, $event)">Modifier</button>
+              <button type="button" [attr.aria-label]="'Réinitialiser le mot de passe de ' + user.displayName"
+                [disabled]="isPending(user)" (click)="editPassword(user, $event)">Mot de passe</button>
+              <button type="button" data-enabled-action [attr.aria-label]="enabledActionLabel(user)"
+                [attr.aria-describedby]="user.id === currentUserId() ? 'self-disable-' + user.id : null"
+                [disabled]="isPending(user) || user.id === currentUserId()"
+                (click)="toggleEnabled(user, $event)">{{ user.enabled ? 'Désactiver' : 'Activer' }}</button>
+              @if (user.id === currentUserId()) {
+                <span class="visually-hidden" [id]="'self-disable-' + user.id">Vous ne pouvez pas désactiver votre propre compte.</span>
+              }
+            </div>
+          </td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<div class="mobile-users" data-mobile-users>
+  @for (user of users(); track user.id) {
+    <article>
+      <div class="mobile-head">
+        <span class="initials" aria-hidden="true">{{ user.displayName.slice(0, 2).toUpperCase() }}</span>
+        <div><h3>{{ user.displayName }}</h3><p>{{ user.email }}</p></div>
+        <span class="status" [class.inactive]="!user.enabled"><span aria-hidden="true"></span>{{ user.enabled ? 'Actif' : 'Inactif' }}</span>
+      </div>
+      <dl>
+        <div><dt>Rôle</dt><dd>{{ roleLabels[user.role] }}</dd></div>
+        <div><dt>Création</dt><dd><time [attr.datetime]="user.createdAt">{{ formatDate(user.createdAt) }}</time></dd></div>
+      </dl>
+      <div class="actions">
+        <button type="button" [attr.aria-label]="'Modifier ' + user.displayName"
+          [disabled]="isPending(user)" (click)="editAccount(user, $event)">Modifier</button>
+        <button type="button" [attr.aria-label]="'Réinitialiser le mot de passe de ' + user.displayName"
+          [disabled]="isPending(user)" (click)="editPassword(user, $event)">Mot de passe</button>
+        <button type="button" data-enabled-action [attr.aria-label]="enabledActionLabel(user)"
+          [attr.aria-describedby]="user.id === currentUserId() ? 'mobile-self-disable-' + user.id : null"
+          [disabled]="isPending(user) || user.id === currentUserId()"
+          (click)="toggleEnabled(user, $event)">{{ user.enabled ? 'Désactiver' : 'Activer' }}</button>
+        @if (user.id === currentUserId()) {
+          <span class="visually-hidden" [id]="'mobile-self-disable-' + user.id">Vous ne pouvez pas désactiver votre propre compte.</span>
+        }
+      </div>
+    </article>
+  }
+</div>
