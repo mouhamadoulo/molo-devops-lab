@@ -1,0 +1,144 @@
+name: Quality
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/quality.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend-quality:
+    name: Analyze backend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: bash
+        working-directory: backend
+    steps:
+      - name: Detect SonarQube configuration
+        id: sonar-config
+        working-directory: .
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [[ -n "$SONAR_HOST_URL" && -n "$SONAR_TOKEN" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "SonarQube analysis is disabled: configure SONAR_HOST_URL and SONAR_TOKEN."
+          fi
+
+      - name: Check out repository
+        if: steps.sonar-config.outputs.enabled == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        if: steps.sonar-config.outputs.enabled == 'true'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Prepare AIStor license
+        if: steps.sonar-config.outputs.enabled == 'true'
+        env:
+          MINIO_LICENSE_B64: ${{ secrets.MINIO_LICENSE_B64 }}
+        run: |
+          if [[ -z "$MINIO_LICENSE_B64" ]]; then
+            echo "MINIO_LICENSE_B64 must exist in Actions secrets" >&2
+            exit 1
+          fi
+          license_path="$RUNNER_TEMP/minio.license"
+          printf '%s' "$MINIO_LICENSE_B64" | base64 --decode > "$license_path"
+          chmod 600 "$license_path"
+          echo "MINIO_LICENSE_FILE=$license_path" >> "$GITHUB_ENV"
+
+      - name: Verify and analyze backend
+        if: steps.sonar-config.outputs.enabled == 'true'
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >-
+          ./mvnw -B clean verify
+          org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
+
+      - name: Remove AIStor license
+        if: ${{ always() && steps.sonar-config.outputs.enabled == 'true' }}
+        run: rm -f "${MINIO_LICENSE_FILE:-$RUNNER_TEMP/minio.license}"
+
+  frontend-quality:
+    name: Analyze frontend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+        working-directory: frontend
+    steps:
+      - name: Detect SonarQube configuration
+        id: sonar-config
+        working-directory: .
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [[ -n "$SONAR_HOST_URL" && -n "$SONAR_TOKEN" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "SonarQube analysis is disabled: configure SONAR_HOST_URL and SONAR_TOKEN."
+          fi
+
+      - name: Check out repository
+        if: steps.sonar-config.outputs.enabled == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        if: steps.sonar-config.outputs.enabled == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24.18.0
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Set up Java for SonarScanner
+        if: steps.sonar-config.outputs.enabled == 'true'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Install dependencies
+        if: steps.sonar-config.outputs.enabled == 'true'
+        run: npm ci
+
+      - name: Verify frontend
+        if: steps.sonar-config.outputs.enabled == 'true'
+        run: npm run lint && npm run test:ci && npm run build
+
+      - name: Analyze frontend
+        if: steps.sonar-config.outputs.enabled == 'true'
+        env:
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          export SONAR_SCANNER_JAVA_EXE_PATH="$JAVA_HOME/bin/java"
+          npm run sonar
