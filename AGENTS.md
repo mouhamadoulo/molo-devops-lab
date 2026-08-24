@@ -11,14 +11,14 @@ DevOps Store est un laboratoire DevSecOps autour d'un catalogue de produits. Le 
 reste volontairement simple afin de concentrer le travail sur la qualité, la sécurité, la livraison
 et l'observabilité.
 
-À ce stade, le backend et le socle sécurisé du frontend sont implémentés :
+À ce stade, l'application et sa stack Docker Compose locale sont implémentées :
 
 - le backend Spring Boot, l'identité, le RBAC, la galerie privée d'images produits et leurs tests
   sont opérationnels dans `backend/` ;
-- `frontend/` contient Angular 22, la session en mémoire, les guards, le login et le shell
-  responsive ; le CRUD produits et l'administration des utilisateurs restent à construire ;
-- un `docker-compose.yml` minimal fournit PostgreSQL et AIStor Free ; les images Docker du
-  frontend/backend, les pipelines et l'observabilité restent planifiés ;
+- `frontend/` contient Angular 22, la session en mémoire, les guards, le login, le shell responsive,
+  le CRUD produits et l'administration des utilisateurs ;
+- les images multi-stage backend/frontend et `docker-compose.yml` démarrent Nginx, Spring Boot,
+  PostgreSQL et AIStor Free avec healthchecks ; les pipelines et l'observabilité restent planifiés ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
   (`frontend/package.json`, `Makefile`, fichiers Compose, etc.) n'existent pas.
 
@@ -43,10 +43,11 @@ Avant une modification importante, consulter :
 - session Angular par Signals, JWT en mémoire, refresh rotatif et navigation par rôle.
 - Docker Compose 5.1 avec PostgreSQL 18.4 et AIStor Free single-node épinglé.
 - MinIO Java 9, validation JPEG/PNG/WebP et stockage privé par URL présignée.
+- images Maven/JDK vers JRE 25 et Node 24 vers Nginx 1.29.4, avec runtimes non-root.
 
 ### Cible planifiée
 
-- Docker, Docker Compose, GitHub Actions, SonarQube, Trivy et JFrog Artifactory ;
+- GitHub Actions, SonarQube, Trivy et JFrog Artifactory ;
 - Terraform, Kubernetes/Minikube, Prometheus, Grafana, Loki et Grafana Alloy.
 
 Toujours distinguer cette cible de ce qui est réellement disponible dans le dépôt.
@@ -92,8 +93,8 @@ Le backend lit les variables suivantes, avec des valeurs locales par défaut :
 - `JWT_SECRET` et `JWT_ISSUER` ;
 - `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_PASSWORD` et `BOOTSTRAP_ADMIN_NAME` ;
 - `AUTH_COOKIE_SECURE`.
-- `MINIO_LICENSE_FILE`, `MINIO_ENDPOINT`, `MINIO_ACCESS_KEY`, `MINIO_SECRET_KEY` et
-  `MINIO_BUCKET`.
+- `MINIO_LICENSE_FILE`, `MINIO_ENDPOINT`, `MINIO_PUBLIC_ENDPOINT`, `MINIO_ACCESS_KEY`,
+  `MINIO_SECRET_KEY`, `MINIO_BUCKET` et `MINIO_REGION`.
 - `MINIO_INITIALIZE_BUCKET`, `MINIO_ORPHAN_MIN_AGE` et
   `MINIO_ORPHAN_RECONCILIATION_INTERVAL`.
 
@@ -137,15 +138,20 @@ Set-Location backend
 `spring-boot:run` nécessite un PostgreSQL accessible. Utiliser les variables de configuration
 ci-dessus si la base ne correspond pas aux valeurs locales par défaut.
 
-Le socle PostgreSQL et stockage objet se lance depuis la racine après création d'un `.env` local
-et téléchargement de la licence AIStor Free :
+La stack complète se lance depuis la racine après copie de `.env.example` vers `.env`, remplissage
+des secrets obligatoires et téléchargement de la licence AIStor Free :
 
 ```powershell
-docker compose up -d postgres object-storage
+docker compose config
+docker compose build --pull
+docker compose up -d --wait
 docker compose ps
+docker compose down
 ```
 
-Le fichier de licence reste hors Git. AIStor Free est limité au single-node sans SLA/SLO.
+Avec GNU Make, les cibles disponibles sont `help`, `application`, `build`, `test`, `backend-test`,
+`frontend-test`, `up`, `down`, `status` et `logs`. `down` préserve les volumes nommés. Le fichier de
+licence reste hors Git. AIStor Free est limité au single-node sans SLA/SLO.
 
 ## Tests
 

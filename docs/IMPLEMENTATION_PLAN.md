@@ -39,8 +39,8 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   produits Angular et l'administration des utilisateurs réservée au rôle `ADMIN`.
 - Le login, la restauration de session, les guards, le shell responsive et les parcours desktop
   et mobile de la console sont implémentés.
-- Un Compose minimal fournit PostgreSQL et AIStor Free pour le développement des images produits ;
-  les images Docker du backend et du frontend restent planifiées pour la phase 4.
+- Docker Compose fournit Nginx, le backend, PostgreSQL et AIStor Free ; les images applicatives
+  multi-stage non-root et leur démarrage ordonné sont disponibles.
 - Docker 29.2.1, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0,
   Maven 3.9.13, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
@@ -123,8 +123,8 @@ uniquement après lecture des notes de version et relance de toutes les validati
 
 ### Infrastructure et DevSecOps
 
-- `docker-compose.yml` lance d'abord PostgreSQL et AIStor Free ; la phase 4 y ajoutera frontend et
-  backend sans créer une stack concurrente.
+- `docker-compose.yml` lance PostgreSQL et AIStor Free, puis le backend sain et le frontend Nginx,
+  sans stack concurrente.
 - La licence AIStor Free est acceptée pour ce laboratoire single-node, montée en lecture seule et
   exclue de Git ; cette édition ne fournit ni haute disponibilité ni SLA/SLO.
 - `docker-compose.devops.yml` utilise les profils `quality`, `artifacts` et `observability`
@@ -410,28 +410,30 @@ npm run build
 
 ## PHASE 4 — Docker et Docker Compose applicatif
 
-**Objectif :** démarrer frontend, backend et PostgreSQL avec `docker compose up -d`.
+**Objectif :** démarrer frontend, backend, PostgreSQL et AIStor avec `docker compose up -d`.
 
-**Fichiers concernés :** `backend/Dockerfile`, `frontend/Dockerfile`, `.dockerignore`,
-`frontend/nginx.conf`, `docker-compose.yml`, `.env.example`, `Makefile`.
+**Fichiers concernés :** configuration MinIO du backend, `backend/Dockerfile`,
+`backend/.dockerignore`, `frontend/Dockerfile`, `frontend/.dockerignore`, `frontend/nginx.conf`,
+`docker-compose.yml`, `.env.example`, `Makefile`, `README.md` et
+`docs/infrastructure/docker.md`.
 
 **Implémentation :**
 
-- [ ] Écrire les Dockerfiles multi-stage et épingler tags puis digests.
-- [ ] Exécuter les runtimes backend et frontend avec des utilisateurs non-root.
-- [ ] Configurer Nginx pour SPA, reverse proxy `/api` et headers HTTP défensifs.
-- [ ] Définir PostgreSQL 18.4, volume nommé, réseau privé et healthcheck `pg_isready`.
-- [ ] Faire dépendre le backend de PostgreSQL sain et le frontend du backend sain.
-- [ ] Ajouter healthchecks, limites raisonnables et arrêt gracieux.
-- [ ] Créer `.env.example` sans secret utilisable et ignorer `.env`.
-- [ ] Ajouter les cibles Makefile application/test/build avec aide auto-documentée.
+- [x] Écrire les Dockerfiles multi-stage et épingler tags puis digests.
+- [x] Exécuter les runtimes backend et frontend avec des utilisateurs non-root.
+- [x] Configurer Nginx pour SPA, reverse proxy `/api` et headers HTTP défensifs.
+- [x] Définir PostgreSQL 18.4, volume nommé, réseau privé et healthcheck `pg_isready`.
+- [x] Faire dépendre le backend de PostgreSQL et AIStor sains, puis le frontend du backend sain.
+- [x] Ajouter healthchecks, limites raisonnables et arrêt gracieux.
+- [x] Créer `.env.example` sans secret utilisable et ignorer `.env`.
+- [x] Ajouter les cibles Makefile application/test/build avec aide auto-documentée.
 
 **Commandes de validation :**
 
 ```powershell
 docker compose config
 docker compose build --pull
-docker compose up -d
+docker compose up -d --wait
 docker compose ps
 curl.exe http://localhost:8080/actuator/health
 curl.exe http://localhost:4200
@@ -440,10 +442,10 @@ docker compose down
 
 **Critères d'acceptation :**
 
-- [ ] Les trois services deviennent sains sans intervention manuelle.
-- [ ] Les migrations et données exemples sont présentes au premier démarrage.
-- [ ] Aucun secret ni outil de build n'est présent dans les images runtime.
-- [ ] Le frontend appelle l'API via Nginx sans CORS en production Compose.
+- [x] Les quatre services durables deviennent sains et l'initialiseur AIStor se termine avec succès.
+- [x] Les migrations et données exemples sont présentes au premier démarrage.
+- [x] Aucun secret ni outil de build n'est présent dans les images runtime.
+- [x] Le frontend appelle l'API via Nginx sans CORS en production Compose.
 
 **Dépendances :** phases 1 à 3, Docker Desktop disponible.
 

@@ -6,8 +6,8 @@ recherche, aux filtres et à la pagination afin de concentrer l'apprentissage su
 livraison.
 
 > État actuel : l'API Products, sa galerie privée S3, l'authentification JWT avec refresh rotatif,
-> le RBAC, le CRUD produits et l'administration Angular des utilisateurs sont opérationnels.
-> Les images applicatives, pipelines et briques d'observabilité restent planifiés dans le
+> le RBAC, le CRUD produits, l'administration Angular et la stack Docker Compose applicative sont
+> opérationnels. Les pipelines et briques d'observabilité restent planifiés dans le
 > [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
@@ -41,41 +41,31 @@ flowchart LR
 - JDK 25, ou Docker pour utiliser l'image Maven/JDK 25 de référence ;
 - une licence locale AIStor Free pour les tests et le stockage objet, jamais versionnée ;
 - Git ;
-- Terraform, kubectl, Minikube et GNU Make pour les phases d'infrastructure.
+- GNU Make est optionnel ; les commandes Docker Compose directes sont documentées pour Windows ;
+- Terraform, kubectl et Minikube restent requis uniquement pour les phases d'infrastructure à venir.
 
 Les versions de référence et l'état de l'outillage local sont détaillés dans le
 [plan](docs/IMPLEMENTATION_PLAN.md#socle-de-versions).
 
 ## Quick Start
 
-Le backend se valide avec un JDK 25 :
+Copier [`.env.example`](.env.example) vers `.env`, puis renseigner les valeurs laissées vides et
+faire pointer `MINIO_LICENSE_FILE` vers la licence AIStor locale. Depuis la racine :
 
 ```bash
-cd backend
-./mvnw clean verify
+docker compose config
+docker compose build --pull
+docker compose up -d --wait
+docker compose ps
 ```
 
-Le frontend se lance séparément :
+Avec GNU Make, `make application` remplace les commandes de build et de démarrage. L'arrêt normal
+préserve les données : `docker compose down` ou `make down`.
 
-```bash
-cd frontend
-npm start
-```
+Les tests natifs restent disponibles avec `./mvnw clean verify` dans `backend/`, puis `npm ci`,
+`npm run lint`, `npm run test:ci`, `npm run build` et `npm run e2e` dans `frontend/`.
 
-Les contrôles frontend disponibles sont `npm run lint`, `npm run test:ci`, `npm run build` et
-`npm run e2e`. Le backend local exige PostgreSQL, AIStor Free ainsi que les variables d'identité
-et de stockage documentées dans [`.env.example`](.env.example).
-
-Après avoir créé un `.env` local, renseigné `MINIO_SECRET_KEY` et placé la licence au chemin
-`MINIO_LICENSE_FILE`, les dépendances de données démarrent depuis la racine :
-
-```bash
-docker compose up -d postgres object-storage
-```
-
-Les images Docker du backend et du frontend restent prévues pour une phase ultérieure.
-
-## URLs prévues
+## URLs locales
 
 | Service | URL locale |
 |---|---|
@@ -84,25 +74,21 @@ Les images Docker du backend et du frontend restent prévues pour une phase ult�
 | Swagger UI | <http://localhost:8080/swagger-ui.html> |
 | Stockage objet S3 | <http://localhost:9000> |
 | Console AIStor | <http://localhost:9001> |
-| SonarQube | <http://localhost:9000> (planifié ; port partagé avec AIStor, services non simultanés sans reconfiguration) |
-| JFrog | <http://localhost:8082> |
-| Prometheus | <http://localhost:9090> |
-| Grafana | <http://localhost:3000> |
 
 ## Commandes principales
 
 ```bash
 make help
+make application
 make test
-make docker-up
-make devops-up
-make k8s-deploy
+make status
+make logs
+make down
 ```
-
-Ces commandes seront ajoutées au fil des phases correspondantes.
 
 ## Documentation
 
 - [Index documentaire](docs/README.md)
+- [Images et stack Docker Compose](docs/infrastructure/docker.md)
 - [Plan d'implémentation](docs/IMPLEMENTATION_PLAN.md)
 - [Cahier des charges](Prompt-DevSecOps-Lab.md)

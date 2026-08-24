@@ -30,11 +30,14 @@ class MinioObjectStorageIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        var endpoint = "http://" + OBJECT_STORAGE.getHost() + ":" + OBJECT_STORAGE.getMappedPort(9000);
         var properties = new MinioProperties(
-                "http://" + OBJECT_STORAGE.getHost() + ":" + OBJECT_STORAGE.getMappedPort(9000),
+                endpoint,
+                endpoint,
                 S3ContainerSupport.ACCESS_KEY,
                 S3ContainerSupport.SECRET_KEY,
-                S3ContainerSupport.BUCKET);
+                S3ContainerSupport.BUCKET,
+                "us-east-1");
         objectStorage = new MinioObjectStorage(properties);
         new ObjectStorageInitializer(objectStorage).run(null);
     }
