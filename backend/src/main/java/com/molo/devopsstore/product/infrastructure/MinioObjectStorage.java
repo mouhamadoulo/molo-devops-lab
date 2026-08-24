@@ -27,12 +27,19 @@ public class MinioObjectStorage implements ObjectStorage {
     private static final Duration MAX_PRESIGNED_URL_DURATION = Duration.ofDays(7);
 
     private final MinioClient client;
+    private final MinioClient presigningClient;
     private final String bucket;
 
     public MinioObjectStorage(MinioProperties properties) {
         Objects.requireNonNull(properties, "properties must not be null");
         this.client = MinioClient.builder()
                 .endpoint(properties.endpoint())
+                .region(properties.region())
+                .credentials(properties.accessKey(), properties.secretKey())
+                .build();
+        this.presigningClient = MinioClient.builder()
+                .endpoint(properties.publicEndpoint())
+                .region(properties.region())
                 .credentials(properties.accessKey(), properties.secretKey())
                 .build();
         this.bucket = properties.bucket();
@@ -118,7 +125,7 @@ public class MinioObjectStorage implements ObjectStorage {
             throw new IllegalArgumentException("duration must not exceed seven days");
         }
 
-        return execute(() -> URI.create(client.getPresignedObjectUrl(
+        return execute(() -> URI.create(presigningClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.GET)
                         .bucket(bucket)

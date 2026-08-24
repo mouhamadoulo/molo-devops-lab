@@ -6,9 +6,9 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-devops_store}
       POSTGRES_USER: ${DB_USERNAME:-devops_store}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-devops_store}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql
     healthcheck:
@@ -20,6 +20,12 @@ services:
     networks:
       - application
     restart: unless-stopped
+    stop_grace_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    cpus: 1.0
+    mem_limit: 512m
+    pids_limit: 200
 
   object-storage-permissions:
     image: quay.io/minio/aistor/minio:RELEASE.2026-04-14T21-32-45Z@sha256:3fe2c9acc9bf79ce982fa61d4befb97556a34e44e278395152ed54de471bb95d
@@ -30,6 +36,17 @@ services:
     networks:
       - application
     restart: "no"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_READ_SEARCH
+    cpus: 0.25
+    mem_limit: 128m
+    pids_limit: 50
 
   object-storage:
     image: quay.io/minio/aistor/minio:RELEASE.2026-04-14T21-32-45Z@sha256:3fe2c9acc9bf79ce982fa61d4befb97556a34e44e278395152ed54de471bb95d
@@ -47,12 +64,12 @@ services:
       MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-devops_store}
       MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:?Set MINIO_SECRET_KEY in .env}
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "127.0.0.1:${MINIO_API_PORT:-9000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - object-storage-data:/mnt/data
       - type: bind
-        source: ${MINIO_LICENSE_FILE:-./minio.license}
+        source: ${MINIO_LICENSE_FILE:?Set MINIO_LICENSE_FILE in .env}
         target: /run/secrets/minio.license
         read_only: true
     healthcheck:
@@ -68,13 +85,110 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
     networks:
       - application
     restart: unless-stopped
+    stop_grace_period: 30s
+    cpus: 1.0
+    mem_limit: 1g
+    pids_limit: 200
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: devops-store-backend:local
+    user: "10001:10001"
+    init: true
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-devops_store}
+      DB_USERNAME: ${DB_USERNAME:-devops_store}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:4200}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
+      JWT_ISSUER: ${JWT_ISSUER:-https://devops-store.local}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:?Set BOOTSTRAP_ADMIN_EMAIL in .env}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?Set BOOTSTRAP_ADMIN_PASSWORD in .env}
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:?Set BOOTSTRAP_ADMIN_NAME in .env}
+      AUTH_COOKIE_SECURE: "false"
+      MINIO_ENDPOINT: http://object-storage:9000
+      MINIO_PUBLIC_ENDPOINT: ${MINIO_PUBLIC_ENDPOINT:-http://localhost:9000}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-devops_store}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:?Set MINIO_SECRET_KEY in .env}
+      MINIO_BUCKET: ${MINIO_BUCKET:-devops-store-products}
+      MINIO_REGION: ${MINIO_REGION:-us-east-1}
+      MINIO_INITIALIZE_BUCKET: "true"
+      MINIO_ORPHAN_MIN_AGE: ${MINIO_ORPHAN_MIN_AGE:-24h}
+      MINIO_ORPHAN_RECONCILIATION_INTERVAL: ${MINIO_ORPHAN_RECONCILIATION_INTERVAL:-1h}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      object-storage:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 18
+      start_period: 20s
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - application
+    restart: unless-stopped
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+    cpus: 1.0
+    mem_limit: 768m
+    pids_limit: 300
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: devops-store-frontend:local
+    user: "101:101"
+    init: true
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-4200}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:8080/"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=32m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - application
+    restart: unless-stopped
+    stop_signal: SIGQUIT
+    stop_grace_period: 15s
+    cpus: 0.5
+    mem_limit: 128m
+    pids_limit: 100
 
 networks:
   application:
-    name: devops-store-application
+    driver: bridge
 
 volumes:
   postgres-data:

@@ -16,6 +16,7 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [Contexte produit](../PRODUCT.md) | Public, personnalité, anti-références et principes d'accessibilité de la console |
 | [Décision stockage objet](architecture/object-storage-decision.md) | AIStor Free local, licence, sécurité et portabilité S3 |
 | [Tests et couverture](devops/testing.md) | Pyramide de tests, rapports JaCoCo/LCOV et scénarios manuels critiques |
+| [Images et stack Docker Compose](infrastructure/docker.md) | Images non-root, démarrage local, réseau, santé et dépannage |
 
 ## Architecture
 
@@ -39,7 +40,7 @@ Documents créés pendant les phases d'industrialisation :
 
 ## Infrastructure
 
-- `infrastructure/docker.md` — images et stacks Docker Compose ;
+- [Images et stack Docker Compose](infrastructure/docker.md) — images, réseau et exploitation locale ;
 - `infrastructure/terraform.md` — configuration JFrog avec Terraform ;
 - `infrastructure/kubernetes.md` — déploiement Minikube et gestion des secrets.
 
