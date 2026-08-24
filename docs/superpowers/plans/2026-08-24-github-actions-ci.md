@@ -653,7 +653,7 @@ updates:
         patterns: ['*']
         update-types: [minor, patch]
 
-  - package-ecosystem: docker
+  - package-ecosystem: docker-compose
     directory: /
     schedule:
       interval: weekly
@@ -725,15 +725,18 @@ Run:
 
 ```powershell
 $dependabot = Get-Content -Raw -Encoding UTF8 .github/dependabot.yml
-foreach ($ecosystem in @('maven', 'npm', 'github-actions', 'docker')) {
+foreach ($ecosystem in @('maven', 'npm', 'github-actions', 'docker-compose', 'docker')) {
   if ($dependabot -notmatch "package-ecosystem: $ecosystem") { throw "Missing ecosystem: $ecosystem" }
 }
-if (($dependabot | Select-String -Pattern 'package-ecosystem: docker' -AllMatches).Matches.Count -ne 3) {
-  throw 'Docker updates must cover root, backend and frontend'
+if (($dependabot | Select-String -Pattern '(?m)^\s*- package-ecosystem: docker-compose\s*$' -AllMatches).Matches.Count -ne 1) {
+  throw 'Docker Compose updates must cover the root manifest'
+}
+if (($dependabot | Select-String -Pattern '(?m)^\s*- package-ecosystem: docker\s*$' -AllMatches).Matches.Count -ne 2) {
+  throw 'Docker updates must cover the backend and frontend Dockerfiles'
 }
 ```
 
-Expected: four ecosystems are present and Docker has three directories.
+Expected: five ecosystems are present, with Docker Compose at the root and Docker in two directories.
 
 - [ ] **Step 5: Review the task diff**
 
@@ -838,8 +841,8 @@ Le backend requiert Docker et `MINIO_LICENSE_FILE`. Le build Docker ne publie au
 ## Permissions et dépendances
 
 Tous les workflows utilisent uniquement `contents: read`. Chaque action est épinglée à un SHA
-complet avec sa version en commentaire. Dependabot vérifie Maven, npm, GitHub Actions et Docker
-chaque semaine.
+complet avec sa version en commentaire. Dependabot vérifie Maven, npm, GitHub Actions, Docker
+Compose et Docker chaque semaine.
 
 ## Diagnostic
 
@@ -1114,6 +1117,6 @@ Expected: the Pull Request includes the evidence commit and remains green.
 - [ ] Both Dockerfiles build locally and in GitHub Actions.
 - [ ] Reports upload with `always()` and remain available for 14 days.
 - [ ] Actions and Dependabot both contain `MINIO_LICENSE_B64`, with no value in logs or Git.
-- [ ] Dependabot covers Maven, npm, GitHub Actions and all three Docker directories.
+- [ ] Dependabot covers Maven, npm, GitHub Actions, the root Compose manifest and both Dockerfiles.
 - [ ] Documentation matches the observed hosted behavior before phase 6 is declared complete.
 - [ ] `git diff --check` passes and the final working tree contains no unrelated changes.

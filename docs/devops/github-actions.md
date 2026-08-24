@@ -57,8 +57,8 @@ docker build --file frontend/Dockerfile --tag devops-store-frontend:ci frontend
 ## Permissions et dépendances
 
 Tous les workflows utilisent uniquement `contents: read`. Chaque action est épinglée à un SHA
-complet avec sa version en commentaire. Dependabot vérifie Maven, npm, GitHub Actions et Docker
-chaque semaine.
+complet avec sa version en commentaire. Dependabot vérifie Maven, npm, GitHub Actions, le manifeste
+Docker Compose racine et les Dockerfiles backend/frontend chaque semaine.
 
 ## Preuves hébergées
 

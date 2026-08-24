@@ -501,7 +501,7 @@ git log --oneline --decorate -5
 - [x] Définir `permissions: contents: read` par défaut sans élévation superflue.
 - [x] Épingler toutes les actions par SHA complet avec commentaire de version.
 - [x] Exécuter `actionlint` depuis une image épinglée par digest.
-- [x] Activer Dependabot pour npm, Maven, GitHub Actions et Docker.
+- [x] Activer Dependabot pour npm, Maven, GitHub Actions, Docker Compose et Docker.
 
 **Commandes de validation :**
 
