@@ -22,7 +22,7 @@ fichier depuis un secret sans l'ajouter au dépôt ou aux logs.
 - conserver les rapports de tests et de couverture même après un échec ;
 - limiter le `GITHUB_TOKEN` à la lecture du dépôt ;
 - épingler chaque action tierce à un SHA complet vérifié ;
-- activer Dependabot pour Maven, npm, GitHub Actions et Docker ;
+- activer Dependabot pour Maven, npm, GitHub Actions, Docker Compose et Docker ;
 - rendre les workflows vérifiables localement avec `actionlint`.
 
 ## Hors périmètre
@@ -161,7 +161,7 @@ celles du plan : Java 25 et Node.js 24.18.0.
 - Maven dans `/backend` ;
 - npm dans `/frontend` ;
 - GitHub Actions à la racine ;
-- Docker dans `/`, `/backend` et `/frontend`.
+- Docker Compose à la racine, puis Docker dans `/backend` et `/frontend`.
 
 Les mises à jour mineures et correctives compatibles sont regroupées par écosystème afin de
 réduire le bruit. Les mises à jour majeures restent isolées pour faciliter la revue. Le nombre de
