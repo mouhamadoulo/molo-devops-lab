@@ -7,9 +7,10 @@ livraison.
 
 > État actuel : l'API Products, sa galerie privée S3, l'authentification JWT avec refresh rotatif,
 > le RBAC, le CRUD produits, l'administration Angular et la stack Docker Compose applicative sont
-> opérationnels. Les workflows GitHub Actions et Dependabot sont définis ; leur validation
-> hébergée reste à observer avant de déclarer la phase terminée. Les autres briques DevSecOps et
-> d'observabilité restent planifiées dans le [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
+> opérationnels. Les workflows GitHub Actions et Dependabot sont configurés et validés par la
+> [Pull Request #6](https://github.com/mouhamadoulo/molo-devops-lab/pull/6). Les autres briques
+> DevSecOps et d'observabilité restent planifiées dans le
+> [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
 

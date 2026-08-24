@@ -41,8 +41,8 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   et mobile de la console sont implémentés.
 - Docker Compose fournit Nginx, le backend, PostgreSQL et AIStor Free ; les images applicatives
   multi-stage non-root et leur démarrage ordonné sont disponibles.
-- Les workflows GitHub Actions, actionlint et Dependabot sont validés localement ; leur exécution
-  hébergée doit encore être observée avant de clore la phase.
+- Les workflows GitHub Actions, actionlint et Dependabot sont validés localement et sur la Pull
+  Request #6 ; les rapports backend et frontend sont conservés 14 jours.
 - Docker 29.2.1, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0,
   Maven 3.9.13, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
@@ -512,9 +512,9 @@ docker run --rm -v "${PWD}:/repo" -w /repo rhysd/actionlint:1.7.12@sha256:b1934e
 
 **Critères d'acceptation :**
 
-- [ ] Backend et frontend ont des jobs indépendants et reproductibles.
-- [ ] Aucun secret n'est disponible sur un job qui n'en a pas besoin.
-- [ ] Les builds locaux et CI exécutent les mêmes commandes.
+- [x] Backend et frontend ont des jobs indépendants et reproductibles.
+- [x] Aucun secret n'est disponible sur un job qui n'en a pas besoin.
+- [x] Les builds locaux et CI exécutent les mêmes commandes.
 
 **Dépendances :** phases 3 à 5 ; GitHub requis pour l'exécution hébergée.
 

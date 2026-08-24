@@ -60,6 +60,21 @@ Tous les workflows utilisent uniquement `contents: read`. Chaque action est épi
 complet avec sa version en commentaire. Dependabot vérifie Maven, npm, GitHub Actions et Docker
 chaque semaine.
 
+## Preuves hébergées
+
+La [Pull Request #6](https://github.com/mouhamadoulo/molo-devops-lab/pull/6), à la révision
+`34b7dbd`, fournit les preuves suivantes le 24 août 2026 :
+
+| Contrôle | Run | Résultat | Artefact |
+|---|---|---|---|
+| Backend CI | [32741521307](https://github.com/mouhamadoulo/molo-devops-lab/actions/runs/32741521307) | 110 tests, succès | `backend-reports-32741521307-1`, 14 jours |
+| Frontend CI | [32741521323](https://github.com/mouhamadoulo/molo-devops-lab/actions/runs/32741521323) | 105 tests, succès | `frontend-coverage-32741521323-1`, 14 jours |
+| Docker CI | [32741521309](https://github.com/mouhamadoulo/molo-devops-lab/actions/runs/32741521309) | images backend et frontend construites | aucune publication |
+
+Le premier run backend a révélé que `backend/mvnw` était enregistré sans bit exécutable. Le
+commit `34b7dbd` a restauré le mode `100755` sans modifier le contenu du wrapper ; le nouveau run
+backend a ensuite réussi.
+
 ## Diagnostic
 
 - licence absente : vérifier le nom dans les deux magasins de secrets ;
