@@ -2,8 +2,8 @@
 
 La stratégie de test privilégie les comportements utiles : tests unitaires rapides, tests
 d'intégration contre les dépendances réelles, puis parcours navigateur ciblés. Aucun seuil global
-de couverture n'est imposé ; les rapports servent à repérer les zones non exercées et seront
-importés par SonarQube en phase 7.
+de couverture n'est imposé ; les rapports servent à repérer les zones non exercées et sont
+importés par les projets SonarQube backend et frontend.
 
 ## Validation automatisée
 
@@ -29,10 +29,11 @@ Les rapports générés sont :
 - `backend/target/site/jacoco/jacoco.xml` pour JaCoCo ;
 - `backend/target/site/jacoco/index.html` pour la lecture locale ;
 - `frontend/coverage/frontend/lcov.info` pour Angular/Vitest ;
-- `frontend/coverage/frontend/index.html` pour la lecture locale.
+- `frontend/coverage/frontend/index.html` pour la lecture locale ;
+- `frontend/sonar-report.xml` pour le format Generic Test Execution de SonarQube.
 
-Ces chemins sont les entrées à déclarer dans la configuration SonarQube de la phase 7. Les
-répertoires de rapports restent générés et ne sont pas versionnés.
+Ces chemins sont consommés par les configurations SonarQube. Les rapports restent générés et ne
+sont pas versionnés.
 
 ## Scénarios critiques encore manuels
 

@@ -19,6 +19,7 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [Images et stack Docker Compose](infrastructure/docker.md) | Images non-root, démarrage local, réseau, santé et dépannage |
 | [Workflow Git et GitHub](devops/git-workflow.md) | Branches, commits, Pull Requests, tags, releases et retour arrière |
 | [GitHub Actions](devops/github-actions.md) | Workflows CI, artefacts, permissions, secrets et dépannage |
+| [SonarQube](devops/sonarqube.md) | Stack qualité locale, analyses backend/frontend, quality gates et CI conditionnelle |
 
 ## Architecture
 
@@ -36,7 +37,7 @@ Documents créés pendant les phases d'industrialisation :
 - `devops/toolchain.md` — chaîne DevSecOps et diagramme Mermaid ;
 - [Workflow Git et GitHub](devops/git-workflow.md) — branches, commits, Pull Requests, tags et releases ;
 - [GitHub Actions](devops/github-actions.md) — workflows CI, artefacts, permissions, secrets et dépannage ;
-- `devops/sonarqube.md` — analyse qualité locale et CI ;
+- [SonarQube](devops/sonarqube.md) — analyse qualité locale et CI ;
 - `devops/trivy.md` — scans filesystem, dépendances, images et IaC ;
 - `devops/jfrog-artifactory.md` — Maven, repositories et limites de licence.
 

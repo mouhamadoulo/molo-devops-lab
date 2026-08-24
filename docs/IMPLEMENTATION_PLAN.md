@@ -527,30 +527,42 @@ Maven/frontend, workflow qualité et `docs/devops/sonarqube.md`.
 
 **Implémentation :**
 
-- [ ] Ajouter SonarQube Community 26.7 et sa base PostgreSQL dédiée au profil `quality`.
-- [ ] Allouer les ressources et volumes requis par Elasticsearch/SonarQube.
-- [ ] Créer des projets backend/frontend ou une analyse monorepo documentée et reproductible.
-- [ ] Importer JaCoCo XML et LCOV, exclure uniquement generated/dist/target/node_modules.
-- [ ] Exécuter un smoke scan réel de sources Java 25 et TypeScript 6.
-- [ ] Si le scanner embarqué refuse TypeScript 6, mettre à jour vers la première Community Build
-  qui embarque SonarJS 13.x compatible, repinner l'image et consigner la preuve.
-- [ ] Ajouter l'analyse CI conditionnelle à `SONAR_HOST_URL` et `SONAR_TOKEN`.
-- [ ] Documenter quality gate, token local, RAM et nettoyage.
+- [x] Ajouter SonarQube Community 26.7 et sa base PostgreSQL dédiée au profil `quality`.
+- [x] Allouer les ressources et volumes requis par Elasticsearch/SonarQube.
+- [x] Créer deux projets backend/frontend documentés et reproductibles.
+- [x] Importer JaCoCo XML, Surefire, LCOV et Vitest sans retirer les tests de l'analyse.
+- [x] Exécuter un smoke scan réel de sources Java 25 et TypeScript 6.
+- [x] Vérifier la compatibilité : SonarJS 13.1.0.42921 analyse TypeScript 6.0.3 sans changement
+  d'image SonarQube.
+- [x] Ajouter l'analyse CI conditionnelle à `SONAR_HOST_URL` et `SONAR_TOKEN`.
+- [x] Documenter quality gate, token local, RAM et nettoyage.
 
 **Commandes de validation :**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile quality config
-docker compose -f docker-compose.devops.yml --profile quality up -d
+docker compose -f docker-compose.devops.yml --profile quality up -d --wait
 curl.exe http://localhost:9000/api/system/status
-.\backend\mvnw.cmd clean verify sonar:sonar
+.\backend\mvnw.cmd clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
+Set-Location frontend
+npm ci
+npm run lint
+npm run test:ci
+npm run build
+$env:SONAR_SCANNER_JAVA_EXE_PATH = Join-Path $env:JAVA_HOME 'bin\java.exe'
+npm run sonar
 ```
 
 **Critères d'acceptation :**
 
-- [ ] Les analyses Java 25 et TypeScript 6 finissent sans erreur de parsing/version.
-- [ ] Tests et couverture apparaissent dans SonarQube.
-- [ ] Token et mot de passe ne figurent dans aucun fichier suivi.
+- [x] Les analyses Java 25 et TypeScript 6 finissent sans erreur de parsing/version.
+- [x] Tests et couverture apparaissent dans SonarQube.
+- [x] Token et mot de passe ne figurent dans aucun fichier suivi.
+
+**Preuve locale du 24 août 2026 :** SonarQube 26.7.0.124771 a accepté les deux quality gates.
+Le backend publie 110 tests et 87,6 % de couverture ; le frontend publie 105 tests et 89,1 % de
+couverture. Sur Windows ARM64, le Scanner NPM utilise Java 25 x64 via
+`SONAR_SCANNER_JAVA_EXE_PATH`, car aucun JRE embarqué ARM64 Windows n'est distribué.
 
 **Dépendances :** phases 3, 4 et 6 ; au moins 4 Go de RAM disponibles pour SonarQube.
 

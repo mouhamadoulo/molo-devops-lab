@@ -74,7 +74,11 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "coverageReporters": ["html", "lcov"]
+            "coverageReporters": ["html", "lcov"],
+            "reporters": [
+              "default",
+              ["vitest-sonar-reporter", { "outputFile": "sonar-report.xml" }]
+            ]
           }
         },
         "lint": {
