@@ -17,6 +17,7 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [Décision stockage objet](architecture/object-storage-decision.md) | AIStor Free local, licence, sécurité et portabilité S3 |
 | [Tests et couverture](devops/testing.md) | Pyramide de tests, rapports JaCoCo/LCOV et scénarios manuels critiques |
 | [Images et stack Docker Compose](infrastructure/docker.md) | Images non-root, démarrage local, réseau, santé et dépannage |
+| [Workflow Git et GitHub](devops/git-workflow.md) | Branches, commits, Pull Requests, tags, releases et retour arrière |
 
 ## Architecture
 
@@ -32,7 +33,7 @@ Documents créés pendant les phases application :
 Documents créés pendant les phases d'industrialisation :
 
 - `devops/toolchain.md` — chaîne DevSecOps et diagramme Mermaid ;
-- `devops/git-workflow.md` — branches, commits, Pull Requests, tags et releases ;
+- [Workflow Git et GitHub](devops/git-workflow.md) — branches, commits, Pull Requests, tags et releases ;
 - `devops/github-actions.md` — workflows CI et secrets ;
 - `devops/sonarqube.md` — analyse qualité locale et CI ;
 - `devops/trivy.md` — scans filesystem, dépendances, images et IaC ;

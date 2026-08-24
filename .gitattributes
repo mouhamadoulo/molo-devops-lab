@@ -1,0 +1,19 @@
+* text=auto eol=lf
+
+# Windows launchers keep native line endings.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Unix launchers must remain executable-friendly.
+*.sh text eol=lf
+mvnw text eol=lf
+
+# Binary assets must never be normalized as text.
+*.gif binary
+*.ico binary
+*.jpeg binary
+*.jpg binary
+*.license binary
+*.pdf binary
+*.png binary
+*.webp binary

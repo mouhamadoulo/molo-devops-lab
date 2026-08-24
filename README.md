@@ -90,5 +90,6 @@ make down
 
 - [Index documentaire](docs/README.md)
 - [Images et stack Docker Compose](docs/infrastructure/docker.md)
+- [Workflow Git et GitHub](docs/devops/git-workflow.md)
 - [Plan d'implémentation](docs/IMPLEMENTATION_PLAN.md)
 - [Cahier des charges](Prompt-DevSecOps-Lab.md)

@@ -458,12 +458,12 @@ docker compose down
 
 **Implémentation :**
 
-- [ ] Initialiser Git, créer le premier commit Conventional Commits puis les branches convenues.
-- [ ] Ignorer secrets, états Terraform, sorties de build, IDE, logs et volumes locaux.
-- [ ] Normaliser UTF-8 et LF, tout en conservant les scripts Windows nécessaires.
-- [ ] Créer un modèle PR avec tests, sécurité, documentation et rollback.
-- [ ] Documenter `main`, `develop`, `feature/*`, `fix/*`, review, merge, tag et release.
-- [ ] Configurer le remote GitHub uniquement quand son URL est fournie.
+- [x] Conserver `main` comme branche durable et utiliser des branches courtes par Pull Request.
+- [x] Ignorer secrets, états Terraform, sorties de build, IDE, logs et volumes locaux.
+- [x] Normaliser UTF-8 et LF, tout en conservant les scripts Windows nécessaires.
+- [x] Créer un modèle PR avec tests, sécurité, documentation et rollback.
+- [x] Documenter GitHub Flow, `codex/*`, `feature/*`, `fix/*`, review, merge, tag et release.
+- [x] Configurer le remote GitHub uniquement quand son URL est fournie.
 
 **Commandes de validation :**
 
@@ -475,9 +475,9 @@ git log --oneline --decorate -5
 
 **Critères d'acceptation :**
 
-- [ ] L'historique commence par des commits intentionnels et lisibles.
-- [ ] Un fichier secret de test est correctement ignoré sans être ajouté à Git.
-- [ ] Le modèle PR permet de vérifier fonctionnel, tests, sécurité et documentation.
+- [x] L'historique commence par des commits intentionnels et lisibles.
+- [x] Un fichier secret de test est correctement ignoré sans être ajouté à Git.
+- [x] Le modèle PR permet de vérifier fonctionnel, tests, sécurité et documentation.
 
 **Dépendances :** phase 4 ; compte/dépôt GitHub requis uniquement pour push et PR.
 
