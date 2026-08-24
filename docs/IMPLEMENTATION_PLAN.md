@@ -380,14 +380,14 @@ couverture Maven et Angular/Vitest.
 
 **Implémentation :**
 
-- [ ] Compléter les tests unitaires `ProductService` avec Mockito et AssertJ.
-- [ ] Tester le controller : validation, filtres, 404, 409 éventuel et Problem Details.
-- [ ] Tester repository et migrations sur PostgreSQL 18 avec `@ServiceConnection` Testcontainers.
-- [ ] Ajouter un test d'intégration API complet sans mock de PostgreSQL.
-- [ ] Tester `ProductsApi` avec `provideHttpClientTesting()` après `provideHttpClient()`.
-- [ ] Tester store, formulaires, loading, erreur, liste vide, filtres et opérations CRUD critiques.
-- [ ] Produire JaCoCo XML côté backend et LCOV côté frontend sans seuil artificiel global.
-- [ ] Documenter les scénarios critiques non automatisés et leur justification.
+- [x] Compléter les tests unitaires `ProductService` avec Mockito et AssertJ.
+- [x] Tester le controller : validation, filtres, 404, 409 éventuel et Problem Details.
+- [x] Tester repository et migrations sur PostgreSQL 18 avec `@ServiceConnection` Testcontainers.
+- [x] Ajouter un test d'intégration API complet sans mock de PostgreSQL.
+- [x] Tester `ProductsApi` avec `provideHttpClientTesting()` après `provideHttpClient()`.
+- [x] Tester store, formulaires, loading, erreur, liste vide, filtres et opérations CRUD critiques.
+- [x] Produire JaCoCo XML côté backend et LCOV côté frontend sans seuil artificiel global.
+- [x] Documenter les scénarios critiques non automatisés et leur justification.
 
 **Commandes de validation :**
 
@@ -401,10 +401,10 @@ npm run build
 
 **Critères d'acceptation :**
 
-- [ ] ProductService, ProductController et ProductRepository ont des tests pertinents.
-- [ ] Les tests PostgreSQL échouent clairement si Docker n'est pas accessible.
-- [ ] Les rapports XML/LCOV sont générés aux chemins consommés par SonarQube.
-- [ ] Aucun test ne dépend de l'ordre d'exécution ou d'un port hôte fixe.
+- [x] ProductService, ProductController et ProductRepository ont des tests pertinents.
+- [x] Les tests PostgreSQL échouent clairement si Docker n'est pas accessible.
+- [x] Les rapports XML/LCOV sont générés aux chemins consommés par SonarQube.
+- [x] Aucun test ne dépend de l'ordre d'exécution ou d'un port hôte fixe.
 
 **Dépendances :** phases 1 et 2.
 
