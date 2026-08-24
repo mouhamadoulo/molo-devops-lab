@@ -33,7 +33,7 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 
 ---
 
-## État du dépôt au 23 août 2026
+## État du dépôt au 24 août 2026
 
 - Le dépôt Git contient le backend, l'identité/RBAC, la galerie privée d'images produits, le CRUD
   produits Angular et l'administration des utilisateurs réservée au rôle `ADMIN`.
@@ -41,6 +41,8 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   et mobile de la console sont implémentés.
 - Docker Compose fournit Nginx, le backend, PostgreSQL et AIStor Free ; les images applicatives
   multi-stage non-root et leur démarrage ordonné sont disponibles.
+- Les workflows GitHub Actions, actionlint et Dependabot sont validés localement et sur la Pull
+  Request #6 ; les rapports backend et frontend sont conservés 14 jours.
 - Docker 29.2.1, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0,
   Maven 3.9.13, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
@@ -486,32 +488,33 @@ git log --oneline --decorate -5
 **Objectif :** automatiser tests, builds et conservation des rapports avec privilèges minimaux.
 
 **Fichiers concernés :** `.github/workflows/backend-ci.yml`, `frontend-ci.yml`, `docker.yml`,
-`docs/devops/github-actions.md`.
+`.github/dependabot.yml`, `Makefile`, `frontend/package.json`, `docs/devops/github-actions.md`.
 
 **Implémentation :**
 
-- [ ] Déclencher PR, push `develop` et push `main` avec filtres de chemins pertinents.
-- [ ] Configurer Java 25 et cache Maven, puis exécuter `./mvnw clean verify`.
-- [ ] Configurer Node 24 et cache npm, puis exécuter `npm ci`, tests et build.
-- [ ] Uploader rapports de tests et couverture, même après un test échoué.
-- [ ] Construire les deux images sans publication sur les Pull Requests.
-- [ ] Définir `permissions: contents: read` par défaut et élever seulement le job nécessaire.
-- [ ] Épingler toutes les actions par SHA complet avec commentaire de version.
-- [ ] Installer `actionlint` localement ou l'exécuter depuis une image épinglée par digest.
-- [ ] Activer Dependabot pour npm, Maven, GitHub Actions et Docker.
+- [x] Déclencher les Pull Requests vers `main`, les pushes sur `main` et les lancements manuels
+  avec des filtres de chemins pertinents.
+- [x] Configurer Java 25 et cache Maven, puis exécuter `./mvnw clean verify`.
+- [x] Configurer Node 24 et cache npm, puis exécuter `npm ci`, tests et build.
+- [x] Uploader rapports de tests et couverture, même après un test échoué.
+- [x] Construire les deux images sans publication sur les Pull Requests.
+- [x] Définir `permissions: contents: read` par défaut sans élévation superflue.
+- [x] Épingler toutes les actions par SHA complet avec commentaire de version.
+- [x] Exécuter `actionlint` depuis une image épinglée par digest.
+- [x] Activer Dependabot pour npm, Maven, GitHub Actions et Docker.
 
 **Commandes de validation :**
 
 ```powershell
 rg "permissions:|uses:.*@[0-9a-f]{40}" .github/workflows
-actionlint
+docker run --rm -v "${PWD}:/repo" -w /repo rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 -color
 ```
 
 **Critères d'acceptation :**
 
-- [ ] Backend et frontend ont des jobs indépendants et reproductibles.
-- [ ] Aucun secret n'est disponible sur un job qui n'en a pas besoin.
-- [ ] Les builds locaux et CI exécutent les mêmes commandes.
+- [x] Backend et frontend ont des jobs indépendants et reproductibles.
+- [x] Aucun secret n'est disponible sur un job qui n'en a pas besoin.
+- [x] Les builds locaux et CI exécutent les mêmes commandes.
 
 **Dépendances :** phases 3 à 5 ; GitHub requis pour l'exécution hébergée.
 

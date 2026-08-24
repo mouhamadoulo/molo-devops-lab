@@ -1,0 +1,76 @@
+name: Backend CI
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: backend
+
+jobs:
+  verify:
+    name: Verify backend
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Prepare AIStor license
+        env:
+          MINIO_LICENSE_B64: ${{ secrets.MINIO_LICENSE_B64 }}
+        run: |
+          if [[ -z "$MINIO_LICENSE_B64" ]]; then
+            echo "MINIO_LICENSE_B64 must exist in Actions or Dependabot secrets" >&2
+            exit 1
+          fi
+          license_path="$RUNNER_TEMP/minio.license"
+          printf '%s' "$MINIO_LICENSE_B64" | base64 --decode > "$license_path"
+          chmod 600 "$license_path"
+          echo "MINIO_LICENSE_FILE=$license_path" >> "$GITHUB_ENV"
+
+      - name: Verify backend
+        run: ./mvnw -B clean verify
+
+      - name: Upload backend reports
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: backend-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            backend/target/surefire-reports/**
+            backend/target/site/jacoco/**
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Remove AIStor license
+        if: ${{ always() }}
+        run: rm -f "${MINIO_LICENSE_FILE:-$RUNNER_TEMP/minio.license}"
