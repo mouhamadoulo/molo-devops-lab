@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -19,12 +19,12 @@
 
     <properties>
         <java.version>25</java.version>
-        <springdoc.version>3.0.3</springdoc.version>
+        <springdoc.version>3.1.0</springdoc.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <jacoco.version>0.8.15</jacoco.version>
-        <minio.version>9.0.1</minio.version>
-        <okhttp.version>5.3.2</okhttp.version>
-        <twelvemonkeys.version>3.13.1</twelvemonkeys.version>
+        <minio.version>9.0.3</minio.version>
+        <okhttp.version>5.5.0</okhttp.version>
+        <twelvemonkeys.version>3.14.0</twelvemonkeys.version>
     </properties>
 
     <dependencies>
