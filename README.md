@@ -10,7 +10,8 @@ livraison.
 > opérationnels. Les workflows GitHub Actions et Dependabot sont configurés et validés par la
 > [Pull Request #6](https://github.com/mouhamadoulo/molo-devops-lab/pull/6). SonarQube analyse
 > localement les projets backend et frontend avec leurs tests et leur couverture ; un workflow
-> conditionnel prépare la même analyse en CI. Trivy, JFrog, l'infrastructure et l'observabilité
+> conditionnel prépare la même analyse en CI. Trivy contrôle le dépôt, les dépendances, les
+> configurations et les images localement et en CI. JFrog, l'infrastructure et l'observabilité
 > restent planifiés dans le
 > [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
@@ -96,6 +97,11 @@ make down
 make quality-up
 make sonar
 make quality-down
+make trivy-verify
+make trivy-fs
+make trivy-config
+make trivy-images
+make security
 ```
 
 ## Documentation
@@ -105,5 +111,6 @@ make quality-down
 - [Workflow Git et GitHub](docs/devops/git-workflow.md)
 - [GitHub Actions](docs/devops/github-actions.md)
 - [Qualité SonarQube](docs/devops/sonarqube.md)
+- [Sécurité Trivy](docs/devops/trivy.md)
 - [Plan d'implémentation](docs/IMPLEMENTATION_PLAN.md)
 - [Cahier des charges](Prompt-DevSecOps-Lab.md)

@@ -33,7 +33,7 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 
 ---
 
-## État du dépôt au 24 août 2026
+## État du dépôt au 29 août 2026
 
 - Le dépôt Git contient le backend, l'identité/RBAC, la galerie privée d'images produits, le CRUD
   produits Angular et l'administration des utilisateurs réservée au rôle `ADMIN`.
@@ -43,11 +43,13 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   multi-stage non-root et leur démarrage ordonné sont disponibles.
 - Les workflows GitHub Actions, actionlint et Dependabot sont validés localement et sur la Pull
   Request #6 ; les rapports backend et frontend sont conservés 14 jours.
-- Docker 29.2.1, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0,
+- Trivy scanne le dépôt, les dépendances, les configurations et les images localement et en CI ;
+  les rapports texte et SARIF sont conservés 14 jours.
+- Docker 29.7.2, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0,
   Maven 3.9.13, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
   `maven:3.9.13-eclipse-temurin-25` compatible ARM64.
-- Terraform, Minikube et GNU Make ne sont pas encore installés.
+- Terraform et Minikube ne sont pas encore installés ; GNU Make 3.81 est disponible sous Windows.
 - Docker fonctionne en ligne de commande, avec un avertissement d'accès au fichier de
   configuration utilisateur à recontrôler hors environnement restreint.
 
@@ -70,7 +72,7 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | MinIO AIStor Free | RELEASE.2026-04-14T21-32-45Z | Single-node licencié, corrigé pour GHSA-xh8f-g2qw-gcm7 |
 | Flyway | BOM Spring Boot 4.1 | Ajouter explicitement `flyway-database-postgresql` |
 | SonarQube Community | 26.7.0.124771-community | Support Java 25 ; scan TypeScript 6 exigé comme test d'acceptation |
-| Trivy | 0.72.0 | Version immuable postérieure à l'incident de mars 2026 |
+| Trivy | 0.73.0 | Image multi-architecture immuable, signature Cosign vérifiée avant les scans |
 | Terraform | 1.15.4 | Version stable avec binaire Windows ARM64 |
 | Provider JFrog Artifactory | 12.11.3 | Provisionnement des repositories Artifactory |
 | Minikube | 1.38.1 | Cluster local ; installer avant la phase 13 |
@@ -575,29 +577,39 @@ exception justifiée existe, `docs/devops/trivy.md`.
 
 **Implémentation :**
 
-- [ ] Installer ou conteneuriser Trivy 0.72.0 et vérifier sa signature.
-- [ ] Scanner le filesystem avec vulnérabilités, mauvaises configurations et secrets.
-- [ ] Scanner les deux images construites et `infrastructure/`.
-- [ ] Générer SARIF pour GitHub et un rapport lisible comme artefact CI.
-- [ ] Bloquer CRITICAL/HIGH corrigibles ; documenter chaque exception avec échéance.
-- [ ] Épingler `trivy-action` à un SHA complet sûr, jamais à `latest`.
-- [ ] Ajouter les commandes Makefile et la procédure de mise à jour de la base CVE.
+- [x] Conteneuriser Trivy 0.73.0 et vérifier sa signature avec Cosign.
+- [x] Scanner le filesystem avec vulnérabilités, mauvaises configurations et secrets.
+- [x] Scanner les deux images construites et les configurations Docker/IaC disponibles.
+- [x] Générer SARIF pour GitHub et un rapport lisible comme artefact CI.
+- [x] Bloquer CRITICAL/HIGH corrigibles ; documenter chaque exception avec échéance.
+- [x] Épingler `trivy-action` à un SHA complet sûr, jamais à `latest`.
+- [x] Ajouter les commandes Makefile et la procédure de mise à jour de la base CVE.
 
 **Commandes de validation :**
 
 ```powershell
-trivy --version
-trivy fs --scanners vuln,misconfig,secret .
-trivy image devops-store-backend:local
-trivy image devops-store-frontend:local
-trivy config infrastructure
+make trivy-verify
+make trivy-fs
+make trivy-config
+make build
+make trivy-images
+make security
 ```
 
 **Critères d'acceptation :**
 
-- [ ] Les quatre surfaces demandées sont scannées.
-- [ ] Le pipeline échoue selon une politique écrite, pas sur une configuration implicite.
-- [ ] Aucun ignore sans justification, propriétaire et date de révision.
+- [x] Les quatre surfaces demandées sont scannées.
+- [x] Le pipeline échoue selon une politique écrite, pas sur une configuration implicite.
+- [x] Aucun ignore sans justification, propriétaire et date de révision.
+
+**Preuve locale du 29 août 2026 :** `make security` retourne 0 avec Trivy 0.73.0, une signature
+Cosign valide, huit rapports non vides et aucune vulnérabilité HIGH/CRITICAL corrigible sur le
+dépôt, les Dockerfiles et les images backend/frontend. La validation applicative complémentaire
+réussit avec 110 tests backend, 105 tests frontend, le lint frontend et les deux builds.
+
+**Preuve GitHub du 29 août 2026 :** la [Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18)
+valide les six jobs backend, frontend, Security et Docker CI. Les quatre artefacts Trivy contiennent
+chacun un rapport texte et un rapport SARIF non vides.
 
 **Dépendances :** phases 4 et 6.
 

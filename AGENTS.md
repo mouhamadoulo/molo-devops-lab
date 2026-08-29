@@ -19,8 +19,8 @@ et l'observabilité.
   le CRUD produits et l'administration des utilisateurs ;
 - les images multi-stage backend/frontend et `docker-compose.yml` démarrent Nginx, Spring Boot,
   PostgreSQL et AIStor Free avec healthchecks ; GitHub Actions et le profil qualité SonarQube sont
-  opérationnels, tandis que les scans de sécurité, les artefacts, l'infrastructure et
-  l'observabilité restent planifiés ;
+  opérationnels ; Trivy contrôle le dépôt, les dépendances, les configurations et les images avec
+  des rapports CI, tandis que JFrog, l'infrastructure et l'observabilité restent planifiés ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
   (`frontend/package.json`, `Makefile`, fichiers Compose, etc.) n'existent pas.
 
@@ -45,14 +45,16 @@ Avant une modification importante, consulter :
 - session Angular par Signals, JWT en mémoire, refresh rotatif et navigation par rôle.
 - Docker Compose 5.1 avec PostgreSQL 18.4 et AIStor Free single-node épinglé.
 - MinIO Java 9, validation JPEG/PNG/WebP et stockage privé par URL présignée.
-- images Maven/JDK vers JRE 25 et Node 24 vers Nginx 1.29.4, avec runtimes non-root.
+- images Maven/JDK vers JRE 25 et Node 24 vers Nginx 1.31.3, avec runtimes non-root.
 - GitHub Actions et Dependabot avec actions épinglées par SHA.
 - SonarQube Community Build 26.7, Scanner Maven 5.5.0.6356, Scanner NPM 5.0.0 et import des
   rapports JaCoCo, LCOV, Surefire et Vitest.
+- Trivy 0.73.0 conteneurisé et vérifié par Cosign, avec scans filesystem, configuration et images,
+  rapports texte/SARIF et gate sur les vulnérabilités HIGH/CRITICAL corrigibles.
 
 ### Cible planifiée
 
-- Trivy et JFrog Artifactory ;
+- JFrog Artifactory ;
 - Terraform, Kubernetes/Minikube, Prometheus, Grafana, Loki et Grafana Alloy.
 
 Toujours distinguer cette cible de ce qui est réellement disponible dans le dépôt.
@@ -159,13 +161,18 @@ docker compose down
 
 Avec GNU Make, les cibles disponibles sont `help`, `application`, `build`, `test`, `backend-test`,
 `frontend-test`, `up`, `down`, `status`, `logs`, `quality-config`, `quality-up`, `quality-down`,
-`quality-status`, `quality-logs`, `quality-reset`, `sonar`, `sonar-backend` et `sonar-frontend`.
+`quality-status`, `quality-logs`, `quality-reset`, `sonar`, `sonar-backend`, `sonar-frontend`,
+`ci-lint`, `trivy-verify`, `trivy-fs`, `trivy-config`, `trivy-images` et `security`.
 `down` et `quality-down` préservent les volumes nommés ; `quality-reset` les supprime. Le fichier
 de licence reste hors Git. AIStor Free est limité au single-node sans SLA/SLO.
 
 Le profil SonarQube est documenté dans `docs/devops/sonarqube.md`. Son port 9000 par défaut entre
 en conflit avec AIStor lorsque les deux stacks sont lancées simultanément ; utiliser `SONAR_PORT`
 pour déplacer SonarQube.
+
+La politique Trivy et ses commandes sont documentées dans `docs/devops/trivy.md`. `make security`
+vérifie la provenance de l'image Trivy, prépare le cache Maven, scanne le dépôt et les
+configurations, construit les images applicatives puis les scanne.
 
 ## Tests
 
