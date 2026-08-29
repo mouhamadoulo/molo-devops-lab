@@ -1089,5 +1089,17 @@ et les deux jobs `Docker CI`, télécharger un artefact texte/SARIF de chaque su
 URLs de run. Tant que ce push n’est pas autorisé, indiquer explicitement « validation distante non
 exécutée ».
 
-Validation distante non exécutée : aucun push ni création de Pull Request n’est autorisé à ce
-stade.
+Validation distante exécutée le 29 août 2026 sur la
+[Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18) :
+
+- [Security run 33273062143](https://github.com/mouhamadoulo/molo-devops-lab/actions/runs/33273062143) :
+  scans repository et configuration réussis ; artefacts `trivy-filesystem-33273062143-1` et
+  `trivy-config-33273062143-1` téléchargés et vérifiés ;
+- [Docker CI run 33273062128](https://github.com/mouhamadoulo/molo-devops-lab/actions/runs/33273062128) :
+  builds/scans backend et frontend réussis ; artefacts `trivy-image-backend-33273062128-1` et
+  `trivy-image-frontend-33273062128-1` téléchargés et vérifiés ;
+- [Backend CI run 33273062069](https://github.com/mouhamadoulo/molo-devops-lab/actions/runs/33273062069)
+  et [Frontend CI run 33273062129](https://github.com/mouhamadoulo/molo-devops-lab/actions/runs/33273062129) :
+  succès ;
+- les quatre artefacts contiennent chacun un rapport texte et un rapport SARIF non vides ; la PR
+  est `MERGEABLE` avec l’état `CLEAN`.

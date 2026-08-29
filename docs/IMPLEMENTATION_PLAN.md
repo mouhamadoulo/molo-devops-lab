@@ -607,6 +607,10 @@ Cosign valide, huit rapports non vides et aucune vulnérabilité HIGH/CRITICAL c
 dépôt, les Dockerfiles et les images backend/frontend. La validation applicative complémentaire
 réussit avec 110 tests backend, 105 tests frontend, le lint frontend et les deux builds.
 
+**Preuve GitHub du 29 août 2026 :** la [Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18)
+valide les six jobs backend, frontend, Security et Docker CI. Les quatre artefacts Trivy contiennent
+chacun un rapport texte et un rapport SARIF non vides.
+
 **Dépendances :** phases 4 et 6.
 
 ## PHASE 9 — JFrog Artifactory
