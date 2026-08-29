@@ -1,7 +1,8 @@
 # GitHub Actions
 
-La CI sépare backend, frontend et builds Docker. Elle s'exécute sur les Pull Requests vers `main`,
-les pushes sur `main` et à la demande. Les filtres de chemins évitent les validations sans rapport.
+La CI sépare backend, frontend, builds Docker et sécurité. Elle s'exécute sur les Pull Requests vers
+`main`, les pushes sur `main` et à la demande. Les filtres de chemins évitent les validations sans
+rapport ; le workflow sécurité s'exécute aussi chaque lundi à 05:00 UTC.
 
 ## Workflows
 
@@ -9,7 +10,8 @@ les pushes sur `main` et à la demande. Les filtres de chemins évitent les vali
 |---|---|---|
 | Backend CI | Java 25, Maven, PostgreSQL et AIStor | Surefire et JaCoCo, 14 jours |
 | Frontend CI | npm, ESLint, Vitest avec couverture et build Angular | couverture HTML/LCOV, 14 jours |
-| Docker CI | images backend et frontend avec Buildx | aucune image publiée |
+| Docker CI | images backend et frontend avec Buildx, puis scans Trivy | rapports texte et SARIF Trivy, 14 jours ; aucune image publiée |
+| Security CI | filesystem, dépendances, secrets et configurations avec Trivy | rapports texte et SARIF Trivy, 14 jours |
 
 ## Licence AIStor
 
@@ -52,13 +54,24 @@ reproduire les deux constructions :
 Set-Location ..
 docker build --file backend/Dockerfile --tag devops-store-backend:ci backend
 docker build --file frontend/Dockerfile --tag devops-store-frontend:ci frontend
+make security
 ```
+
+Les scans peuvent aussi être exécutés séparément avec `make trivy-verify`, `make trivy-fs`,
+`make trivy-config` et `make trivy-images`. La politique, les rapports et la procédure de mise à
+jour sont détaillés dans le [guide Trivy](trivy.md).
 
 ## Permissions et dépendances
 
-Tous les workflows utilisent uniquement `contents: read`. Chaque action est épinglée à un SHA
-complet avec sa version en commentaire. Dependabot vérifie Maven, npm, GitHub Actions, le manifeste
-Docker Compose racine et les Dockerfiles backend/frontend chaque semaine.
+Les workflows backend et frontend utilisent uniquement `contents: read`. Les workflows Docker et
+sécurité ajoutent `actions: read` et `security-events: write` afin de pouvoir publier les SARIF dans
+GitHub Code Scanning. Cette publication reste désactivée par défaut : définir la variable de dépôt
+`ENABLE_CODE_SCANNING` à `true` pour l'activer. Elle est ignorée pour les Pull Requests Dependabot
+et celles provenant de forks, qui ne disposent pas des mêmes autorisations.
+
+Chaque action est épinglée à un SHA complet avec sa version en commentaire. Dependabot vérifie
+Maven, npm, GitHub Actions, le manifeste Docker Compose racine et les Dockerfiles backend/frontend
+chaque semaine.
 
 ## Preuves hébergées
 
@@ -83,3 +96,7 @@ backend a ensuite réussi.
 - workflow filtré : vérifier les chemins modifiés et ne pas rendre ce contrôle obligatoire sans
   contrôle agrégateur toujours exécuté ;
 - build Docker en échec : reproduire avec `docker build` sur le même contexte.
+- gate Trivy en échec : ouvrir le rapport texte correspondant dans l'artefact, appliquer la mise à
+  jour indiquée, puis relancer `make security` ;
+- upload SARIF ignoré : vérifier `ENABLE_CODE_SCANNING`, l'origine de la Pull Request et les
+  autorisations `security-events`.

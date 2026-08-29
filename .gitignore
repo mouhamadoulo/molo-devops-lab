@@ -37,4 +37,6 @@ coverage/
 *.tfstate.*
 *.tfplan
 .sonar/
+.m2/
 .trivycache/
+reports/security/

@@ -20,7 +20,7 @@
 - Réutiliser `actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` (v7.0.1), déjà validé dans le dépôt.
 - Bloquer les vulnérabilités corrigibles et toutes les alertes secret/misconfiguration de sévérité `HIGH` ou `CRITICAL`.
 - Ne créer `.trivyignore.yaml` qu’après un constat réel et une approbation portant sur l’identifiant, le chemin, la justification, le responsable et l’expiration.
-- Ne jamais versionner `reports/security/`, `.trivycache/`, une base Trivy ou une valeur de secret.
+- Ne jamais versionner `reports/security/`, `.trivycache/`, `.m2/`, une base Trivy ou une valeur de secret.
 - Ne jamais annoncer un scan, une signature ou un workflow distant comme réussi sans sortie réelle correspondante.
 - Ne créer aucun commit ni push sans autorisation explicite. Chaque étape de commit ci-dessous est conditionnelle à cette autorisation.
 - Si un worktree isolé est choisi à l’exécution, utiliser `superpowers:using-git-worktrees`. Comme la spécification et ce plan sont initialement non suivis, les committer avec autorisation ou les recréer explicitement dans le worktree avant de commencer.
@@ -55,7 +55,7 @@
 - Consumes: dépôt `main`, Docker Desktop Linux, Docker Buildx et GNU Make.
 - Produces: un espace de travail propre et une baseline dont les échecs sont attribuables à la phase 8.
 
-- [ ] **Step 1: Choisir et vérifier l’espace de travail**
+- [x] **Step 1: Choisir et vérifier l’espace de travail**
 
 Utiliser `superpowers:using-git-worktrees` si l’utilisateur choisit l’exécution isolée. Sinon,
 confirmer explicitement l’exécution dans le workspace courant.
@@ -71,7 +71,7 @@ git worktree list
 Expected: branche et worktree connus ; seuls la spécification et le plan Trivy sont nouveaux. Tout
 autre changement utilisateur est préservé et exclu du périmètre.
 
-- [ ] **Step 2: Vérifier les outils sans mutation du dépôt**
+- [x] **Step 2: Vérifier les outils sans mutation du dépôt**
 
 Run:
 
@@ -85,7 +85,7 @@ Expected: le client et le serveur Docker répondent, Buildx est disponible et GN
 L’état observé le 29 août 2026 est un HTTP 500 du moteur Docker Desktop Linux ; si cet état persiste,
 arrêter l’exécution et ne pas prétendre que la signature ou les scans sont validés.
 
-- [ ] **Step 3: Valider la CI existante avant modification**
+- [x] **Step 3: Valider la CI existante avant modification**
 
 Run:
 
@@ -96,7 +96,7 @@ docker compose config --quiet
 
 Expected: actionlint et la configuration Compose existante réussissent.
 
-- [ ] **Step 4: Construire la baseline des images**
+- [x] **Step 4: Construire la baseline des images**
 
 Run:
 
@@ -122,7 +122,7 @@ Expected: les deux images locales existent et leur inspection renvoie un digest/
 - Consumes: `DOCKER`, le registre GHCR, le registre Sigstore et les deux digests globaux.
 - Produces: `TRIVY_IMAGE`, `COSIGN_IMAGE`, `trivy-verify` et la politique `trivy.yaml` utilisée par toutes les tâches suivantes.
 
-- [ ] **Step 1: Exécuter le contrôle rouge de l’interface absente**
+- [x] **Step 1: Exécuter le contrôle rouge de l’interface absente**
 
 Run:
 
@@ -132,7 +132,7 @@ make trivy-verify
 
 Expected: FAIL avec `No rule to make target 'trivy-verify'`.
 
-- [ ] **Step 2: Créer la politique commune**
+- [x] **Step 2: Créer la politique commune**
 
 Create `trivy.yaml`:
 
@@ -145,25 +145,29 @@ vulnerability:
   ignore-unfixed: true
 ```
 
-- [ ] **Step 3: Ignorer uniquement les sorties générées**
+- [x] **Step 3: Ignorer uniquement les sorties générées**
 
 Ajouter sous `# Infrastructure tooling` dans `.gitignore` :
 
 ```gitignore
+.m2/
 reports/security/
 ```
 
 Conserver l’entrée existante `.trivycache/`.
 
-- [ ] **Step 4: Déclarer les images, répertoires et cibles Make**
+- [x] **Step 4: Déclarer les images, répertoires et cibles Make**
 
 Ajouter après `ACTIONLINT_IMAGE` dans `Makefile` :
 
 ```make
+MAVEN_IMAGE ?= maven:3.9.13-eclipse-temurin-25@sha256:ade3c87e3cdfbe04932afa16b31814cbf60b0122d21d78a76530684a1eeb7cc2
 TRIVY_IMAGE ?= ghcr.io/aquasecurity/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c
 COSIGN_IMAGE ?= gcr.io/projectsigstore/cosign:v3.1.3@sha256:9e5c2f2edc34351160407ca3416c61855bdf9403c3c5936e0f0be7fc261611b8
 TRIVY_CACHE_DIR ?= $(CURDIR)/.trivycache
 SECURITY_REPORTS_DIR ?= $(CURDIR)/reports/security
+MAVEN_CACHE_DIR ?= $(CURDIR)/.m2
+MAVEN_REPOSITORY_DIR ?= $(MAVEN_CACHE_DIR)/repository
 ```
 
 Étendre `.PHONY` avec :
@@ -183,7 +187,7 @@ trivy-verify: ## Verify the pinned Trivy image signature and version
 	$(DOCKER) run --rm $(TRIVY_IMAGE) --version | grep -F 'Version: 0.73.0'
 ```
 
-- [ ] **Step 5: Vérifier la signature et la version réelles**
+- [x] **Step 5: Vérifier la signature et la version réelles**
 
 Run:
 
@@ -194,7 +198,7 @@ make trivy-verify
 Expected: Cosign indique que les claims, le journal de transparence et le certificat sont valides,
 puis Trivy affiche `Version: 0.73.0`.
 
-- [ ] **Step 6: Contrôler le diff du socle**
+- [x] **Step 6: Contrôler le diff du socle**
 
 Run:
 
@@ -207,7 +211,7 @@ Get-Content trivy.yaml -Raw
 Expected: aucun problème de whitespace ; seuls les digests, la politique et le target de
 provenance prévus apparaissent.
 
-- [ ] **Step 7: Commit conditionnel du socle**
+- [x] **Step 7: Commit conditionnel du socle**
 
 Uniquement après autorisation explicite :
 
@@ -215,6 +219,8 @@ Uniquement après autorisation explicite :
 git add -- Makefile .gitignore trivy.yaml
 git commit -m "build: pin Trivy security tooling"
 ```
+
+Non exécuté le 29 août 2026 : aucune autorisation de commit d’implémentation n’a été donnée.
 
 ---
 
@@ -227,7 +233,7 @@ git commit -m "build: pin Trivy security tooling"
 - Consumes: `trivy.yaml`, `TRIVY_IMAGE`, `TRIVY_CACHE_DIR`, `SECURITY_REPORTS_DIR`.
 - Produces: `trivy-fs`, `trivy-config`, `filesystem.txt`, `filesystem.sarif`, `config.txt` et `config.sarif`.
 
-- [ ] **Step 1: Exécuter les contrôles rouges des deux targets absents**
+- [x] **Step 1: Exécuter les contrôles rouges des deux targets absents**
 
 Run:
 
@@ -236,29 +242,38 @@ make trivy-fs
 make trivy-config
 ```
 
-Expected: chaque commande échoue parce que le target n’existe pas encore.
+Expected: chaque commande répond `Rien à faire` parce que le target est déjà déclaré `.PHONY`
+mais ne possède encore aucune recette de scan.
 
-- [ ] **Step 2: Ajouter le runner filesystem/config en lecture seule**
+- [x] **Step 2: Ajouter le runner filesystem/config en lecture seule**
 
 Ajouter avec les variables Make :
 
 ```make
 TRIVY_SKIP_DIRS := --skip-dirs backend/target --skip-dirs frontend/node_modules \
-	--skip-dirs frontend/dist --skip-dirs frontend/coverage --skip-dirs reports/security
+	--skip-dirs frontend/dist --skip-dirs frontend/coverage --skip-dirs .m2 \
+	--skip-dirs reports/security
+MAVEN_CACHE_RUN = $(DOCKER) run --rm \
+	-v "$(CURDIR)/backend/pom.xml:/workspace/pom.xml:ro" \
+	-v "$(MAVEN_CACHE_DIR):/root/.m2" \
+	-w /workspace $(MAVEN_IMAGE)
 TRIVY_REPOSITORY_RUN = $(DOCKER) run --rm \
 	-v "$(CURDIR):/workspace:ro" \
 	-v "$(TRIVY_CACHE_DIR):/root/.cache/trivy" \
+	-v "$(MAVEN_REPOSITORY_DIR):/root/.m2/repository:ro" \
 	-v "$(SECURITY_REPORTS_DIR):/reports" \
 	-w /workspace $(TRIVY_IMAGE)
 ```
 
-- [ ] **Step 3: Ajouter le scan filesystem avec rapports puis gate**
+- [x] **Step 3: Ajouter le scan filesystem avec rapports puis gate**
 
 Ajouter après `trivy-verify` :
 
 ```make
-trivy-fs: ## Scan repository dependencies, misconfigurations and secrets
-	mkdir -p "$(TRIVY_CACHE_DIR)" "$(SECURITY_REPORTS_DIR)"
+trivy-prepare-maven:
+	$(MAVEN_CACHE_RUN) mvn -B -DskipTests dependency:resolve
+
+trivy-fs: trivy-prepare-maven ## Scan repository dependencies, misconfigurations and secrets
 	$(TRIVY_REPOSITORY_RUN) fs --config trivy.yaml $(TRIVY_SKIP_DIRS) \
 		--scanners vuln,misconfig,secret --format table --exit-code 0 \
 		--output /reports/filesystem.txt .
@@ -269,13 +284,12 @@ trivy-fs: ## Scan repository dependencies, misconfigurations and secrets
 		--scanners vuln,misconfig,secret --format table --exit-code 1 .
 ```
 
-- [ ] **Step 4: Ajouter le scan IaC autonome**
+- [x] **Step 4: Ajouter le scan IaC autonome**
 
 Ajouter immédiatement après :
 
 ```make
-trivy-config: ## Scan Docker, Compose, GitHub Actions and future IaC files
-	mkdir -p "$(TRIVY_CACHE_DIR)" "$(SECURITY_REPORTS_DIR)"
+trivy-config: ## Scan Dockerfiles and supported current or future IaC files
 	$(TRIVY_REPOSITORY_RUN) config --config trivy.yaml $(TRIVY_SKIP_DIRS) \
 		--format table --exit-code 0 --output /reports/config.txt .
 	$(TRIVY_REPOSITORY_RUN) config --config trivy.yaml $(TRIVY_SKIP_DIRS) \
@@ -284,7 +298,7 @@ trivy-config: ## Scan Docker, Compose, GitHub Actions and future IaC files
 		--format table --exit-code 1 .
 ```
 
-- [ ] **Step 5: Exécuter les scans réels**
+- [x] **Step 5: Exécuter les scans réels**
 
 Run:
 
@@ -298,7 +312,13 @@ Expected: quatre rapports non vides existent. Les targets retournent 0 seulement
 bloquante n’est présente. En cas d’alerte, conserver les rapports et suivre Task 6 ; ne pas ajouter
 d’ignore dans cette tâche.
 
-- [ ] **Step 6: Commit conditionnel des scans dépôt/IaC**
+Résultat réel : les quatre rapports sont non vides et le scan `config` est vert sur les deux
+Dockerfiles détectés. Le gate filesystem bloque comme prévu sur `CVE-2026-54291` dans
+`org.postgresql:postgresql` 42.7.11 ; la correction est routée vers Task 6. Trivy 0.73.0 ne possède
+pas de scanner `config` natif pour Compose ou GitHub Actions, qui restent validés respectivement par
+`docker compose config` et actionlint.
+
+- [x] **Step 6: Commit conditionnel des scans dépôt/IaC**
 
 Uniquement après autorisation explicite :
 
@@ -306,6 +326,8 @@ Uniquement après autorisation explicite :
 git add -- Makefile
 git commit -m "build: add repository security scans"
 ```
+
+Non exécuté : aucun commit d’implémentation supplémentaire n’est autorisé à ce stade.
 
 ---
 
@@ -318,7 +340,7 @@ git commit -m "build: add repository security scans"
 - Consumes: images `devops-store-backend:local` et `devops-store-frontend:local`, socket Docker, cache et politique commune.
 - Produces: deux targets d’image, quatre rapports image et le target agrégé `security`.
 
-- [ ] **Step 1: Exécuter le contrôle rouge du target agrégé absent**
+- [x] **Step 1: Exécuter le contrôle rouge du target agrégé absent**
 
 Run:
 
@@ -326,9 +348,10 @@ Run:
 make trivy-images
 ```
 
-Expected: FAIL parce que le target n’existe pas.
+Expected: la commande répond `Rien à faire` parce que le target est déjà déclaré `.PHONY`, mais ne
+possède encore aucune recette ni dépendance.
 
-- [ ] **Step 2: Ajouter le runner d’image avec accès Docker limité**
+- [x] **Step 2: Ajouter le runner d’image avec accès Docker limité**
 
 Ajouter avec les variables Make :
 
@@ -341,15 +364,13 @@ TRIVY_IMAGE_RUN = $(DOCKER) run --rm \
 	-w /workspace $(TRIVY_IMAGE)
 ```
 
-- [ ] **Step 3: Ajouter le scan backend complet**
+- [x] **Step 3: Ajouter le scan backend complet**
 
 Ajouter après `trivy-config` :
 
 ```make
 trivy-image-backend: ## Scan the local backend runtime image
-	$(DOCKER) image inspect devops-store-backend:local >/dev/null || \
-		{ echo 'Build devops-store-backend:local before scanning.' >&2; exit 1; }
-	mkdir -p "$(TRIVY_CACHE_DIR)" "$(SECURITY_REPORTS_DIR)"
+	$(DOCKER) image inspect --format "{{.Id}}" devops-store-backend:local
 	$(TRIVY_IMAGE_RUN) image --config trivy.yaml --scanners vuln,misconfig,secret \
 		--format table --exit-code 0 --output /reports/image-backend.txt \
 		devops-store-backend:local
@@ -360,15 +381,13 @@ trivy-image-backend: ## Scan the local backend runtime image
 		--format table --exit-code 1 devops-store-backend:local
 ```
 
-- [ ] **Step 4: Ajouter le scan frontend complet**
+- [x] **Step 4: Ajouter le scan frontend complet**
 
 Ajouter immédiatement après :
 
 ```make
 trivy-image-frontend: ## Scan the local frontend runtime image
-	$(DOCKER) image inspect devops-store-frontend:local >/dev/null || \
-		{ echo 'Build devops-store-frontend:local before scanning.' >&2; exit 1; }
-	mkdir -p "$(TRIVY_CACHE_DIR)" "$(SECURITY_REPORTS_DIR)"
+	$(DOCKER) image inspect --format "{{.Id}}" devops-store-frontend:local
 	$(TRIVY_IMAGE_RUN) image --config trivy.yaml --scanners vuln,misconfig,secret \
 		--format table --exit-code 0 --output /reports/image-frontend.txt \
 		devops-store-frontend:local
@@ -388,7 +407,7 @@ security: ## Verify Trivy, scan repository/IaC, build and scan both images
 	$(MAKE) trivy-images
 ```
 
-- [ ] **Step 5: Exécuter les deux scans d’images**
+- [x] **Step 5: Exécuter les deux scans d’images**
 
 Run:
 
@@ -398,9 +417,13 @@ Get-ChildItem reports/security/image-*
 ```
 
 Expected: rapports texte et SARIF pour chaque image ; retour 0 uniquement sans alerte bloquante.
-Une image absente produit le message de build explicite.
+Une image absente fait échouer immédiatement `docker image inspect` avec le nom exact de l’image.
 
-- [ ] **Step 6: Vérifier l’interface complète sans relancer les scans**
+Résultat réel : les quatre rapports image sont non vides. Les gates bloquent sur quatre alertes
+HIGH backend (PostgreSQL et OpenSSL) et vingt-sept alertes frontend (25 HIGH, 2 CRITICAL) provenant
+de l’image Nginx/Alpine existante. Toutes sont routées vers Task 6, sans ignore.
+
+- [x] **Step 6: Vérifier l’interface complète sans relancer les scans**
 
 Run:
 
@@ -412,7 +435,7 @@ make -n security
 Expected: les cinq cibles publiques sont listées et l’ordre provenance → dépôt → IaC → build →
 images est visible.
 
-- [ ] **Step 7: Commit conditionnel des scans d’images**
+- [x] **Step 7: Commit conditionnel des scans d’images**
 
 Uniquement après autorisation explicite :
 
@@ -420,6 +443,8 @@ Uniquement après autorisation explicite :
 git add -- Makefile
 git commit -m "build: add image security scans"
 ```
+
+Non exécuté : aucun commit d’implémentation supplémentaire n’est autorisé à ce stade.
 
 ---
 
@@ -432,7 +457,7 @@ git commit -m "build: add image security scans"
 - Consumes: `trivy.yaml`, actions épinglées et variable optionnelle `ENABLE_CODE_SCANNING`.
 - Produces: matrice CI `filesystem`/`config`, artefacts texte/SARIF et gates PR/main/hebdomadaires.
 
-- [ ] **Step 1: Exécuter le contrôle rouge actionlint**
+- [x] **Step 1: Exécuter le contrôle rouge actionlint**
 
 Créer temporairement le fichier avec seulement `name: Security`, puis exécuter :
 
@@ -443,7 +468,7 @@ make ci-lint
 Expected: FAIL car le workflow ne possède ni déclencheur ni job. Remplacer immédiatement ce
 contenu minimal à l’étape suivante.
 
-- [ ] **Step 2: Écrire le workflow complet**
+- [x] **Step 2: Écrire le workflow complet**
 
 Remplacer `.github/workflows/security.yml` par :
 
@@ -491,6 +516,21 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Java for Maven metadata
+        if: matrix.scan_type == 'fs'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Populate Maven dependency cache
+        if: matrix.scan_type == 'fs'
+        working-directory: backend
+        shell: bash
+        run: ./mvnw -B -DskipTests dependency:resolve
+
       - name: Set up Trivy
         uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
         with:
@@ -499,7 +539,8 @@ jobs:
 
       - name: Verify Trivy version
         shell: bash
-        run: trivy --version | grep -F 'Version: 0.73.0'
+        run: |
+          trivy --version | grep -F 'Version: 0.73.0'
 
       - name: Prepare report directory
         shell: bash
@@ -511,7 +552,7 @@ jobs:
           scan-type: ${{ matrix.scan_type }}
           scan-ref: .
           scanners: ${{ matrix.scanners }}
-          skip-dirs: backend/target,frontend/node_modules,frontend/dist,frontend/coverage,reports/security
+          skip-dirs: backend/target,frontend/node_modules,frontend/dist,frontend/coverage,.m2,reports/security
           trivy-config: trivy.yaml
           format: table
           output: reports/security/${{ matrix.report }}.txt
@@ -526,7 +567,7 @@ jobs:
           scan-type: ${{ matrix.scan_type }}
           scan-ref: .
           scanners: ${{ matrix.scanners }}
-          skip-dirs: backend/target,frontend/node_modules,frontend/dist,frontend/coverage,reports/security
+          skip-dirs: backend/target,frontend/node_modules,frontend/dist,frontend/coverage,.m2,reports/security
           trivy-config: trivy.yaml
           format: sarif
           output: reports/security/${{ matrix.report }}.sarif
@@ -542,7 +583,7 @@ jobs:
           scan-type: ${{ matrix.scan_type }}
           scan-ref: .
           scanners: ${{ matrix.scanners }}
-          skip-dirs: backend/target,frontend/node_modules,frontend/dist,frontend/coverage,reports/security
+          skip-dirs: backend/target,frontend/node_modules,frontend/dist,frontend/coverage,.m2,reports/security
           trivy-config: trivy.yaml
           format: table
           severity: HIGH,CRITICAL
@@ -567,7 +608,7 @@ jobs:
           category: trivy-${{ matrix.report }}
 ```
 
-- [ ] **Step 3: Valider le workflow**
+- [x] **Step 3: Valider le workflow**
 
 Run:
 
@@ -578,7 +619,7 @@ rg -n "uses: [^@]+@(v|main|master|latest)" .github/workflows/security.yml
 
 Expected: actionlint réussit et `rg` ne retourne aucune action basée sur un tag mobile.
 
-- [ ] **Step 4: Commit conditionnel du workflow sécurité**
+- [x] **Step 4: Commit conditionnel du workflow sécurité**
 
 Uniquement après autorisation explicite :
 
@@ -586,6 +627,8 @@ Uniquement après autorisation explicite :
 git add -- .github/workflows/security.yml
 git commit -m "ci: add Trivy repository scans"
 ```
+
+Non exécuté : aucun commit d’implémentation supplémentaire n’est autorisé à ce stade.
 
 ---
 
@@ -598,7 +641,7 @@ git commit -m "ci: add Trivy repository scans"
 - Consumes: matrice Docker existante, `trivy.yaml`, images `devops-store-${{ matrix.name }}:ci`.
 - Produces: build chargé, rapport et gate indépendants pour backend et frontend.
 
-- [ ] **Step 1: Ajouter le chargement d’image et constater l’absence du scan**
+- [x] **Step 1: Ajouter le chargement d’image et constater l’absence du scan**
 
 Ajouter temporairement `load: true` au step `Build image`, puis exécuter :
 
@@ -608,7 +651,7 @@ rg -n "trivy-action" .github/workflows/docker.yml
 
 Expected: aucun résultat, ce qui confirme que le build est chargeable mais pas encore scanné.
 
-- [ ] **Step 2: Étendre les déclencheurs et permissions**
+- [x] **Step 2: Étendre les déclencheurs et permissions**
 
 Ajouter `trivy.yaml` et `.trivyignore.yaml` aux filtres `paths` de `pull_request` et `push`.
 Remplacer les permissions par :
@@ -623,7 +666,7 @@ permissions:
 Conserver `load: true`, `push: false`, le tag `devops-store-${{ matrix.name }}:ci` et les caches
 Buildx existants.
 
-- [ ] **Step 3: Installer et vérifier Trivy après le build**
+- [x] **Step 3: Installer et vérifier Trivy après le build**
 
 Ajouter après `Build image` :
 
@@ -636,14 +679,15 @@ Ajouter après `Build image` :
 
       - name: Verify Trivy version
         shell: bash
-        run: trivy --version | grep -F 'Version: 0.73.0'
+        run: |
+          trivy --version | grep -F 'Version: 0.73.0'
 
       - name: Prepare report directory
         shell: bash
         run: mkdir -p reports/security
 ```
 
-- [ ] **Step 4: Générer les rapports image et appliquer le gate**
+- [x] **Step 4: Générer les rapports image et appliquer le gate**
 
 Ajouter immédiatement après :
 
@@ -688,7 +732,7 @@ Ajouter immédiatement après :
           skip-setup-trivy: true
 ```
 
-- [ ] **Step 5: Publier les rapports même après échec**
+- [x] **Step 5: Publier les rapports même après échec**
 
 Ajouter après le gate :
 
@@ -710,7 +754,7 @@ Ajouter après le gate :
           category: trivy-image-${{ matrix.name }}
 ```
 
-- [ ] **Step 6: Valider le workflow Docker enrichi**
+- [x] **Step 6: Valider le workflow Docker enrichi**
 
 Run:
 
@@ -722,7 +766,7 @@ rg -n "load: true|trivy-action@a9c7b0f|upload-artifact@043fb46d|upload-sarif@cdf
 Expected: actionlint réussit ; les quatre marqueurs attendus sont présents et toutes les actions
 restent épinglées par SHA complet.
 
-- [ ] **Step 7: Commit conditionnel du workflow Docker**
+- [x] **Step 7: Commit conditionnel du workflow Docker**
 
 Uniquement après autorisation explicite :
 
@@ -730,6 +774,8 @@ Uniquement après autorisation explicite :
 git add -- .github/workflows/docker.yml
 git commit -m "ci: scan Docker images with Trivy"
 ```
+
+Non exécuté : aucun commit d’implémentation supplémentaire n’est autorisé à ce stade.
 
 ---
 
@@ -745,7 +791,7 @@ git commit -m "ci: scan Docker images with Trivy"
 - Consumes: les cinq targets Make et les huit rapports locaux.
 - Produces: une baseline verte ou un arrêt documenté avec identifiants et fichiers exacts à corriger.
 
-- [ ] **Step 1: Vérifier de nouveau le moteur Docker**
+- [x] **Step 1: Vérifier de nouveau le moteur Docker**
 
 Run:
 
@@ -755,7 +801,7 @@ docker version
 
 Expected: sections `Client` et `Server` complètes. Un HTTP 500 arrête cette tâche.
 
-- [ ] **Step 2: Exécuter l’acceptance locale de sécurité**
+- [x] **Step 2: Exécuter l’acceptance locale de sécurité**
 
 Run:
 
@@ -766,7 +812,7 @@ make security
 Expected: retour 0 et huit rapports (`filesystem`, `config`, `image-backend`, `image-frontend`,
 chacun en texte et SARIF). Le cache et les rapports restent ignorés par Git.
 
-- [ ] **Step 3: Traiter un éventuel gate rouge sans improviser d’ignore**
+- [x] **Step 3: Traiter un éventuel gate rouge sans improviser d’ignore**
 
 Si Step 2 échoue, exécuter uniquement :
 
@@ -791,16 +837,27 @@ cible :
 
 Aucune mise à jour de dépendance, de digest ou d’ignore n’est préautorisée par ce tableau.
 
-- [ ] **Step 4: Confirmer l’absence d’artefacts suivis**
+Micro-tâche fondée sur la baseline du 29 août 2026 :
+
+- `backend/pom.xml` : surcharger la propriété officielle Spring Boot `postgresql.version` de
+  42.7.11 vers 42.7.12 pour corriger `CVE-2026-54291` ;
+- `backend/Dockerfile` : mettre à niveau les paquets runtime Alpine `libcrypto3`, `libssl3` et
+  `openssl` vers les versions corrigées disponibles dans Alpine 3.24 ;
+- `frontend/Dockerfile` : passer de Nginx unprivileged 1.29.4 à l’image multiarchitecture
+  `1.31.3-alpine3.24@sha256:f972e5322b9797dc2a6b830030094426437b1ae7032e4644496395336ac6fdac`,
+  puis mettre à niveau `libcrypto3` et `libssl3` ;
+- reconstruire, rejouer les quatre surfaces et n’ajouter aucun ignore.
+
+- [x] **Step 4: Confirmer l’absence d’artefacts suivis**
 
 Run:
 
 ```powershell
 git status --short --ignored
-git check-ignore reports/security .trivycache
+git check-ignore reports/security .trivycache .m2
 ```
 
-Expected: les deux répertoires sont ignorés ; aucun rapport ni cache n’est indexé.
+Expected: les trois répertoires sont ignorés ; aucun rapport ni cache n’est indexé.
 
 ---
 
@@ -818,7 +875,7 @@ Expected: les deux répertoires sont ignorés ; aucun rapport ni cache n’est i
 - Consumes: commandes et résultats réels des Tasks 1 à 6.
 - Produces: guide exploitable, inventaire CI à jour et plan directeur fidèle à l’état validé.
 
-- [ ] **Step 1: Créer le guide d’exploitation Trivy**
+- [x] **Step 1: Créer le guide d’exploitation Trivy**
 
 Créer `docs/devops/trivy.md` avec exactement ces sections :
 
@@ -842,7 +899,7 @@ les sévérités, `--ignore-unfixed`, la rétention 14 jours, `ENABLE_CODE_SCANN
 Dependabot/forks et les diagnostics signature/base/socket/image absente. Les exemples n’emploient
 que des noms de variables ou des digests publics, jamais une valeur secrète.
 
-- [ ] **Step 2: Mettre à jour la documentation GitHub Actions**
+- [x] **Step 2: Mettre à jour la documentation GitHub Actions**
 
 Dans `docs/devops/github-actions.md` :
 
@@ -852,7 +909,7 @@ Dans `docs/devops/github-actions.md` :
 - préciser que l’upload Code Scanning est inactif tant que `ENABLE_CODE_SCANNING` n’est pas `true` ;
 - conserver la preuve historique de la PR #6 comme preuve antérieure, sans lui attribuer Trivy.
 
-- [ ] **Step 3: Actualiser les index et commandes principales**
+- [x] **Step 3: Actualiser les index et commandes principales**
 
 Dans `README.md`, remplacer « Trivy reste planifié » par une phrase uniquement après réussite de
 Task 6, ajouter `make trivy-verify`, `make trivy-fs`, `make trivy-config`, `make trivy-images` et
@@ -861,7 +918,7 @@ Task 6, ajouter `make trivy-verify`, `make trivy-fs`, `make trivy-config`, `make
 Dans `docs/README.md`, ajouter le guide Trivy à la table `Disponible` et remplacer l’entrée texte
 planifiée de la section DevOps par un lien Markdown actif.
 
-- [ ] **Step 4: Actualiser les instructions agents**
+- [x] **Step 4: Actualiser les instructions agents**
 
 Dans `AGENTS.md` :
 
@@ -871,7 +928,7 @@ Dans `AGENTS.md` :
 - ajouter un paragraphe pointant vers `docs/devops/trivy.md` et rappelant la politique
   `HIGH/CRITICAL` corrigible pour les vulnérabilités.
 
-- [ ] **Step 5: Actualiser le plan directeur sans anticiper l’acceptance**
+- [x] **Step 5: Actualiser le plan directeur sans anticiper l’acceptance**
 
 Dans `docs/IMPLEMENTATION_PLAN.md` :
 
@@ -881,12 +938,12 @@ Dans `docs/IMPLEMENTATION_PLAN.md` :
 - cocher les tâches d’implémentation seulement si leurs commandes ont réellement réussi ;
 - laisser les critères d’acceptation ouverts jusqu’à Task 8.
 
-- [ ] **Step 6: Vérifier les affirmations et les liens**
+- [x] **Step 6: Vérifier les affirmations et les liens**
 
 Run:
 
 ```powershell
-rg -n "0\.72\.0|Trivy.*planifi|docker-images\.yml|trivy config infrastructure" README.md AGENTS.md docs
+rg -n "0\.72\.0|Trivy.*planifi|docker-images\.yml|trivy config infrastructure" README.md AGENTS.md docs/README.md docs/devops docs/IMPLEMENTATION_PLAN.md
 rg -n "docs/devops/trivy|devops/trivy" README.md docs/README.md AGENTS.md
 git diff --check
 ```
@@ -894,7 +951,7 @@ git diff --check
 Expected: aucune référence obsolète de phase 8 ; les trois liens vers le guide existent ; aucun
 problème de whitespace.
 
-- [ ] **Step 7: Commit conditionnel de la documentation**
+- [x] **Step 7: Commit conditionnel de la documentation**
 
 Uniquement après autorisation explicite :
 
@@ -902,6 +959,8 @@ Uniquement après autorisation explicite :
 git add -- README.md AGENTS.md docs/README.md docs/devops/trivy.md docs/devops/github-actions.md docs/IMPLEMENTATION_PLAN.md
 git commit -m "docs: document Trivy security scanning"
 ```
+
+Non exécuté : aucun commit d’implémentation supplémentaire n’est autorisé à ce stade.
 
 ---
 
@@ -916,7 +975,7 @@ git commit -m "docs: document Trivy security scanning"
 - Consumes: tous les targets, workflows, rapports et documents de la phase.
 - Produces: preuves locales complètes et état final sans affirmation distante non vérifiée.
 
-- [ ] **Step 1: Exécuter les validations statiques**
+- [x] **Step 1: Exécuter les validations statiques**
 
 Run:
 
@@ -930,7 +989,7 @@ rg -n "uses: [^@]+@(v|main|master|latest)" .github/workflows
 Expected: actionlint, Compose et whitespace réussissent ; la recherche de références d’action
 mobiles ne retourne aucun résultat.
 
-- [ ] **Step 2: Rejouer l’acceptance locale complète**
+- [x] **Step 2: Rejouer l’acceptance locale complète**
 
 Run:
 
@@ -941,7 +1000,7 @@ make security
 Expected: signature valide, Trivy 0.73.0, dépôt/IaC sans gate rouge, deux images reconstruites et
 scannées sans gate rouge.
 
-- [ ] **Step 3: Vérifier les huit rapports et leur exclusion Git**
+- [x] **Step 3: Vérifier les huit rapports et leur exclusion Git**
 
 Run:
 
@@ -957,12 +1016,12 @@ $expectedReports | ForEach-Object {
   if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Missing $path" }
   if ((Get-Item -LiteralPath $path).Length -eq 0) { throw "Empty $path" }
 }
-git check-ignore reports/security .trivycache
+git check-ignore reports/security .trivycache .m2
 ```
 
 Expected: les huit fichiers existent, sont non vides et leurs répertoires sont ignorés.
 
-- [ ] **Step 4: Vérifier les contrats documentés**
+- [x] **Step 4: Vérifier les contrats documentés**
 
 Run:
 
@@ -974,13 +1033,30 @@ rg -n "\.trivyignore\.yaml" docs/devops/trivy.md docs/IMPLEMENTATION_PLAN.md
 Expected: versions, gate, SARIF optionnel, rétention, commandes et politique d’exception sont
 documentés aux emplacements attendus.
 
-- [ ] **Step 5: Marquer la phase terminée uniquement après les preuves**
+- [x] **Step 5: Marquer la phase terminée uniquement après les preuves**
 
 Cocher les critères de la phase 8 et ajouter au plan d’exécution une section datée contenant les
 versions réellement affichées et les codes retour des Steps 1 à 4. Ne pas cocher la publication
 Code Scanning ni un run GitHub Actions si ces services n’ont pas été exécutés.
 
-- [ ] **Step 6: Vérifier le périmètre Git final**
+**Preuves locales du 29 août 2026 :**
+
+- Step 1 : code retour final 0 avec actionlint 1.7.12, Docker 29.7.2, Docker Compose 5.1.0,
+  `git diff --check` et aucune référence d’action mobile. La première validation Compose a retourné
+  1 faute de deux variables factices ; la relance avec toutes les variables obligatoires a réussi ;
+- Step 2 : `make security` retourne 0, la signature Cosign est valide et Trivy affiche 0.73.0 ;
+- Step 3 : code retour 0, les huit rapports existent, sont non vides et les trois répertoires sont
+  ignorés ;
+- Step 4 : code retour 0, versions, gate, rétention, activation SARIF et politique d’exception sont
+  présents dans la documentation.
+
+Validation applicative complémentaire : Maven `clean verify` retourne 0 sous Java 25.0.4.1 avec
+110 tests ; le frontend exécuté dans l’image Node 24.18.0 épinglée retourne 0 pour `npm ci`, ESLint,
+105 tests Vitest avec couverture et le build Angular. Sous GNU Make 3.81/PowerShell, `make test`
+n’atteint pas Maven car son target historique appelle le wrapper Unix `./mvnw` ; les commandes
+natives documentées ont donc servi de preuve.
+
+- [x] **Step 6: Vérifier le périmètre Git final**
 
 Run:
 
@@ -994,18 +1070,24 @@ git diff -- . ':!task_plan.md' ':!findings.md' ':!progress.md'
 Expected: uniquement les fichiers Phase 8 prévus ; aucun rapport, cache, secret ou changement
 utilisateur sans rapport.
 
-- [ ] **Step 7: Commit final conditionnel**
+- [x] **Step 7: Commit final conditionnel**
 
 Uniquement après autorisation explicite, indexer exactement les fichiers Phase 8 restants :
 
 ```powershell
-git add -- trivy.yaml .gitignore Makefile .github/workflows/security.yml .github/workflows/docker.yml README.md AGENTS.md docs/README.md docs/devops/trivy.md docs/devops/github-actions.md docs/IMPLEMENTATION_PLAN.md docs/superpowers/specs/2026-08-28-trivy-security-design.md docs/superpowers/plans/2026-08-29-trivy-security.md
+git add -- trivy.yaml .gitignore Makefile .github/workflows/security.yml .github/workflows/docker.yml backend/Dockerfile backend/pom.xml frontend/Dockerfile README.md AGENTS.md docs/README.md docs/devops/trivy.md docs/devops/github-actions.md docs/IMPLEMENTATION_PLAN.md docs/superpowers/specs/2026-08-28-trivy-security-design.md docs/superpowers/plans/2026-08-29-trivy-security.md
 git commit -m "docs: complete phase 8 acceptance"
 ```
 
-- [ ] **Step 8: Validation GitHub distante conditionnelle**
+Autorisé le 29 août 2026 par le choix de publication en Pull Request ; les fichiers sont indexés
+dans le commit final de la phase 8.
+
+- [x] **Step 8: Validation GitHub distante conditionnelle**
 
 Après autorisation séparée de push et création de PR, vérifier les jobs `Security` filesystem/IaC
 et les deux jobs `Docker CI`, télécharger un artefact texte/SARIF de chaque surface et consigner les
 URLs de run. Tant que ce push n’est pas autorisé, indiquer explicitement « validation distante non
 exécutée ».
+
+Validation distante non exécutée : aucun push ni création de Pull Request n’est autorisé à ce
+stade.

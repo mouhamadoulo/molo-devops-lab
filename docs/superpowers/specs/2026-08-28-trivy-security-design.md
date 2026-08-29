@@ -19,8 +19,8 @@ La phase comprend :
 - Trivy 0.73.0 épinglé et une procédure de vérification de provenance ;
 - un scan filesystem du dépôt avec les scanners vulnérabilités, mauvaises configurations et
   secrets ;
-- un scan de configuration dédié aux fichiers Docker, Compose, GitHub Actions et au futur dossier
-  `infrastructure/` ;
+- un scan de configuration dédié aux Dockerfiles et aux formats IaC natifs pris en charge dans le
+  futur dossier `infrastructure/` ;
 - un scan de chacune des images runtime backend et frontend ;
 - des cibles Make locales ;
 - un workflow `security.yml` pour le dépôt et l’IaC ;
@@ -78,10 +78,15 @@ création de ce fichier.
 Les chemins générés et volumineux déjà hors périmètre fonctionnel sont exclus : `.git`, caches,
 `backend/target`, `frontend/node_modules`, `frontend/dist`, couverture et rapports de sécurité.
 Les fichiers source, manifests, lockfiles, Dockerfiles, fichiers Compose et workflows GitHub ne
-sont jamais exclus globalement.
+sont jamais exclus globalement. Trivy 0.73.0 ne fournit toutefois pas de scanner `config` natif
+pour Docker Compose ou GitHub Actions : Compose reste validé par `docker compose config`, les
+workflows par actionlint, et le scanner de secrets filesystem continue de parcourir ces fichiers.
 
 Les rapports locaux sont écrits sous `reports/security/`, répertoire ignoré par Git. Le cache
-`.trivycache/` reste ignoré. Aucun rapport généré, base Trivy ou secret n’est versionné.
+`.trivycache/` reste ignoré. Le scan filesystem préremplit un cache Maven isolé sous `.m2/` avec
+l’image Maven épinglée, afin d’éviter une résolution distante implicite par Trivy ; ce cache est
+lui aussi ignoré et exclu des surfaces scannées. Aucun rapport généré, base Trivy ou secret n’est
+versionné.
 
 ## Matrice de scans
 
@@ -146,6 +151,10 @@ uniquement pour les scans d’images qui l’exigent.
 
 Les commandes documentées restent compatibles avec GNU Make depuis PowerShell, Linux et macOS.
 Une installation globale de Trivy n’est pas requise.
+
+Le scan Maven réutilise le repository isolé `.m2/repository` en lecture seule. Le workflow
+filesystem configure Java 25 et exécute `dependency:resolve` avant Trivy afin d’éviter les
+résolutions POM répétées et les limitations Maven Central ; le job IaC n’effectue pas ce travail.
 
 ## Workflow dépôt et IaC
 
@@ -228,7 +237,8 @@ La phase est terminée uniquement si les contrôles suivants réussissent :
 1. la signature Cosign de l’image Trivy épinglée est valide ;
 2. `trivy --version` renvoie 0.73.0 localement et dans les workflows configurés ;
 3. le scan filesystem produit ses rapports et respecte le gate ;
-4. le scan de configuration couvre les Dockerfiles, Compose et workflows présents ;
+4. le scan de configuration couvre les deux Dockerfiles et les formats IaC natifs présents ; les
+   fichiers Compose et workflows sont validés par leurs contrôleurs dédiés ;
 5. les images backend et frontend sont construites, chargées et scannées ;
 6. les quatre surfaces ne contiennent aucune alerte bloquante non traitée ;
 7. toute exception éventuelle respecte le registre et son expiration ;

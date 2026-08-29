@@ -20,6 +20,7 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [Workflow Git et GitHub](devops/git-workflow.md) | Branches, commits, Pull Requests, tags, releases et retour arrière |
 | [GitHub Actions](devops/github-actions.md) | Workflows CI, artefacts, permissions, secrets et dépannage |
 | [SonarQube](devops/sonarqube.md) | Stack qualité locale, analyses backend/frontend, quality gates et CI conditionnelle |
+| [Trivy](devops/trivy.md) | Scans du dépôt, des dépendances, des configurations et des images, politique et rapports |
 
 ## Architecture
 
@@ -38,7 +39,7 @@ Documents créés pendant les phases d'industrialisation :
 - [Workflow Git et GitHub](devops/git-workflow.md) — branches, commits, Pull Requests, tags et releases ;
 - [GitHub Actions](devops/github-actions.md) — workflows CI, artefacts, permissions, secrets et dépannage ;
 - [SonarQube](devops/sonarqube.md) — analyse qualité locale et CI ;
-- `devops/trivy.md` — scans filesystem, dépendances, images et IaC ;
+- [Trivy](devops/trivy.md) — scans filesystem, dépendances, configurations et images ;
 - `devops/jfrog-artifactory.md` — Maven, repositories et limites de licence.
 
 ## Infrastructure

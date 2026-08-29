@@ -24,6 +24,7 @@
         <jacoco.version>0.8.15</jacoco.version>
         <minio.version>9.0.1</minio.version>
         <okhttp.version>5.3.2</okhttp.version>
+        <postgresql.version>42.7.12</postgresql.version>
         <twelvemonkeys.version>3.13.1</twelvemonkeys.version>
         <sonar-maven-plugin.version>5.5.0.6356</sonar-maven-plugin.version>
         <sonar.projectKey>devops-store-backend</sonar.projectKey>

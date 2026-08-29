@@ -4,13 +4,67 @@ COMPOSE ?= docker compose
 DEVOPS_COMPOSE ?= docker compose -f docker-compose.devops.yml
 DOCKER ?= docker
 ACTIONLINT_IMAGE ?= rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+MAVEN_IMAGE ?= maven:3.9.13-eclipse-temurin-25@sha256:ade3c87e3cdfbe04932afa16b31814cbf60b0122d21d78a76530684a1eeb7cc2
+TRIVY_IMAGE ?= ghcr.io/aquasecurity/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c
+COSIGN_IMAGE ?= gcr.io/projectsigstore/cosign:v3.1.3@sha256:9e5c2f2edc34351160407ca3416c61855bdf9403c3c5936e0f0be7fc261611b8
+TRIVY_CACHE_DIR ?= $(CURDIR)/.trivycache
+SECURITY_REPORTS_DIR ?= $(CURDIR)/reports/security
+MAVEN_CACHE_DIR ?= $(CURDIR)/.m2
+MAVEN_REPOSITORY_DIR ?= $(MAVEN_CACHE_DIR)/repository
+TRIVY_SKIP_DIRS := --skip-dirs backend/target --skip-dirs frontend/node_modules \
+	--skip-dirs frontend/dist --skip-dirs frontend/coverage --skip-dirs .m2 \
+	--skip-dirs reports/security
+MAVEN_CACHE_RUN = $(DOCKER) run --rm \
+	-v "$(CURDIR)/backend/pom.xml:/workspace/pom.xml:ro" \
+	-v "$(MAVEN_CACHE_DIR):/root/.m2" \
+	-w /workspace $(MAVEN_IMAGE)
+TRIVY_REPOSITORY_RUN = $(DOCKER) run --rm \
+	-v "$(CURDIR):/workspace:ro" \
+	-v "$(TRIVY_CACHE_DIR):/root/.cache/trivy" \
+	-v "$(MAVEN_REPOSITORY_DIR):/root/.m2/repository:ro" \
+	-v "$(SECURITY_REPORTS_DIR):/reports" \
+	-w /workspace $(TRIVY_IMAGE)
+TRIVY_IMAGE_RUN = $(DOCKER) run --rm \
+	-v "$(CURDIR):/workspace:ro" \
+	-v "$(TRIVY_CACHE_DIR):/root/.cache/trivy" \
+	-v "$(SECURITY_REPORTS_DIR):/reports" \
+	-v /var/run/docker.sock:/var/run/docker.sock \
+	-w /workspace $(TRIVY_IMAGE)
 
 .PHONY: help application build test backend-test frontend-test ci-lint up down status logs \
 	quality-config quality-up quality-down quality-status quality-logs quality-reset \
-	sonar sonar-backend sonar-frontend
+	sonar sonar-backend sonar-frontend \
+	trivy-verify trivy-prepare-maven trivy-fs trivy-config trivy-image-backend trivy-image-frontend \
+	trivy-images security
 
 help: ## Show available commands
-	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} /^[a-zA-Z_-]+:.*## / {printf "  %-16s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	$(info Usage: make [target])
+	$(info )
+	$(info Targets:)
+	$(info   application       Build and start the complete application)
+	$(info   build             Build the backend and frontend images)
+	$(info   test              Run backend and frontend validations)
+	$(info   backend-test      Run the complete Maven verification)
+	$(info   frontend-test     Install, lint, test and build the frontend)
+	$(info   ci-lint           Validate GitHub Actions workflows)
+	$(info   trivy-verify      Verify the pinned Trivy image signature and version)
+	$(info   trivy-fs          Scan repository dependencies, misconfigurations and secrets)
+	$(info   trivy-config      Scan Dockerfiles and supported current or future IaC files)
+	$(info   trivy-images      Scan both local runtime images)
+	$(info   security          Run the complete local security gate)
+	$(info   up                Start the complete stack in the background)
+	$(info   down              Stop the stack while preserving named volumes)
+	$(info   status            Show container and health status)
+	$(info   logs              Follow the latest service logs)
+	$(info   quality-config    Validate the SonarQube Compose profile)
+	$(info   quality-up        Start SonarQube and its PostgreSQL database)
+	$(info   quality-down      Stop SonarQube while preserving quality data)
+	$(info   quality-status    Show SonarQube container and health status)
+	$(info   quality-logs      Follow SonarQube and database logs)
+	$(info   quality-reset     Delete the local SonarQube stack and its volumes)
+	$(info   sonar             Analyze backend and frontend with SonarQube)
+	$(info   sonar-backend     Verify and analyze the backend with SonarQube)
+	$(info   sonar-frontend    Verify and analyze the frontend with SonarQube)
 
 application: build up ## Build and start the complete application
 
@@ -27,6 +81,65 @@ frontend-test: ## Install, lint, test and build the frontend
 
 ci-lint: ## Validate GitHub Actions workflows
 	$(DOCKER) run --rm -v "$(CURDIR):/repo" -w /repo $(ACTIONLINT_IMAGE) -color
+
+trivy-verify: ## Verify the pinned Trivy image signature and version
+	$(DOCKER) run --rm $(COSIGN_IMAGE) verify $(TRIVY_IMAGE) \
+		--certificate-identity-regexp 'https://github\.com/aquasecurity/trivy/\.github/workflows/.+' \
+		--certificate-oidc-issuer 'https://token.actions.githubusercontent.com'
+	$(DOCKER) run --rm --entrypoint /bin/sh $(TRIVY_IMAGE) \
+		-c "trivy --version | grep -F 'Version: 0.73.0'"
+
+trivy-prepare-maven:
+	$(MAVEN_CACHE_RUN) mvn -B -DskipTests dependency:resolve
+
+trivy-fs: trivy-prepare-maven ## Scan repository dependencies, misconfigurations and secrets
+	$(TRIVY_REPOSITORY_RUN) fs --config trivy.yaml $(TRIVY_SKIP_DIRS) \
+		--scanners vuln,misconfig,secret --format table --exit-code 0 \
+		--output /reports/filesystem.txt .
+	$(TRIVY_REPOSITORY_RUN) fs --config trivy.yaml $(TRIVY_SKIP_DIRS) \
+		--scanners vuln,misconfig,secret --format sarif --exit-code 0 \
+		--output /reports/filesystem.sarif .
+	$(TRIVY_REPOSITORY_RUN) fs --config trivy.yaml $(TRIVY_SKIP_DIRS) \
+		--scanners vuln,misconfig,secret --format table --exit-code 1 .
+
+trivy-config: ## Scan Dockerfiles and supported current or future IaC files
+	$(TRIVY_REPOSITORY_RUN) config --config trivy.yaml $(TRIVY_SKIP_DIRS) \
+		--format table --exit-code 0 --output /reports/config.txt .
+	$(TRIVY_REPOSITORY_RUN) config --config trivy.yaml $(TRIVY_SKIP_DIRS) \
+		--format sarif --exit-code 0 --output /reports/config.sarif .
+	$(TRIVY_REPOSITORY_RUN) config --config trivy.yaml $(TRIVY_SKIP_DIRS) \
+		--format table --exit-code 1 .
+
+trivy-image-backend: ## Scan the local backend runtime image
+	$(DOCKER) image inspect --format "{{.Id}}" devops-store-backend:local
+	$(TRIVY_IMAGE_RUN) image --config trivy.yaml --scanners vuln,misconfig,secret \
+		--format table --exit-code 0 --output /reports/image-backend.txt \
+		devops-store-backend:local
+	$(TRIVY_IMAGE_RUN) image --config trivy.yaml --scanners vuln,misconfig,secret \
+		--format sarif --exit-code 0 --output /reports/image-backend.sarif \
+		devops-store-backend:local
+	$(TRIVY_IMAGE_RUN) image --config trivy.yaml --scanners vuln,misconfig,secret \
+		--format table --exit-code 1 devops-store-backend:local
+
+trivy-image-frontend: ## Scan the local frontend runtime image
+	$(DOCKER) image inspect --format "{{.Id}}" devops-store-frontend:local
+	$(TRIVY_IMAGE_RUN) image --config trivy.yaml --scanners vuln,misconfig,secret \
+		--format table --exit-code 0 --output /reports/image-frontend.txt \
+		devops-store-frontend:local
+	$(TRIVY_IMAGE_RUN) image --config trivy.yaml --scanners vuln,misconfig,secret \
+		--format sarif --exit-code 0 --output /reports/image-frontend.sarif \
+		devops-store-frontend:local
+	$(TRIVY_IMAGE_RUN) image --config trivy.yaml --scanners vuln,misconfig,secret \
+		--format table --exit-code 1 devops-store-frontend:local
+
+trivy-images: trivy-image-backend trivy-image-frontend ## Scan both local runtime images
+
+security: ## Verify Trivy, scan repository/IaC, build and scan both images
+	$(MAKE) trivy-verify
+	$(MAKE) trivy-fs
+	$(MAKE) trivy-config
+	$(MAKE) build
+	$(MAKE) trivy-images
 
 up: ## Start the complete stack in the background
 	$(COMPOSE) up -d

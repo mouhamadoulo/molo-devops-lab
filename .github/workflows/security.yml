@@ -1,26 +1,12 @@
-name: Docker CI
+name: Security
 
 on:
   pull_request:
     branches: [main]
-    paths:
-      - 'backend/**'
-      - 'frontend/**'
-      - 'docker-compose.yml'
-      - '.dockerignore'
-      - 'trivy.yaml'
-      - '.trivyignore.yaml'
-      - '.github/workflows/docker.yml'
   push:
     branches: [main]
-    paths:
-      - 'backend/**'
-      - 'frontend/**'
-      - 'docker-compose.yml'
-      - '.dockerignore'
-      - 'trivy.yaml'
-      - '.trivyignore.yaml'
-      - '.github/workflows/docker.yml'
+  schedule:
+    - cron: '0 5 * * 1'
   workflow_dispatch:
 
 permissions:
@@ -29,43 +15,46 @@ permissions:
   security-events: write
 
 concurrency:
-  group: docker-ci-${{ github.event.pull_request.number || github.ref }}
+  group: security-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Build ${{ matrix.name }} image
+  repository:
+    name: Scan ${{ matrix.label }}
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: backend
-            context: backend
-            dockerfile: backend/Dockerfile
-          - name: frontend
-            context: frontend
-            dockerfile: frontend/Dockerfile
+          - label: repository
+            report: filesystem
+            scan_type: fs
+            scanners: vuln,misconfig,secret
+          - label: infrastructure configuration
+            report: config
+            scan_type: config
+            scanners: misconfig
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
-
-      - name: Build image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+      - name: Set up Java for Maven metadata
+        if: matrix.scan_type == 'fs'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
-          context: ${{ matrix.context }}
-          file: ${{ matrix.dockerfile }}
-          load: true
-          push: false
-          tags: devops-store-${{ matrix.name }}:ci
-          cache-from: type=gha,scope=${{ matrix.name }}
-          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Populate Maven dependency cache
+        if: matrix.scan_type == 'fs'
+        working-directory: backend
+        shell: bash
+        run: ./mvnw -B -DskipTests dependency:resolve
 
       - name: Set up Trivy
         uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
@@ -82,38 +71,44 @@ jobs:
         shell: bash
         run: mkdir -p reports/security
 
-      - name: Generate human-readable image report
+      - name: Generate human-readable report
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: devops-store-${{ matrix.name }}:ci
-          scanners: vuln,misconfig,secret
+          scan-type: ${{ matrix.scan_type }}
+          scan-ref: .
+          scanners: ${{ matrix.scanners }}
+          skip-dirs: backend/target,frontend/node_modules,frontend/dist,frontend/coverage,.m2,reports/security
           trivy-config: trivy.yaml
           format: table
-          output: reports/security/image-${{ matrix.name }}.txt
+          output: reports/security/${{ matrix.report }}.txt
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: 0
           skip-setup-trivy: true
 
-      - name: Generate image SARIF report
+      - name: Generate SARIF report
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: devops-store-${{ matrix.name }}:ci
-          scanners: vuln,misconfig,secret
+          scan-type: ${{ matrix.scan_type }}
+          scan-ref: .
+          scanners: ${{ matrix.scanners }}
+          skip-dirs: backend/target,frontend/node_modules,frontend/dist,frontend/coverage,.m2,reports/security
           trivy-config: trivy.yaml
           format: sarif
-          output: reports/security/image-${{ matrix.name }}.sarif
+          output: reports/security/${{ matrix.report }}.sarif
           severity: HIGH,CRITICAL
           limit-severities-for-sarif: true
           ignore-unfixed: true
           exit-code: 0
           skip-setup-trivy: true
 
-      - name: Enforce image security gate
+      - name: Enforce security gate
         uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
         with:
-          image-ref: devops-store-${{ matrix.name }}:ci
-          scanners: vuln,misconfig,secret
+          scan-type: ${{ matrix.scan_type }}
+          scan-ref: .
+          scanners: ${{ matrix.scanners }}
+          skip-dirs: backend/target,frontend/node_modules,frontend/dist,frontend/coverage,.m2,reports/security
           trivy-config: trivy.yaml
           format: table
           severity: HIGH,CRITICAL
@@ -121,18 +116,18 @@ jobs:
           exit-code: 1
           skip-setup-trivy: true
 
-      - name: Upload Trivy image reports
+      - name: Upload Trivy reports
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: trivy-image-${{ matrix.name }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: reports/security/image-${{ matrix.name }}.*
+          name: trivy-${{ matrix.report }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/security/${{ matrix.report }}.*
           if-no-files-found: error
           retention-days: 14
 
-      - name: Upload image SARIF to Code Scanning
+      - name: Upload SARIF to Code Scanning
         if: ${{ always() && vars.ENABLE_CODE_SCANNING == 'true' && github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
         uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
         with:
-          sarif_file: reports/security/image-${{ matrix.name }}.sarif
-          category: trivy-image-${{ matrix.name }}
+          sarif_file: reports/security/${{ matrix.report }}.sarif
+          category: trivy-${{ matrix.report }}
