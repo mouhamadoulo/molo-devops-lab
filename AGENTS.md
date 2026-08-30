@@ -22,7 +22,8 @@ et l'observabilité.
   opérationnels ; Trivy contrôle le dépôt, les dépendances, les configurations et les images avec
   des rapports CI ; la phase 8 est terminée et fusionnée sur `main` via la PR #18 ; Artifactory
   OSS, PostgreSQL 17, le parcours Maven et la publication CI conditionnelle de phase 9 sont
-  implémentés, tandis que Terraform, Kubernetes et l'observabilité restent planifiés ;
+  implémentés ; Terraform 1.15.4 décrit les cinq repositories avec tests simulés, tandis que son
+  application réelle, Kubernetes et l'observabilité restent planifiés ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
   (`frontend/package.json`, `Makefile`, fichiers Compose, etc.) n'existent pas.
 
@@ -55,10 +56,13 @@ Avant une modification importante, consulter :
   rapports texte/SARIF et gate sur les vulnérabilités HIGH/CRITICAL corrigibles.
 - Artifactory OSS 7.161.20 avec PostgreSQL 17.10, repositories Maven local/remote/virtual,
   publication snapshot/candidate, promotion par checksum et résolution à cache vierge.
+- Terraform 1.15.4 et provider JFrog 12.11.3 avec garde Pro, lockfile multiplateforme et tests
+  simulés des cinq repositories Maven.
 
 ### Cible planifiée
 
-- Terraform, Kubernetes/Minikube, Prometheus, Grafana, Loki et Grafana Alloy.
+- application réelle de Terraform sur Artifactory Pro, Kubernetes/Minikube, Prometheus, Grafana,
+  Loki et Grafana Alloy.
 
 Toujours distinguer cette cible de ce qui est réellement disponible dans le dépôt.
 
@@ -114,6 +118,9 @@ Le backend lit les variables suivantes, avec des valeurs locales par défaut :
   `ARTIFACTORY_DB_USERNAME`, `ARTIFACTORY_DB_PASSWORD`, `JFROG_URL`, `JFROG_ADMIN_TOKEN`,
   `JFROG_USERNAME` et `JFROG_TOKEN`. Le profil JCR optionnel utilise `JCR_PORT`, `JCR_DB_NAME`,
   `JCR_DB_USERNAME` et `JCR_DB_PASSWORD`.
+- Terraform utilise `TF_VAR_artifactory_url`, `TF_VAR_artifactory_access_token` et
+  `TF_VAR_confirm_pro_repository_api`. Le token reste hors Git et la confirmation Pro reste à
+  `false` contre l'instance OSS locale.
 
 Ne jamais versionner de secret réel. Ajouter les exemples sans secret dans un fichier
 `.env.example` si nécessaire et conserver les valeurs sensibles hors de Git.
@@ -188,6 +195,19 @@ configurations, construit les images applicatives puis les scanne.
 Le parcours JFrog est documenté dans `docs/devops/jfrog-artifactory.md`. En édition OSS, les cinq
 repositories sont créés une fois dans l'interface puis vérifiés par `make artifacts-verify` ; ne
 pas réintroduire les API de configuration ou de copie réservées à Artifactory Pro.
+
+La configuration Terraform est documentée dans `docs/infrastructure/terraform.md`. Les commandes
+disponibles sans instance Pro sont :
+
+```powershell
+Set-Location infrastructure/terraform
+terraform init
+terraform fmt -check -recursive
+terraform validate
+terraform test
+```
+
+Ne pas exécuter `plan`, `import`, `apply` ou `destroy` contre l'instance Artifactory OSS locale.
 
 ## Tests
 

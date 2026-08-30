@@ -33,7 +33,7 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 
 ---
 
-## État du dépôt au 29 août 2026
+## État du dépôt au 30 août 2026
 
 - Le dépôt Git contient le backend, l'identité/RBAC, la galerie privée d'images produits, le CRUD
   produits Angular et l'administration des utilisateurs réservée au rôle `ADMIN`.
@@ -45,11 +45,11 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   Request #6 ; les rapports backend et frontend sont conservés 14 jours.
 - Trivy scanne le dépôt, les dépendances, les configurations et les images localement et en CI ;
   les rapports texte et SARIF sont conservés 14 jours.
-- Docker 29.7.2, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0,
-  Maven 3.9.13, kubectl 1.34.1 et Git 2.53.0 sont installés.
+- Docker 29.7.2, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0, Maven 3.9.13,
+  Terraform 1.15.4 Windows ARM64, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
   `maven:3.9.13-eclipse-temurin-25` compatible ARM64.
-- Terraform et Minikube ne sont pas encore installés ; GNU Make 3.81 est disponible sous Windows.
+- Minikube n'est pas encore installé ; GNU Make 3.81 est disponible sous Windows.
 - Docker fonctionne en ligne de commande, avec un avertissement d'accès au fichier de
   configuration utilisateur à recontrôler hors environnement restreint.
 
@@ -215,7 +215,7 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | Tests unitaires et Testcontainers | Oui | Non, mais Docker est requis |
 | SonarQube, Trivy, JFrog Maven | Oui | Non |
 | Prometheus, Grafana, Loki, Alloy | Oui | Non |
-| Terraform contre JFrog local | Oui | Non |
+| Terraform JFrog | Configuration et tests simulés | Instance Pro/Enterprise pour import/apply |
 | Kubernetes avec Minikube | Oui | Non |
 | Workflows GitHub Actions | Fichiers testables partiellement | Dépôt GitHub et secrets |
 | Publication Maven/images distante | Non | Instance JFrog accessible et credentials |
@@ -684,16 +684,18 @@ accès aux API de configuration.
 
 **Implémentation :**
 
-- [ ] Installer Terraform 1.15.4 et vérifier le binaire Windows ARM64.
-- [ ] Contraindre Terraform et le provider `jfrog/artifactory` 12.11.3.
-- [ ] Vérifier d'abord qu'une licence Artifactory Pro ou supérieure expose les API nécessaires ;
+- [x] Installer Terraform 1.15.4 et vérifier le binaire Windows ARM64.
+- [x] Contraindre Terraform et le provider `jfrog/artifactory` 12.11.3.
+- [x] Vérifier d'abord qu'une licence Artifactory Pro ou supérieure expose les API nécessaires ;
   ne pas prétendre que le provider peut appliquer ces ressources à l'édition OSS actuelle.
-- [ ] Déclarer Maven local releases/snapshots, remote Central et virtual si ce prérequis est rempli.
-- [ ] Fournir URL et credentials par variables sensibles `TF_VAR_*`, jamais dans tfvars suivi.
-- [ ] Produire des outputs non sensibles pour les URLs de résolution/déploiement.
-- [ ] Ignorer state, plan binaire et `.terraform/`, mais versionner `.terraform.lock.hcl`.
+- [x] Préparer Maven local releases/snapshots/candidates, remote Central et virtual dans une
+  configuration Pro-ready testée par provider simulé, sans l'appliquer sous OSS.
+- [x] Fournir URL et credentials par variables sensibles `TF_VAR_*`, jamais dans tfvars suivi.
+- [x] Produire des outputs non sensibles pour les URLs de résolution/déploiement.
+- [x] Ignorer state, tfvars privés, plan binaire et `.terraform/`, mais versionner
+  `.terraform.lock.hcl`.
 - [ ] Importer ou recréer proprement les repositories de phase 9 afin d'éviter les doublons.
-- [ ] Documenter pourquoi Compose lance Artifactory et Terraform configure son contenu.
+- [x] Documenter pourquoi Compose lance Artifactory et Terraform configure son contenu.
 
 **Commandes de validation :**
 
@@ -702,6 +704,13 @@ Set-Location infrastructure/terraform
 terraform init
 terraform fmt -check -recursive
 terraform validate
+terraform test
+terraform providers
+```
+
+Validation reportée jusqu'à disponibilité d'une instance Pro ou Enterprise :
+
+```powershell
 terraform plan -out=tfplan
 terraform show -no-color tfplan
 ```
@@ -709,8 +718,13 @@ terraform show -no-color tfplan
 **Critères d'acceptation :**
 
 - [ ] Un second `terraform plan` après apply ne propose aucun changement.
-- [ ] Aucun secret n'apparaît dans Git, les outputs ou les logs documentés.
-- [ ] `terraform destroy` ne cible que les repositories de laboratoire déclarés.
+- [x] Aucun secret n'apparaît dans Git, les outputs ou les logs documentés.
+- [ ] Vérifier sur une instance Pro que `terraform destroy` ne cible que les repositories de
+  laboratoire déclarés.
+
+**Statut :** phase partielle sous OSS. Le module, le garde de licence, le lockfile multiplateforme,
+les tests simulés et la documentation sont validés ; import, apply, second plan vide et destroy
+réel restent reportés.
 
 **Dépendances :** phase 9 et Terraform installé.
 

@@ -33,9 +33,12 @@ coverage/
 
 # Infrastructure tooling
 **/.terraform/
+*.tfvars
+*.tfvars.json
 *.tfstate
 *.tfstate.*
 *.tfplan
+tfplan
 .sonar/
 .m2/
 .trivycache/

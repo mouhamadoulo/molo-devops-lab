@@ -22,6 +22,7 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [SonarQube](devops/sonarqube.md) | Stack qualité locale, analyses backend/frontend, quality gates et CI conditionnelle |
 | [Trivy](devops/trivy.md) | Scans du dépôt, des dépendances, des configurations et des images, politique et rapports |
 | [JFrog Artifactory](devops/jfrog-artifactory.md) | Artifactory OSS, topologie Maven, publication, promotion et limites de licence |
+| [Terraform et JFrog](infrastructure/terraform.md) | Configuration Pro-ready, tests simulés et parcours d’import sous licence |
 | [Design Trivy](superpowers/specs/2026-08-28-trivy-security-design.md) | Périmètre, politique de sécurité, provenance et architecture des scans |
 | [Plan Trivy](superpowers/plans/2026-08-29-trivy-security.md) | Exécution et preuves de validation de la phase 8 |
 
@@ -48,7 +49,7 @@ Documents créés pendant les phases d'industrialisation :
 ## Infrastructure
 
 - [Images et stack Docker Compose](infrastructure/docker.md) — images, réseau et exploitation locale ;
-- `infrastructure/terraform.md` — configuration JFrog avec Terraform ;
+- [Terraform et JFrog](infrastructure/terraform.md) — configuration Pro-ready, tests simulés et parcours d’import sous licence ;
 - `infrastructure/kubernetes.md` — déploiement Minikube et gestion des secrets.
 
 ## Observabilité
