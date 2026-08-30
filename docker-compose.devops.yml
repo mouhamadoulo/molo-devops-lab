@@ -7,7 +7,13 @@ services:
     environment:
       POSTGRES_DB: ${SONAR_DB_NAME:-sonarqube}
       POSTGRES_USER: ${SONAR_DB_USERNAME:-sonarqube}
-      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD:?Set SONAR_DB_PASSWORD outside Git}
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD:-}
+    command:
+      - sh
+      - -ec
+      - >-
+        test -n "$$POSTGRES_PASSWORD" || { echo 'SONAR_DB_PASSWORD is required' >&2; exit 1; };
+        exec docker-entrypoint.sh postgres
     volumes:
       - sonarqube-postgres-data:/var/lib/postgresql
     healthcheck:
@@ -32,7 +38,7 @@ services:
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/${SONAR_DB_NAME:-sonarqube}
       SONAR_JDBC_USERNAME: ${SONAR_DB_USERNAME:-sonarqube}
-      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD:?Set SONAR_DB_PASSWORD outside Git}
+      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD:-}
     ports:
       - "127.0.0.1:${SONAR_PORT:-9000}:9000"
     volumes:
@@ -65,8 +71,220 @@ services:
     mem_limit: 3g
     pids_limit: 500
 
+  artifactory-db:
+    profiles: [artifacts]
+    image: postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+    environment:
+      POSTGRES_DB: ${ARTIFACTORY_DB_NAME:-artifactory}
+      POSTGRES_USER: ${ARTIFACTORY_DB_USERNAME:-artifactory}
+      POSTGRES_PASSWORD: ${ARTIFACTORY_DB_PASSWORD:-}
+    command:
+      - sh
+      - -ec
+      - >-
+        test -n "$$POSTGRES_PASSWORD" || { echo 'ARTIFACTORY_DB_PASSWORD is required' >&2; exit 1; };
+        exec docker-entrypoint.sh postgres
+    volumes:
+      - artifactory-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    networks: [artifacts]
+    restart: unless-stopped
+    stop_grace_period: 30s
+    security_opt: [no-new-privileges:true]
+    cpus: 0.5
+    mem_limit: 512m
+    pids_limit: 200
+
+  artifactory:
+    profiles: [artifacts]
+    image: releases-docker.jfrog.io/jfrog/artifactory-oss:7.161.20@sha256:b0e71ce0c1cca3a4028c56e5afeacfe7280602f56be961e2c756e5a3deee482a
+    environment:
+      JF_SHARED_DATABASE_TYPE: postgresql
+      JF_SHARED_DATABASE_DRIVER: org.postgresql.Driver
+      JF_SHARED_DATABASE_URL: jdbc:postgresql://artifactory-db:5432/${ARTIFACTORY_DB_NAME:-artifactory}
+      JF_SHARED_DATABASE_USERNAME: ${ARTIFACTORY_DB_USERNAME:-artifactory}
+      JF_SHARED_DATABASE_PASSWORD: ${ARTIFACTORY_DB_PASSWORD:-}
+      JF_SHARED_EXTRAJAVAOPTS: -Xms512m -Xmx2g
+      JF_JFCONNECT_ENABLED: "false"
+      JF_JFCONNECT_SERVICE_ENABLED: "false"
+    ports:
+      - "127.0.0.1:${ARTIFACTORY_PORT:-8082}:8082"
+    volumes:
+      - artifactory-data:/var/opt/jfrog/artifactory
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          bash -c 'exec 3<>/dev/tcp/127.0.0.1/8082 &&
+          printf "GET /router/api/v1/system/readiness HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 &&
+          read -r status <&3 && [[ "$$status" == *" 200 "* ]]'
+      interval: 15s
+      timeout: 10s
+      retries: 40
+      start_period: 120s
+    depends_on:
+      artifactory-db:
+        condition: service_healthy
+    networks: [artifacts]
+    restart: unless-stopped
+    stop_grace_period: 120s
+    security_opt: [no-new-privileges:true]
+    cpus: 4.0
+    mem_limit: 4g
+    pids_limit: 1000
+
+  jcr-db:
+    profiles: [registry]
+    image: postgres:17.10-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+    environment:
+      POSTGRES_DB: ${JCR_DB_NAME:-jcr}
+      POSTGRES_USER: ${JCR_DB_USERNAME:-jcr}
+      POSTGRES_PASSWORD: ${JCR_DB_PASSWORD:-}
+    command:
+      - sh
+      - -ec
+      - >-
+        test -n "$$POSTGRES_PASSWORD" || { echo 'JCR_DB_PASSWORD is required' >&2; exit 1; };
+        exec docker-entrypoint.sh postgres
+    volumes:
+      - jcr-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+    networks: [registry]
+    restart: unless-stopped
+    stop_grace_period: 30s
+    security_opt: [no-new-privileges:true]
+    cpus: 0.5
+    mem_limit: 512m
+    pids_limit: 200
+
+  jcr:
+    profiles: [registry]
+    image: releases-docker.jfrog.io/jfrog/artifactory-jcr:7.161.20@sha256:d17bb796de9e1f77e521e0b28b5121acc1edcc873ef308245865e04c343da2dc
+    environment:
+      JF_SHARED_DATABASE_TYPE: postgresql
+      JF_SHARED_DATABASE_DRIVER: org.postgresql.Driver
+      JF_SHARED_DATABASE_URL: jdbc:postgresql://jcr-db:5432/${JCR_DB_NAME:-jcr}
+      JF_SHARED_DATABASE_USERNAME: ${JCR_DB_USERNAME:-jcr}
+      JF_SHARED_DATABASE_PASSWORD: ${JCR_DB_PASSWORD:-}
+      JF_SHARED_EXTRAJAVAOPTS: -Xms512m -Xmx2g
+    ports:
+      - "127.0.0.1:${JCR_PORT:-8084}:8082"
+    volumes:
+      - jcr-data:/var/opt/jfrog/artifactory
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          bash -c 'exec 3<>/dev/tcp/127.0.0.1/8082 &&
+          printf "GET /router/api/v1/system/readiness HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n" >&3 &&
+          read -r status <&3 && [[ "$$status" == *" 200 "* ]]'
+      interval: 15s
+      timeout: 10s
+      retries: 40
+      start_period: 120s
+    depends_on:
+      jcr-db:
+        condition: service_healthy
+    networks: [registry]
+    restart: unless-stopped
+    stop_grace_period: 120s
+    security_opt: [no-new-privileges:true]
+    cpus: 4.0
+    mem_limit: 4g
+    pids_limit: 1000
+
+  artifactory-bootstrap:
+    profiles: [artifacts-tools]
+    image: curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6
+    environment:
+      JFROG_INTERNAL_URL: http://artifactory:8082/artifactory
+      JFROG_ADMIN_TOKEN: ${JFROG_ADMIN_TOKEN:-}
+    volumes:
+      - ./infrastructure/jfrog/bootstrap.sh:/opt/jfrog/bootstrap.sh:ro
+      - ./infrastructure/jfrog/repositories:/opt/jfrog/repositories:ro
+    entrypoint: [/bin/sh, /opt/jfrog/bootstrap.sh]
+    depends_on:
+      artifactory:
+        condition: service_healthy
+    networks: [artifacts]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp]
+    cpus: 0.25
+    mem_limit: 128m
+    pids_limit: 50
+
+  artifactory-promote:
+    profiles: [artifacts-tools]
+    image: curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6
+    environment:
+      JFROG_INTERNAL_URL: http://artifactory:8082/artifactory
+      JFROG_ADMIN_TOKEN: ${JFROG_ADMIN_TOKEN:-}
+      VERSION: ${VERSION:-}
+    volumes:
+      - ./infrastructure/jfrog/promote.sh:/opt/jfrog/promote.sh:ro
+    entrypoint: [/bin/sh, /opt/jfrog/promote.sh]
+    depends_on:
+      artifactory:
+        condition: service_healthy
+    networks: [artifacts]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp]
+    cpus: 0.25
+    mem_limit: 128m
+    pids_limit: 50
+
+  artifactory-resolve:
+    profiles: [artifacts-tools]
+    image: maven:3.9.13-eclipse-temurin-25@sha256:ade3c87e3cdfbe04932afa16b31814cbf60b0122d21d78a76530684a1eeb7cc2
+    environment:
+      JFROG_URL: http://artifactory:8082/artifactory
+      JFROG_USERNAME: ${JFROG_USERNAME:-}
+      JFROG_TOKEN: ${JFROG_TOKEN:-}
+      VERSION: ${VERSION:-}
+    volumes:
+      - ./infrastructure/jfrog/settings.xml.example:/opt/jfrog/settings.xml:ro
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - >-
+        test -n "$$VERSION" || { echo 'VERSION is required' >&2; exit 1; };
+        test -n "$$JFROG_USERNAME" || { echo 'JFROG_USERNAME is required' >&2; exit 1; };
+        test -n "$$JFROG_TOKEN" || { echo 'JFROG_TOKEN is required' >&2; exit 1; };
+        mkdir -p /tmp/consumer /tmp/m2/repository;
+        cd /tmp/consumer;
+        mvn -B -s /opt/jfrog/settings.xml
+        -Dmaven.repo.local=/tmp/m2/repository dependency:get
+        -Dartifact=com.molo:devops-store-backend:$$VERSION -Dtransitive=false
+    depends_on:
+      artifactory:
+        condition: service_healthy
+    networks: [artifacts]
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cpus: 1.0
+    mem_limit: 1g
+    pids_limit: 200
+
 networks:
   quality:
+    driver: bridge
+  artifacts:
+    driver: bridge
+  registry:
     driver: bridge
 
 volumes:
@@ -75,3 +293,7 @@ volumes:
   sonarqube-extensions:
   sonarqube-logs:
   sonarqube-temp:
+  artifactory-postgres-data:
+  artifactory-data:
+  jcr-postgres-data:
+  jcr-data:

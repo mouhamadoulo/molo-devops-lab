@@ -131,9 +131,11 @@ uniquement après lecture des notes de version et relance de toutes les validati
   sans stack concurrente.
 - La licence AIStor Free est acceptée pour ce laboratoire single-node, montée en lecture seule et
   exclue de Git ; cette édition ne fournit ni haute disponibilité ni SLA/SLO.
-- `docker-compose.devops.yml` utilise les profils `quality`, `artifacts` et `observability`
-  pour éviter de consommer toutes les ressources simultanément.
-- Terraform configure les repositories JFrog ; il ne duplique ni Compose ni les manifestes K8s.
+- `docker-compose.devops.yml` utilise les profils `quality`, `artifacts`, `registry` et
+  `observability` pour éviter de consommer toutes les ressources simultanément ; `registry` reste
+  optionnel et `observability` est encore planifié.
+- Terraform ne configurera les repositories JFrog qu'avec une souscription exposant les API de
+  configuration ; l'édition OSS conserve la création initiale dans l'interface.
 - Kubernetes utilise des YAML natifs pédagogiques, sans Helm dans le MVP.
 - Artifactory OSS illustre Maven local/remote/virtual. Le registre Docker JFrog est optionnel et
   requiert JFrog Container Registry ou une édition Artifactory adaptée.
@@ -627,38 +629,55 @@ chacun un rapport texte et un rapport SARIF non vides.
 
 **Implémentation :**
 
-- [ ] Vérifier et épingler une image Artifactory OSS 7.x disponible avant écriture de Compose.
-- [ ] Ajouter Artifactory au profil `artifacts` avec volume, healthcheck et ressources.
-- [ ] Créer Maven local releases/snapshots, remote Central et virtual via API ou UI initiale.
-- [ ] Configurer `distributionManagement` et un `settings.xml.example` alimenté par variables.
-- [ ] Publier un JAR snapshot, le résoudre depuis le virtual puis publier une release.
-- [ ] Illustrer une promotion simple par copie/move entre repositories quand l'édition le permet.
-- [ ] Ajouter publication CI uniquement sur `main`/tag et seulement si les secrets existent.
-- [ ] Documenter GitHub vs Actions vs Artifactory vs registre Docker.
-- [ ] Garder npm hors périmètre : le frontend est une application, pas un package réutilisable.
-- [ ] Ajouter un profil JFrog Container Registry optionnel pour les images, sans prétendre que
+- [x] Vérifier et épingler une image Artifactory OSS 7.x disponible avant écriture de Compose.
+- [x] Ajouter Artifactory au profil `artifacts` avec volume, healthcheck et ressources.
+- [x] Créer Maven local releases/snapshots, remote Central et virtual via l'UI initiale, puis les
+  vérifier de manière idempotente par l'API Storage publique.
+- [x] Configurer `distributionManagement` et un `settings.xml.example` alimenté par variables.
+- [x] Publier un JAR snapshot et une candidate, puis les résoudre selon la politique du virtual.
+- [x] Promouvoir sans écrasement par checksum deploy, l'API de copie étant réservée à Pro.
+- [x] Ajouter publication CI uniquement sur `main`/tag et seulement si les secrets existent.
+- [x] Documenter GitHub vs Actions vs Artifactory vs registre Docker.
+- [x] Garder npm hors périmètre : le frontend est une application, pas un package réutilisable.
+- [x] Ajouter un profil JFrog Container Registry optionnel pour les images, sans prétendre que
   Docker est disponible dans Artifactory OSS.
 
 **Commandes de validation :**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile artifacts config
-docker compose -f docker-compose.devops.yml --profile artifacts up -d
-curl.exe http://localhost:8082/router/api/v1/system/health
-.\backend\mvnw.cmd -s infrastructure/jfrog/settings.xml.example deploy
+make artifacts-up
+make artifacts-verify
+make artifacts-verify
+make artifacts-publish-snapshot VERSION=0.1.20260830-SNAPSHOT
+make artifacts-resolve VERSION=0.1.20260830-SNAPSHOT
+make artifacts-publish-candidate VERSION=0.1.20260830
+# Échec attendu : candidates est exclu du virtual avant promotion.
+make artifacts-resolve VERSION=0.1.20260830
+if ($LASTEXITCODE -eq 0) { throw "La candidate ne doit pas être résolue avant promotion" }
+make artifacts-promote VERSION=0.1.20260830
+make artifacts-resolve VERSION=0.1.20260830
+# Échec attendu : une release existante n'est jamais écrasée.
+make artifacts-promote VERSION=0.1.20260830
+if ($LASTEXITCODE -eq 0) { throw "Une seconde promotion ne doit pas écraser la release" }
 ```
+
+Utiliser une version candidate encore absente lors d'une nouvelle exécution. L'API Storage OSS
+prouve uniquement la présence des cinq clés ; les publications, l'échec avant promotion et les
+résolutions ci-dessus prouvent fonctionnellement leur politique Maven.
 
 **Critères d'acceptation :**
 
-- [ ] Le JAR apparaît dans un repository Maven local et se résout via le virtual.
-- [ ] Les identifiants proviennent exclusivement de variables ou secrets.
-- [ ] Les fonctions Docker/licenciées sont clairement séparées du parcours OSS garanti.
+- [x] Le JAR apparaît dans un repository Maven local et se résout via le virtual.
+- [x] Les identifiants proviennent exclusivement de variables ou secrets.
+- [x] Les fonctions Docker/licenciées sont clairement séparées du parcours OSS garanti.
 
 **Dépendances :** phases 5, 6 et 8 ; 4 Go de RAM supplémentaires recommandés.
 
 ## PHASE 10 — Terraform
 
-**Objectif :** gérer comme code les repositories JFrog réellement utilisés par le laboratoire.
+**Objectif :** préparer la gestion comme code des repositories JFrog avec une édition donnant
+accès aux API de configuration.
 
 **Fichiers concernés :** `infrastructure/terraform/providers.tf`, `main.tf`, `variables.tf`,
 `outputs.tf`, `terraform.tfvars.example`, `.gitignore`, `docs/infrastructure/terraform.md`.
@@ -667,7 +686,9 @@ curl.exe http://localhost:8082/router/api/v1/system/health
 
 - [ ] Installer Terraform 1.15.4 et vérifier le binaire Windows ARM64.
 - [ ] Contraindre Terraform et le provider `jfrog/artifactory` 12.11.3.
-- [ ] Déclarer Maven local releases/snapshots, remote Central et virtual.
+- [ ] Vérifier d'abord qu'une licence Artifactory Pro ou supérieure expose les API nécessaires ;
+  ne pas prétendre que le provider peut appliquer ces ressources à l'édition OSS actuelle.
+- [ ] Déclarer Maven local releases/snapshots, remote Central et virtual si ce prérequis est rempli.
 - [ ] Fournir URL et credentials par variables sensibles `TF_VAR_*`, jamais dans tfvars suivi.
 - [ ] Produire des outputs non sensibles pour les URLs de résolution/déploiement.
 - [ ] Ignorer state, plan binaire et `.terraform/`, mais versionner `.terraform.lock.hcl`.

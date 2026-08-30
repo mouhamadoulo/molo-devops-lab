@@ -5,11 +5,14 @@ on:
     branches: [main]
     paths:
       - 'backend/**'
+      - 'infrastructure/jfrog/**'
       - '.github/workflows/backend-ci.yml'
   push:
     branches: [main]
+    tags: ['v*']
     paths:
       - 'backend/**'
+      - 'infrastructure/jfrog/**'
       - '.github/workflows/backend-ci.yml'
   workflow_dispatch:
 
@@ -74,3 +77,72 @@ jobs:
       - name: Remove AIStor license
         if: ${{ always() }}
         run: rm -f "${MINIO_LICENSE_FILE:-$RUNNER_TEMP/minio.license}"
+
+  publish:
+    name: Publish backend artifact
+    if: github.event_name == 'push'
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Detect JFrog configuration
+        id: jfrog-config
+        env:
+          JFROG_URL: ${{ vars.JFROG_URL }}
+          JFROG_USERNAME: ${{ vars.JFROG_USERNAME }}
+          JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
+        run: |
+          if [[ -n "$JFROG_URL" && -n "$JFROG_USERNAME" && -n "$JFROG_TOKEN" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "JFrog publication is disabled: configure JFROG_URL, JFROG_USERNAME and JFROG_TOKEN."
+          fi
+
+      - name: Check out repository
+        if: steps.jfrog-config.outputs.enabled == 'true'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Java
+        if: steps.jfrog-config.outputs.enabled == 'true'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          cache-dependency-path: backend/pom.xml
+
+      - name: Select Maven version
+        if: steps.jfrog-config.outputs.enabled == 'true'
+        env:
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+        run: |
+          if [[ "$REF_TYPE" == "tag" ]]; then
+            [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "Release tags must match vX.Y.Z" >&2
+              exit 1
+            }
+            version="${REF_NAME#v}"
+          else
+            version="0.1.0-SNAPSHOT"
+          fi
+          echo "ARTIFACT_VERSION=$version" >> "$GITHUB_ENV"
+
+      - name: Publish Maven artifact
+        if: steps.jfrog-config.outputs.enabled == 'true'
+        working-directory: backend
+        env:
+          JFROG_URL: ${{ vars.JFROG_URL }}
+          JFROG_USERNAME: ${{ vars.JFROG_USERNAME }}
+          JFROG_TOKEN: ${{ secrets.JFROG_TOKEN }}
+        run: >-
+          ./mvnw -B -DskipTests
+          -Drevision="$ARTIFACT_VERSION"
+          -s ../infrastructure/jfrog/settings.xml.example
+          deploy

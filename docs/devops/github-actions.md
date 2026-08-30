@@ -8,7 +8,7 @@ rapport ; le workflow sécurité s'exécute aussi chaque lundi à 05:00 UTC.
 
 | Workflow | Validation | Artefact |
 |---|---|---|
-| Backend CI | Java 25, Maven, PostgreSQL et AIStor | Surefire et JaCoCo, 14 jours |
+| Backend CI | Java 25, Maven, PostgreSQL, AIStor et publication Maven JFrog conditionnelle | Surefire et JaCoCo, 14 jours |
 | Frontend CI | npm, ESLint, Vitest avec couverture et build Angular | couverture HTML/LCOV, 14 jours |
 | Docker CI | images backend et frontend avec Buildx, puis scans Trivy | rapports texte et SARIF Trivy, 14 jours ; aucune image publiée |
 | Security CI | filesystem, dépendances, secrets et configurations avec Trivy | rapports texte et SARIF Trivy, 14 jours |
@@ -31,6 +31,24 @@ Remove-Variable licenseBytes, licenseBase64
 
 Les Pull Requests de forks ne reçoivent aucun secret. Importer le changement vérifié dans une
 branche interne avant d'exécuter le backend complet.
+
+## Publication Maven JFrog
+
+Le workflow backend accepte aussi les tags `v*`. Son job `publish` dépend de `verify`, ne s'exécute
+jamais sur une pull request et reste désactivé tant que la configuration suivante n'est pas
+complète :
+
+- variables Actions `JFROG_URL` et `JFROG_USERNAME` ;
+- secret Actions `JFROG_TOKEN`.
+
+`JFROG_URL` doit être joignable en HTTPS depuis le runner. `http://localhost:8082` désigne le
+runner lui-même et ne permet pas à un runner GitHub hébergé d'atteindre l'instance locale ; utiliser
+une instance distante sécurisée ou un runner auto-hébergé dans le même réseau.
+
+Un push sur `main` publie `0.1.0-SNAPSHOT`. Un tag strict `vX.Y.Z` publie la candidate `X.Y.Z` ; un
+tag non conforme échoue avant Maven. La CI ne promeut jamais automatiquement une candidate et ne
+publie aucune image Docker. Voir le [guide Artifactory](jfrog-artifactory.md) pour les permissions
+minimales et le parcours local.
 
 ## Commandes locales
 

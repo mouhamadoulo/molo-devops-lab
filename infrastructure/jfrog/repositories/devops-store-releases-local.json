@@ -1,0 +1,8 @@
+{
+  "key": "devops-store-releases-local",
+  "rclass": "local",
+  "packageType": "maven",
+  "repoLayoutRef": "maven-2-default",
+  "handleReleases": true,
+  "handleSnapshots": false
+}

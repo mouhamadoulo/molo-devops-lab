@@ -1,0 +1,10 @@
+{
+  "key": "devops-store-snapshots-local",
+  "rclass": "local",
+  "packageType": "maven",
+  "repoLayoutRef": "maven-2-default",
+  "handleReleases": false,
+  "handleSnapshots": true,
+  "maxUniqueSnapshots": 5,
+  "snapshotVersionBehavior": "unique"
+}
