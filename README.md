@@ -13,8 +13,10 @@ livraison.
 > conditionnel prépare la même analyse en CI. Trivy contrôle le dépôt, les dépendances, les
 > configurations et les images localement et en CI ; la phase 8 est terminée et fusionnée via la
 > [Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18). La phase 9 fournit
-> Artifactory OSS, la publication/résolution Maven et une promotion compatible OSS ; Terraform,
-> Kubernetes et l'observabilité restent planifiés dans le
+> Artifactory OSS, la publication/résolution Maven et une promotion compatible OSS. La phase 10
+> décrit les cinq repositories avec Terraform 1.15.4 et des tests simulés ; import, apply et
+> idempotence restent reportés faute de licence Artifactory Pro. Kubernetes et l'observabilité
+> restent planifiés dans le
 > [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
@@ -50,7 +52,8 @@ flowchart LR
 - une licence locale AIStor Free pour les tests et le stockage objet, jamais versionnée ;
 - Git ;
 - GNU Make est optionnel ; les commandes Docker Compose directes sont documentées pour Windows ;
-- Terraform, kubectl et Minikube restent requis uniquement pour les phases d'infrastructure à venir.
+- Terraform 1.15.4 pour valider la configuration JFrog simulée ;
+- kubectl et Minikube restent requis uniquement pour les phases Kubernetes à venir.
 
 Les versions de référence et l'état de l'outillage local sont détaillés dans le
 [plan](docs/IMPLEMENTATION_PLAN.md#socle-de-versions).

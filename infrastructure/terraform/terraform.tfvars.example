@@ -1,0 +1,4 @@
+artifactory_url            = "https://example.jfrog.io/artifactory"
+confirm_pro_repository_api = false
+
+# Never store a token here. Use TF_VAR_artifactory_access_token in the environment.
