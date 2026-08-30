@@ -570,6 +570,10 @@ couverture. Sur Windows ARM64, le Scanner NPM utilise Java 25 x64 via
 
 ## PHASE 8 — Trivy
 
+**Statut :** terminée et fusionnée dans `main` le 29 août 2026 via la
+[Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18), merge commit
+`333a52a`.
+
 **Objectif :** scanner dépôt, dépendances, secrets, images et IaC localement et dans la CI.
 
 **Fichiers concernés :** `.github/workflows/security.yml`, `Makefile`, `.trivyignore.yaml` si une

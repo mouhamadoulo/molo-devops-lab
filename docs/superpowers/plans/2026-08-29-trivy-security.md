@@ -1,5 +1,9 @@
 # Trivy Security Scanning Implementation Plan
 
+**Statut d'exécution :** terminé et fusionné dans `main` le 29 août 2026 via la
+[Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18), merge commit
+`333a52a`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Livrer des scans Trivy 0.73.0 reproductibles et bloquants pour le dépôt, les secrets, l’IaC et les images backend/frontend, localement et dans GitHub Actions.

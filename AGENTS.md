@@ -20,7 +20,8 @@ et l'observabilité.
 - les images multi-stage backend/frontend et `docker-compose.yml` démarrent Nginx, Spring Boot,
   PostgreSQL et AIStor Free avec healthchecks ; GitHub Actions et le profil qualité SonarQube sont
   opérationnels ; Trivy contrôle le dépôt, les dépendances, les configurations et les images avec
-  des rapports CI, tandis que JFrog, l'infrastructure et l'observabilité restent planifiés ;
+  des rapports CI ; la phase 8 est terminée et fusionnée sur `main` via la PR #18, tandis que
+  JFrog, l'infrastructure et l'observabilité restent planifiés ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
   (`frontend/package.json`, `Makefile`, fichiers Compose, etc.) n'existent pas.
 

@@ -11,8 +11,9 @@ livraison.
 > [Pull Request #6](https://github.com/mouhamadoulo/molo-devops-lab/pull/6). SonarQube analyse
 > localement les projets backend et frontend avec leurs tests et leur couverture ; un workflow
 > conditionnel prépare la même analyse en CI. Trivy contrôle le dépôt, les dépendances, les
-> configurations et les images localement et en CI. JFrog, l'infrastructure et l'observabilité
-> restent planifiés dans le
+> configurations et les images localement et en CI ; la phase 8 est terminée et fusionnée via la
+> [Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18). JFrog,
+> l'infrastructure et l'observabilité restent planifiés dans le
 > [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture

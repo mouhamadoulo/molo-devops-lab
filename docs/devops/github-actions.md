@@ -88,6 +88,15 @@ Le premier run backend a révélé que `backend/mvnw` était enregistré sans bi
 commit `34b7dbd` a restauré le mode `100755` sans modifier le contenu du wrapper ; le nouveau run
 backend a ensuite réussi.
 
+La [Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18), fusionnée dans
+`main` le 29 août 2026, clôt la phase 8. À la révision finale `3b0b9b8`, les six jobs Backend CI,
+Frontend CI, Docker CI et Security réussissent. Les runs Security
+[33273062143](https://github.com/mouhamadoulo/molo-devops-lab/actions/runs/33273062143) et Docker CI
+[33273062128](https://github.com/mouhamadoulo/molo-devops-lab/actions/runs/33273062128) fournissent
+les quatre artefacts Trivy vérifiés : `trivy-filesystem-33273062143-1`,
+`trivy-config-33273062143-1`, `trivy-image-backend-33273062128-1` et
+`trivy-image-frontend-33273062128-1`.
+
 ## Diagnostic
 
 - licence absente : vérifier le nom dans les deux magasins de secrets ;
