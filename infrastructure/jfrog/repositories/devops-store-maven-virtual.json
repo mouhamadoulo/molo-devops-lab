@@ -1,0 +1,12 @@
+{
+  "key": "devops-store-maven-virtual",
+  "rclass": "virtual",
+  "packageType": "maven",
+  "repoLayoutRef": "maven-2-default",
+  "repositories": [
+    "devops-store-releases-local",
+    "devops-store-snapshots-local",
+    "maven-central-remote"
+  ],
+  "defaultDeploymentRepo": "devops-store-snapshots-local"
+}

@@ -3,6 +3,7 @@
 COMPOSE ?= docker compose
 DEVOPS_COMPOSE ?= docker compose -f docker-compose.devops.yml
 DOCKER ?= docker
+MAVEN ?= ./mvnw
 ACTIONLINT_IMAGE ?= rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
 MAVEN_IMAGE ?= maven:3.9.13-eclipse-temurin-25@sha256:ade3c87e3cdfbe04932afa16b31814cbf60b0122d21d78a76530684a1eeb7cc2
 TRIVY_IMAGE ?= ghcr.io/aquasecurity/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c
@@ -33,6 +34,10 @@ TRIVY_IMAGE_RUN = $(DOCKER) run --rm \
 
 .PHONY: help application build test backend-test frontend-test ci-lint up down status logs \
 	quality-config quality-up quality-down quality-status quality-logs quality-reset \
+	artifacts-config artifacts-up artifacts-down artifacts-status artifacts-logs artifacts-reset \
+	artifacts-bootstrap artifacts-verify artifacts-publish-snapshot artifacts-publish-candidate \
+	artifacts-promote artifacts-resolve \
+	registry-config registry-up registry-down registry-status registry-logs registry-reset \
 	sonar sonar-backend sonar-frontend \
 	trivy-verify trivy-prepare-maven trivy-fs trivy-config trivy-image-backend trivy-image-frontend \
 	trivy-images security
@@ -62,6 +67,24 @@ help: ## Show available commands
 	$(info   quality-status    Show SonarQube container and health status)
 	$(info   quality-logs      Follow SonarQube and database logs)
 	$(info   quality-reset     Delete the local SonarQube stack and its volumes)
+	$(info   artifacts-config  Validate the Artifactory OSS Compose profile)
+	$(info   artifacts-up      Start Artifactory OSS and its PostgreSQL database)
+	$(info   artifacts-down    Stop Artifactory while preserving artifact data)
+	$(info   artifacts-status  Show Artifactory and database health)
+	$(info   artifacts-logs    Follow Artifactory and database logs)
+	$(info   artifacts-reset   Delete the local Artifactory stack and its volumes)
+	$(info   artifacts-verify  Verify presence of the five Maven repository keys created in the OSS UI)
+	$(info   artifacts-bootstrap Alias for artifacts-verify)
+	$(info   artifacts-publish-snapshot Publish VERSION=X.Y.Z-SNAPSHOT to Artifactory)
+	$(info   artifacts-publish-candidate Publish VERSION=X.Y.Z as a release candidate)
+	$(info   artifacts-promote Promote candidate VERSION=X.Y.Z without overwrite)
+	$(info   artifacts-resolve Resolve VERSION through the Maven virtual with a fresh cache)
+	$(info   registry-config   Validate the optional JCR Compose profile)
+	$(info   registry-up       Start JCR and its PostgreSQL database)
+	$(info   registry-down     Stop JCR while preserving registry data)
+	$(info   registry-status   Show JCR and database health)
+	$(info   registry-logs     Follow JCR and database logs)
+	$(info   registry-reset    Delete the local JCR stack and its volumes)
 	$(info   sonar             Analyze backend and frontend with SonarQube)
 	$(info   sonar-backend     Verify and analyze the backend with SonarQube)
 	$(info   sonar-frontend    Verify and analyze the frontend with SonarQube)
@@ -74,7 +97,7 @@ build: ## Build the backend and frontend images
 test: backend-test frontend-test ## Run backend and frontend validations
 
 backend-test: ## Run the complete Maven verification
-	cd backend && ./mvnw clean verify
+	cd backend && $(MAVEN) clean verify
 
 frontend-test: ## Install, lint, test and build the frontend
 	cd frontend && npm ci && npm run lint && npm run test:ci && npm run build
@@ -171,10 +194,69 @@ quality-logs: ## Follow SonarQube and database logs
 quality-reset: ## Delete the local SonarQube stack and its volumes
 	$(DEVOPS_COMPOSE) --profile quality down --volumes
 
+artifacts-config: ## Validate the Artifactory OSS Compose profile
+	$(DEVOPS_COMPOSE) --profile artifacts config --quiet
+
+artifacts-up: ## Start Artifactory OSS and its PostgreSQL database
+	$(DEVOPS_COMPOSE) --profile artifacts up -d --wait
+
+artifacts-down: ## Stop Artifactory while preserving artifact data
+	$(DEVOPS_COMPOSE) --profile artifacts down
+
+artifacts-status: ## Show Artifactory and database health
+	$(DEVOPS_COMPOSE) --profile artifacts ps
+
+artifacts-logs: ## Follow Artifactory and database logs
+	$(DEVOPS_COMPOSE) --profile artifacts logs --follow --tail=200
+
+artifacts-reset: ## Delete the local Artifactory stack and its volumes
+	$(DEVOPS_COMPOSE) --profile artifacts down --volumes
+
+artifacts-bootstrap: artifacts-verify ## Alias for artifacts-verify
+
+artifacts-verify: ## Verify presence of the five Maven repository keys created in the OSS UI
+	$(DEVOPS_COMPOSE) --profile artifacts --profile artifacts-tools run --rm artifactory-bootstrap
+
+artifacts-publish-snapshot: ## Publish VERSION=X.Y.Z-SNAPSHOT to Artifactory
+	@test -n "$(VERSION)" || { echo "VERSION=X.Y.Z-SNAPSHOT is required" >&2; exit 1; }
+	@echo "$(VERSION)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+-SNAPSHOT$$' || { echo "VERSION must match X.Y.Z-SNAPSHOT" >&2; exit 1; }
+	cd backend && $(MAVEN) -B -s ../infrastructure/jfrog/settings.xml.example -Drevision=$(VERSION) deploy
+
+artifacts-publish-candidate: ## Publish VERSION=X.Y.Z as a release candidate
+	@test -n "$(VERSION)" || { echo "VERSION=X.Y.Z is required" >&2; exit 1; }
+	@echo "$(VERSION)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$$' || { echo "VERSION must match X.Y.Z" >&2; exit 1; }
+	cd backend && $(MAVEN) -B -s ../infrastructure/jfrog/settings.xml.example -Drevision=$(VERSION) deploy
+
+artifacts-promote: ## Promote candidate VERSION=X.Y.Z without overwrite
+	@test -n "$(VERSION)" || { echo "VERSION=X.Y.Z is required" >&2; exit 1; }
+	VERSION=$(VERSION) $(DEVOPS_COMPOSE) --profile artifacts --profile artifacts-tools run --rm artifactory-promote
+
+artifacts-resolve: ## Resolve VERSION through the Maven virtual with a fresh cache
+	@test -n "$(VERSION)" || { echo "VERSION=X.Y.Z or X.Y.Z-SNAPSHOT is required" >&2; exit 1; }
+	VERSION=$(VERSION) $(DEVOPS_COMPOSE) --profile artifacts --profile artifacts-tools run --rm artifactory-resolve
+
+registry-config: ## Validate the optional JCR Compose profile
+	$(DEVOPS_COMPOSE) --profile registry config --quiet
+
+registry-up: ## Start JCR and its PostgreSQL database
+	$(DEVOPS_COMPOSE) --profile registry up -d --wait
+
+registry-down: ## Stop JCR while preserving registry data
+	$(DEVOPS_COMPOSE) --profile registry down
+
+registry-status: ## Show JCR and database health
+	$(DEVOPS_COMPOSE) --profile registry ps
+
+registry-logs: ## Follow JCR and database logs
+	$(DEVOPS_COMPOSE) --profile registry logs --follow --tail=200
+
+registry-reset: ## Delete the local JCR stack and its volumes
+	$(DEVOPS_COMPOSE) --profile registry down --volumes
+
 sonar: sonar-backend sonar-frontend ## Analyze backend and frontend with SonarQube
 
 sonar-backend: ## Verify and analyze the backend with SonarQube
-	cd backend && ./mvnw clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
+	cd backend && $(MAVEN) clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
 
 sonar-frontend: ## Verify and analyze the frontend with SonarQube
 	cd frontend && npm ci && npm run lint && npm run test:ci && npm run build && SONAR_SCANNER_JAVA_EXE_PATH="$$JAVA_HOME/bin/java" npm run sonar

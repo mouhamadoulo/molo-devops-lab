@@ -13,11 +13,12 @@
 
     <groupId>com.molo</groupId>
     <artifactId>devops-store-backend</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>${revision}</version>
     <name>DevOps Store Backend</name>
     <description>Product catalog API for the DevOps Store learning lab</description>
 
     <properties>
+        <revision>0.1.0-SNAPSHOT</revision>
         <java.version>25</java.version>
         <springdoc.version>3.0.3</springdoc.version>
         <testcontainers.version>2.0.5</testcontainers.version>
@@ -127,6 +128,19 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>devops-store-candidates</id>
+            <name>DevOps Store release candidates</name>
+            <url>${env.JFROG_URL}/devops-store-candidates-local</url>
+        </repository>
+        <snapshotRepository>
+            <id>devops-store-snapshots</id>
+            <name>DevOps Store snapshots</name>
+            <url>${env.JFROG_URL}/devops-store-snapshots-local</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <build>
         <plugins>

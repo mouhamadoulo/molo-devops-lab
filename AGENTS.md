@@ -20,8 +20,9 @@ et l'observabilité.
 - les images multi-stage backend/frontend et `docker-compose.yml` démarrent Nginx, Spring Boot,
   PostgreSQL et AIStor Free avec healthchecks ; GitHub Actions et le profil qualité SonarQube sont
   opérationnels ; Trivy contrôle le dépôt, les dépendances, les configurations et les images avec
-  des rapports CI ; la phase 8 est terminée et fusionnée sur `main` via la PR #18, tandis que
-  JFrog, l'infrastructure et l'observabilité restent planifiés ;
+  des rapports CI ; la phase 8 est terminée et fusionnée sur `main` via la PR #18 ; Artifactory
+  OSS, PostgreSQL 17, le parcours Maven et la publication CI conditionnelle de phase 9 sont
+  implémentés, tandis que Terraform, Kubernetes et l'observabilité restent planifiés ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
   (`frontend/package.json`, `Makefile`, fichiers Compose, etc.) n'existent pas.
 
@@ -52,10 +53,11 @@ Avant une modification importante, consulter :
   rapports JaCoCo, LCOV, Surefire et Vitest.
 - Trivy 0.73.0 conteneurisé et vérifié par Cosign, avec scans filesystem, configuration et images,
   rapports texte/SARIF et gate sur les vulnérabilités HIGH/CRITICAL corrigibles.
+- Artifactory OSS 7.161.20 avec PostgreSQL 17.10, repositories Maven local/remote/virtual,
+  publication snapshot/candidate, promotion par checksum et résolution à cache vierge.
 
 ### Cible planifiée
 
-- JFrog Artifactory ;
 - Terraform, Kubernetes/Minikube, Prometheus, Grafana, Loki et Grafana Alloy.
 
 Toujours distinguer cette cible de ce qui est réellement disponible dans le dépôt.
@@ -108,6 +110,10 @@ Le backend lit les variables suivantes, avec des valeurs locales par défaut :
 - Le profil qualité local utilise `SONAR_PORT`, `SONAR_DB_NAME`, `SONAR_DB_USERNAME` et
   `SONAR_DB_PASSWORD`. Les scans utilisent `SONAR_HOST_URL` et `SONAR_TOKEN` fournis hors Git.
   Sur Windows ARM64, définir aussi `SONAR_SCANNER_JAVA_EXE_PATH` vers le binaire Java 25 x64.
+- Le profil artefacts utilise `ARTIFACTORY_PORT`, `ARTIFACTORY_DB_NAME`,
+  `ARTIFACTORY_DB_USERNAME`, `ARTIFACTORY_DB_PASSWORD`, `JFROG_URL`, `JFROG_ADMIN_TOKEN`,
+  `JFROG_USERNAME` et `JFROG_TOKEN`. Le profil JCR optionnel utilise `JCR_PORT`, `JCR_DB_NAME`,
+  `JCR_DB_USERNAME` et `JCR_DB_PASSWORD`.
 
 Ne jamais versionner de secret réel. Ajouter les exemples sans secret dans un fichier
 `.env.example` si nécessaire et conserver les valeurs sensibles hors de Git.
@@ -163,7 +169,11 @@ docker compose down
 Avec GNU Make, les cibles disponibles sont `help`, `application`, `build`, `test`, `backend-test`,
 `frontend-test`, `up`, `down`, `status`, `logs`, `quality-config`, `quality-up`, `quality-down`,
 `quality-status`, `quality-logs`, `quality-reset`, `sonar`, `sonar-backend`, `sonar-frontend`,
-`ci-lint`, `trivy-verify`, `trivy-fs`, `trivy-config`, `trivy-images` et `security`.
+`artifacts-config`, `artifacts-up`, `artifacts-down`, `artifacts-status`, `artifacts-logs`,
+`artifacts-reset`, `artifacts-verify`, `artifacts-bootstrap`, `artifacts-publish-snapshot`,
+`artifacts-publish-candidate`, `artifacts-promote`, `artifacts-resolve`, `registry-config`,
+`registry-up`, `registry-down`, `registry-status`, `registry-logs`, `registry-reset`, `ci-lint`,
+`trivy-verify`, `trivy-fs`, `trivy-config`, `trivy-images` et `security`.
 `down` et `quality-down` préservent les volumes nommés ; `quality-reset` les supprime. Le fichier
 de licence reste hors Git. AIStor Free est limité au single-node sans SLA/SLO.
 
@@ -174,6 +184,10 @@ pour déplacer SonarQube.
 La politique Trivy et ses commandes sont documentées dans `docs/devops/trivy.md`. `make security`
 vérifie la provenance de l'image Trivy, prépare le cache Maven, scanne le dépôt et les
 configurations, construit les images applicatives puis les scanne.
+
+Le parcours JFrog est documenté dans `docs/devops/jfrog-artifactory.md`. En édition OSS, les cinq
+repositories sont créés une fois dans l'interface puis vérifiés par `make artifacts-verify` ; ne
+pas réintroduire les API de configuration ou de copie réservées à Artifactory Pro.
 
 ## Tests
 

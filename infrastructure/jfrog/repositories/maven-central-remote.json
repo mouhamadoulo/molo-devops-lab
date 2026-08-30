@@ -1,0 +1,9 @@
+{
+  "key": "maven-central-remote",
+  "rclass": "remote",
+  "packageType": "maven",
+  "url": "https://repo.maven.apache.org/maven2/",
+  "repoLayoutRef": "maven-2-default",
+  "handleReleases": true,
+  "handleSnapshots": false
+}

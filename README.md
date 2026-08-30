@@ -12,8 +12,9 @@ livraison.
 > localement les projets backend et frontend avec leurs tests et leur couverture ; un workflow
 > conditionnel prépare la même analyse en CI. Trivy contrôle le dépôt, les dépendances, les
 > configurations et les images localement et en CI ; la phase 8 est terminée et fusionnée via la
-> [Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18). JFrog,
-> l'infrastructure et l'observabilité restent planifiés dans le
+> [Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18). La phase 9 fournit
+> Artifactory OSS, la publication/résolution Maven et une promotion compatible OSS ; Terraform,
+> Kubernetes et l'observabilité restent planifiés dans le
 > [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
@@ -82,6 +83,7 @@ Les tests natifs restent disponibles avec `./mvnw clean verify` dans `backend/`,
 | Stockage objet S3 | <http://localhost:9000> |
 | Console AIStor | <http://localhost:9001> |
 | SonarQube (profil `quality`) | <http://localhost:9000> |
+| Artifactory OSS (profil `artifacts`) | <http://localhost:8082/ui/> |
 
 AIStor et SonarQube utilisent tous deux le port 9000 par défaut. Pour les exécuter en parallèle,
 modifier `SONAR_PORT` comme indiqué dans le [guide SonarQube](docs/devops/sonarqube.md).
@@ -103,6 +105,9 @@ make trivy-fs
 make trivy-config
 make trivy-images
 make security
+make artifacts-up
+make artifacts-verify
+make artifacts-status
 ```
 
 ## Documentation
@@ -113,5 +118,6 @@ make security
 - [GitHub Actions](docs/devops/github-actions.md)
 - [Qualité SonarQube](docs/devops/sonarqube.md)
 - [Sécurité Trivy](docs/devops/trivy.md)
+- [Artefacts Maven avec JFrog](docs/devops/jfrog-artifactory.md)
 - [Plan d'implémentation](docs/IMPLEMENTATION_PLAN.md)
 - [Cahier des charges](Prompt-DevSecOps-Lab.md)
