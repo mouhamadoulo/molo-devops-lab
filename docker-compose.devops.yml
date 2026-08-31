@@ -34,7 +34,7 @@ services:
 
   sonarqube:
     profiles: [quality]
-    image: sonarqube:26.7.0.124771-community@sha256:d4899d380ad9d7b63ebaa751e047f5a4f064f8902cdf7c1a3c3c96f7d71600ed
+    image: sonarqube:26.8.0.126808-community@sha256:9026624a61cd25542a402a9e7213dd7dbb39724ac9597e331e6b85362558c079
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/${SONAR_DB_NAME:-sonarqube}
       SONAR_JDBC_USERNAME: ${SONAR_DB_USERNAME:-sonarqube}
@@ -205,7 +205,7 @@ services:
 
   artifactory-bootstrap:
     profiles: [artifacts-tools]
-    image: curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6
+    image: curlimages/curl:8.21.0@sha256:7c12af72ceb38b7432ab85e1a265cff6ae58e06f95539d539b654f2cfa64bb13
     environment:
       JFROG_INTERNAL_URL: http://artifactory:8082/artifactory
       JFROG_ADMIN_TOKEN: ${JFROG_ADMIN_TOKEN:-}
@@ -227,7 +227,7 @@ services:
 
   artifactory-promote:
     profiles: [artifacts-tools]
-    image: curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6
+    image: curlimages/curl:8.21.0@sha256:7c12af72ceb38b7432ab85e1a265cff6ae58e06f95539d539b654f2cfa64bb13
     environment:
       JFROG_INTERNAL_URL: http://artifactory:8082/artifactory
       JFROG_ADMIN_TOKEN: ${JFROG_ADMIN_TOKEN:-}
@@ -249,7 +249,7 @@ services:
 
   artifactory-resolve:
     profiles: [artifacts-tools]
-    image: maven:3.9.13-eclipse-temurin-25@sha256:ade3c87e3cdfbe04932afa16b31814cbf60b0122d21d78a76530684a1eeb7cc2
+    image: maven:3.9.15-eclipse-temurin-26@sha256:029a8e2838ae68238ffb8be407cddbb3f07d4d839c60c6f26c619a69fd184531
     environment:
       JFROG_URL: http://artifactory:8082/artifactory
       JFROG_USERNAME: ${JFROG_USERNAME:-}
