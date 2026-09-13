@@ -8,6 +8,7 @@ ACTIONLINT_IMAGE ?= rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47e
 MAVEN_IMAGE ?= maven:3.9.13-eclipse-temurin-25@sha256:ade3c87e3cdfbe04932afa16b31814cbf60b0122d21d78a76530684a1eeb7cc2
 TRIVY_IMAGE ?= ghcr.io/aquasecurity/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c
 COSIGN_IMAGE ?= gcr.io/projectsigstore/cosign:v3.1.3@sha256:9e5c2f2edc34351160407ca3416c61855bdf9403c3c5936e0f0be7fc261611b8
+PROMETHEUS_IMAGE ?= prom/prometheus:v3.12.0-distroless@sha256:f39df5334dee301b885f77e0ff1159f5d8a43bf9db518f885544594799a1e3c2
 TRIVY_CACHE_DIR ?= $(CURDIR)/.trivycache
 SECURITY_REPORTS_DIR ?= $(CURDIR)/reports/security
 MAVEN_CACHE_DIR ?= $(CURDIR)/.m2
@@ -34,6 +35,8 @@ TRIVY_IMAGE_RUN = $(DOCKER) run --rm \
 
 .PHONY: help application build test backend-test frontend-test ci-lint up down status logs \
 	quality-config quality-up quality-down quality-status quality-logs quality-reset \
+	observability-config observability-up observability-down observability-status \
+	observability-logs observability-reset \
 	artifacts-config artifacts-up artifacts-down artifacts-status artifacts-logs artifacts-reset \
 	artifacts-bootstrap artifacts-verify artifacts-publish-snapshot artifacts-publish-candidate \
 	artifacts-promote artifacts-resolve \
@@ -67,6 +70,12 @@ help: ## Show available commands
 	$(info   quality-status    Show SonarQube container and health status)
 	$(info   quality-logs      Follow SonarQube and database logs)
 	$(info   quality-reset     Delete the local SonarQube stack and its volumes)
+	$(info   observability-config Validate Prometheus and the observability Compose profile)
+	$(info   observability-up  Start the application, Prometheus and Grafana)
+	$(info   observability-down Stop observability while preserving its data)
+	$(info   observability-status Show Prometheus and Grafana health)
+	$(info   observability-logs Follow Prometheus and Grafana logs)
+	$(info   observability-reset Delete only Prometheus and Grafana local data)
 	$(info   artifacts-config  Validate the Artifactory OSS Compose profile)
 	$(info   artifacts-up      Start Artifactory OSS and its PostgreSQL database)
 	$(info   artifacts-down    Stop Artifactory while preserving artifact data)
@@ -193,6 +202,35 @@ quality-logs: ## Follow SonarQube and database logs
 
 quality-reset: ## Delete the local SonarQube stack and its volumes
 	$(DEVOPS_COMPOSE) --profile quality down --volumes
+
+observability-config: ## Validate Prometheus and the observability Compose profile
+	$(COMPOSE) config --quiet
+	$(DEVOPS_COMPOSE) --profile observability config --quiet
+	$(DOCKER) run --rm \
+		-v "$(CURDIR)/infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
+		--entrypoint /bin/promtool $(PROMETHEUS_IMAGE) \
+		check config /etc/prometheus/prometheus.yml
+
+observability-up: ## Start the application, Prometheus and Grafana
+	$(MAKE) application
+	$(DEVOPS_COMPOSE) --profile observability up -d --wait prometheus grafana
+
+observability-down: ## Stop observability while preserving its data
+	$(DEVOPS_COMPOSE) --profile observability stop grafana prometheus
+	$(DEVOPS_COMPOSE) --profile observability rm -f grafana prometheus
+
+observability-status: ## Show Prometheus and Grafana health
+	$(DEVOPS_COMPOSE) --profile observability ps prometheus grafana
+
+observability-logs: ## Follow Prometheus and Grafana logs
+	$(DEVOPS_COMPOSE) --profile observability logs --follow --tail=200 prometheus grafana
+
+observability-reset: observability-down ## Delete only Prometheus and Grafana local data
+	@for volume in devops-store-prometheus-data devops-store-grafana-data; do \
+		if $(DOCKER) volume inspect "$$volume" >/dev/null 2>&1; then \
+			$(DOCKER) volume rm "$$volume"; \
+		fi; \
+	done
 
 artifacts-config: ## Validate the Artifactory OSS Compose profile
 	$(DEVOPS_COMPOSE) --profile artifacts config --quiet

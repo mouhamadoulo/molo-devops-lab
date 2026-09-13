@@ -92,6 +92,7 @@ class ProductApiIntegrationTest {
                 HttpResponse.BodyHandlers.ofString());
         assertThat(metrics.statusCode()).isEqualTo(200);
         assertThat(metrics.body()).contains("products_created_events_total");
+        assertThat(metrics.body()).contains("http_server_requests_seconds_bucket");
 
         var health = httpClient.send(
                 HttpRequest.newBuilder(URI.create(baseUri + "/actuator/health")).GET().build(),

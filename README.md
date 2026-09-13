@@ -15,7 +15,8 @@ livraison.
 > [Pull Request #18](https://github.com/mouhamadoulo/molo-devops-lab/pull/18). La phase 9 fournit
 > Artifactory OSS, la publication/résolution Maven et une promotion compatible OSS. La phase 10
 > décrit les cinq repositories avec Terraform 1.15.4 et des tests simulés ; import, apply et
-> idempotence restent reportés faute de licence Artifactory Pro. Kubernetes et l'observabilité
+> idempotence restent reportés faute de licence Artifactory Pro. La phase 11 Prometheus/Grafana
+> est terminée et validée localement. Kubernetes, Loki et Grafana Alloy
 > restent planifiés dans le
 > [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
@@ -28,8 +29,8 @@ flowchart LR
     API --> S3[(AIStor Free / S3 privé)]
     CI[GitHub Actions] --> QA[Tests / SonarQube / Trivy]
     QA --> ART[JFrog Artifactory]
-    ART --> K8S[Minikube / Kubernetes]
-    K8S --> OBS[Prometheus / Loki / Grafana]
+    API --> OBS[Prometheus / Grafana]
+    ART -. phase planifiée .-> K8S[Minikube / Kubernetes]
 ```
 
 ## Stack
@@ -40,7 +41,7 @@ flowchart LR
 | Build et tests | npm, Maven, Vitest, JUnit 5, Mockito, Testcontainers |
 | DevSecOps | GitHub Actions, SonarQube Community Build, Trivy, JFrog Artifactory |
 | Infrastructure | Docker Compose, Terraform, Kubernetes, Minikube |
-| Observabilité | Actuator, Micrometer, Prometheus, Grafana, Loki, Grafana Alloy |
+| Observabilité | Actuator, Micrometer, Prometheus et Grafana ; Loki et Grafana Alloy planifiés |
 | Planification | Jira, Confluence |
 
 ## Prérequis
@@ -87,6 +88,8 @@ Les tests natifs restent disponibles avec `./mvnw clean verify` dans `backend/`,
 | Console AIStor | <http://localhost:9001> |
 | SonarQube (profil `quality`) | <http://localhost:9000> |
 | Artifactory OSS (profil `artifacts`) | <http://localhost:8082/ui/> |
+| Prometheus (profil `observability`) | <http://localhost:9090> |
+| Grafana (profil `observability`) | <http://localhost:3000> |
 
 AIStor et SonarQube utilisent tous deux le port 9000 par défaut. Pour les exécuter en parallèle,
 modifier `SONAR_PORT` comme indiqué dans le [guide SonarQube](docs/devops/sonarqube.md).
@@ -111,6 +114,12 @@ make security
 make artifacts-up
 make artifacts-verify
 make artifacts-status
+make observability-config
+make observability-up
+make observability-status
+make observability-logs
+make observability-down
+make observability-reset
 ```
 
 ## Documentation
@@ -122,5 +131,7 @@ make artifacts-status
 - [Qualité SonarQube](docs/devops/sonarqube.md)
 - [Sécurité Trivy](docs/devops/trivy.md)
 - [Artefacts Maven avec JFrog](docs/devops/jfrog-artifactory.md)
+- [Métriques Prometheus](docs/observability/prometheus.md)
+- [Dashboard Grafana](docs/observability/grafana.md)
 - [Plan d'implémentation](docs/IMPLEMENTATION_PLAN.md)
 - [Cahier des charges](Prompt-DevSecOps-Lab.md)
