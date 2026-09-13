@@ -50,7 +50,7 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 - Docker 29.7.2, Docker Compose 5.4.0, Node 24.18.0, npm 11.16.0, Maven 3.9.13,
   Terraform 1.15.4 Windows ARM64, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
-  `maven:3.9.13-eclipse-temurin-25` compatible ARM64.
+  `maven:3.9.16-eclipse-temurin-25` compatible ARM64.
 - Minikube n'est pas encore installé ; GNU Make n'est pas disponible dans le `PATH` Windows
   courant, les cibles sont validées dans un conteneur éphémère.
 - Docker fonctionne en ligne de commande, avec un avertissement d'accès au fichier de
@@ -67,14 +67,14 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | TypeScript | 6.0.x | Plage imposée par Angular 22 : `>=6.0.0 <6.1.0` |
 | Node.js / npm | 24.18.0 / 11.16.0 | Node satisfait le minimum Angular `^24.15.0` |
 | Java | 25 LTS | Version source, cible, tests et runtime |
-| Spring Boot | 4.1.0 | Supporte Java 17 à 26 et Maven 3.6.3+ ; Tomcat surchargé en 11.0.25 (CVE) |
-| Maven Wrapper | 3.9.13 | Identique à l'installation locale actuelle |
-| Springdoc OpenAPI | 3.0.3 | Branche 3.x compatible Spring Boot 4 |
+| Spring Boot | 4.1.1 | Supporte Java 17 à 26 et Maven 3.6.3+ ; Tomcat surchargé en 11.0.25 (CVE) |
+| Maven Wrapper | 3.9.16 | Aligné sur l'image de build `maven:3.9.16-eclipse-temurin-25` |
+| Springdoc OpenAPI | 3.1.1 | Branche 3.x compatible Spring Boot 4 |
 | Testcontainers | 2.0.5 | Modules JUnit Jupiter et PostgreSQL |
 | PostgreSQL | 18.4 | Version courante supportée jusqu'en 2030 |
 | MinIO AIStor Free | RELEASE.2026-04-14T21-32-45Z | Single-node licencié, corrigé pour GHSA-xh8f-g2qw-gcm7 |
 | Flyway | BOM Spring Boot 4.1 | Ajouter explicitement `flyway-database-postgresql` |
-| SonarQube Community | 26.7.0.124771-community | Support Java 25 ; scan TypeScript 6 exigé comme test d'acceptation |
+| SonarQube Community | 26.8.0.126808-community | Support Java 25 ; scan TypeScript 6 exigé comme test d'acceptation |
 | Trivy | 0.73.0 | Image multi-architecture immuable, signature Cosign vérifiée avant les scans |
 | Terraform | 1.15.4 | Version stable avec binaire Windows ARM64 |
 | Provider JFrog Artifactory | 12.11.3 | Provisionnement des repositories Artifactory |
@@ -89,7 +89,9 @@ uniquement après lecture des notes de version et relance de toutes les validati
 
 - Les Dockerfiles utilisent des tags explicites puis enregistrent les digests au moment du
   premier build reproductible.
-- Le backend utilise un build Maven/JDK 25 et un runtime JRE 25 non-root.
+- Le backend utilise un build Maven/JDK 25 et un runtime JRE 25 non-root. Les mises à jour
+  Dependabot vers un JDK non LTS (par exemple `eclipse-temurin-26`) sont refusées ; seule la
+  version Maven de l'image est reprise sur une variante JDK 25.
 - Le frontend utilise Node 24.18 pour le build et Nginx non-root pour le runtime.
 - Artifactory OSS démarre d'abord avec une version 7.x explicitement vérifiée par
   `docker manifest inspect`; le tag retenu est ensuite figé dans Compose et documenté.
@@ -552,7 +554,7 @@ Maven/frontend, workflow qualité et `docs/devops/sonarqube.md`.
 docker compose -f docker-compose.devops.yml --profile quality config
 docker compose -f docker-compose.devops.yml --profile quality up -d --wait
 curl.exe http://localhost:9000/api/system/status
-.\backend\mvnw.cmd clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
+.\backend\mvnw.cmd clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar
 Set-Location frontend
 npm ci
 npm run lint

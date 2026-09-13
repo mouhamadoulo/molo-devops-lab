@@ -16,12 +16,12 @@ filesystem parcourt néanmoins ces fichiers.
 
 - Trivy : `ghcr.io/aquasecurity/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c` ;
 - Cosign : `gcr.io/projectsigstore/cosign:v3.1.3@sha256:9e5c2f2edc34351160407ca3416c61855bdf9403c3c5936e0f0be7fc261611b8` ;
-- Maven/JDK pour le cache local : `maven:3.9.13-eclipse-temurin-25@sha256:ade3c87e3cdfbe04932afa16b31814cbf60b0122d21d78a76530684a1eeb7cc2`.
+- Maven/JDK pour le cache local : `maven:3.9.16-eclipse-temurin-25@sha256:31618505df21177d2baa3dc574be2d0b0b32614c8539baca1f23a9136b766eb0`.
 
 Les deux artefacts applicatifs scannés sont `devops-store-backend:local`, construit sur
 `eclipse-temurin:25-jre-alpine@sha256:3137541deb3cac6626b5d9a4a2187bc0d6a34312f858bd2c67dd01e732e6b682`,
 et `devops-store-frontend:local`, construit sur
-`nginxinc/nginx-unprivileged:1.31.3-alpine3.24@sha256:f972e5322b9797dc2a6b830030094426437b1ae7032e4644496395336ac6fdac`.
+`nginxinc/nginx-unprivileged:1.31.5-alpine3.24@sha256:2ddec616f1cb58bcac057aa388f28cb81e35137641ef4226d321714499329bd1`.
 
 `make trivy-verify` vérifie la signature keyless de l’image Trivy contre l’identité GitHub Actions
 du projet Aqua Security, puis confirme que la version exécutée est exactement 0.73.0.

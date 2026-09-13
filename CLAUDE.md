@@ -35,7 +35,7 @@ principal `main` en parallèle. Suivre `docs/devops/git-workflow.md` : pas de pu
 - shell principal PowerShell 5.1 : pas de `&&`, passer les paramètres Maven contenant une virgule
   comme chaîne littérale (`'-Dtest=A,B'`) ;
 - Java 21 est l'actif par défaut ; les builds backend exigent Java 25 (OpenJDK 25 installé
-  localement ou image `maven:3.9.13-eclipse-temurin-25`) ;
+  localement ou image `maven:3.9.16-eclipse-temurin-25`) ;
 - GNU Make peut être absent du `PATH` : utiliser les commandes Compose équivalentes ou un
   conteneur éphémère, et ne pas déclarer une cible Make validée sans exécution réelle ;
 - Testcontainers exige un Docker Desktop réactif : vérifier `docker info` avant de conclure à un

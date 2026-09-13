@@ -2,14 +2,14 @@
 
 ## Architecture et limites
 
-La stack locale isole SonarQube Community Build 26.7 et sa base PostgreSQL dans le profil Compose
+La stack locale isole SonarQube Community Build 26.8 et sa base PostgreSQL dans le profil Compose
 `quality`. La base n'est pas publiée sur l'hôte et l'interface SonarQube écoute uniquement sur
 `127.0.0.1`. Les données, extensions, journaux et fichiers temporaires utilisent des volumes
 nommés.
 
 Deux projets conservent des cycles de build indépendants :
 
-- `devops-store-backend`, analysé avec SonarScanner for Maven 5.5.0.6356 ;
+- `devops-store-backend`, analysé avec SonarScanner for Maven 5.8.0.7211 ;
 - `devops-store-frontend`, analysé avec SonarScanner for NPM 5.0.0.
 
 Community Build analyse ici uniquement la branche principale. Le workflow qualité ne lance donc
@@ -69,7 +69,7 @@ secondes. `MINIO_LICENSE_FILE` doit pointer vers une licence locale lisible.
 
 ```powershell
 Set-Location backend
-.\mvnw.cmd clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
+.\mvnw.cmd clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar
 ```
 
 Depuis un shell compatible GNU Make à la racine, `make sonar-backend` exécute la même validation.

@@ -5,7 +5,7 @@ DEVOPS_COMPOSE ?= docker compose -f docker-compose.devops.yml
 DOCKER ?= docker
 MAVEN ?= ./mvnw
 ACTIONLINT_IMAGE ?= rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
-MAVEN_IMAGE ?= maven:3.9.13-eclipse-temurin-25@sha256:ade3c87e3cdfbe04932afa16b31814cbf60b0122d21d78a76530684a1eeb7cc2
+MAVEN_IMAGE ?= maven:3.9.16-eclipse-temurin-25@sha256:31618505df21177d2baa3dc574be2d0b0b32614c8539baca1f23a9136b766eb0
 TRIVY_IMAGE ?= ghcr.io/aquasecurity/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c
 COSIGN_IMAGE ?= gcr.io/projectsigstore/cosign:v3.1.3@sha256:9e5c2f2edc34351160407ca3416c61855bdf9403c3c5936e0f0be7fc261611b8
 PROMETHEUS_IMAGE ?= prom/prometheus:v3.12.0-distroless@sha256:f39df5334dee301b885f77e0ff1159f5d8a43bf9db518f885544594799a1e3c2
@@ -294,7 +294,7 @@ registry-reset: ## Delete the local JCR stack and its volumes
 sonar: sonar-backend sonar-frontend ## Analyze backend and frontend with SonarQube
 
 sonar-backend: ## Verify and analyze the backend with SonarQube
-	cd backend && $(MAVEN) clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.5.0.6356:sonar
+	cd backend && $(MAVEN) clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar
 
 sonar-frontend: ## Verify and analyze the frontend with SonarQube
 	cd frontend && npm ci && npm run lint && npm run test:ci && npm run build && SONAR_SCANNER_JAVA_EXE_PATH="$$JAVA_HOME/bin/java" npm run sonar
