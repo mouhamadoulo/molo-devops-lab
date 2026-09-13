@@ -47,7 +47,7 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   les rapports texte et SARIF sont conservés 14 jours.
 - Prometheus 3.12 et Grafana 13.1 collectent et affichent les métriques backend dans le profil
   `observability`, avec dashboard provisionné et Actuator isolé sur le port interne `8081`.
-- Docker 29.7.2, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0, Maven 3.9.13,
+- Docker 29.7.2, Docker Compose 5.4.0, Node 24.18.0, npm 11.16.0, Maven 3.9.13,
   Terraform 1.15.4 Windows ARM64, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
   `maven:3.9.13-eclipse-temurin-25` compatible ARM64.

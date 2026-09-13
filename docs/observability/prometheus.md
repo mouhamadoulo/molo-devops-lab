@@ -85,22 +85,25 @@ rester visible.
 
 ## Génération de trafic et métrique métier
 
-Le parcours suivant s'authentifie avec le compte bootstrap, crée un produit temporaire, attend au
-moins un scrape, vérifie le compteur puis supprime le produit. Il lit les secrets depuis
-l'environnement et ne les affiche pas.
+Le parcours suivant s'authentifie avec le compte bootstrap depuis l'origine autorisée
+(`CORS_ALLOWED_ORIGIN`, par défaut `http://localhost:4200` ; sans en-tête `Origin`, le login
+répond 403), crée un produit temporaire, attend au moins un scrape, vérifie le compteur puis
+supprime le produit. Le repli `or vector(0)` évite un échec tant qu'aucun produit n'a été créé.
+Il lit les secrets depuis l'environnement et ne les affiche pas.
 
 ```powershell
-$before = [double](Invoke-RestMethod -Uri 'http://localhost:9090/api/v1/query?query=sum(products_created_events_total)').data.result[0].value[1]
+$counterQuery = 'http://localhost:9090/api/v1/query?query=' + [uri]::EscapeDataString('sum(products_created_events_total) or vector(0)')
+$before = [double](Invoke-RestMethod -Uri $counterQuery).data.result[0].value[1]
 $loginBody = @{ email = $env:BOOTSTRAP_ADMIN_EMAIL; password = $env:BOOTSTRAP_ADMIN_PASSWORD } | ConvertTo-Json
-$login = Invoke-RestMethod -Method Post -Uri 'http://localhost:8080/api/v1/auth/login' -ContentType 'application/json' -Body $loginBody
+$login = Invoke-RestMethod -Method Post -Uri 'http://localhost:8080/api/v1/auth/login' -Headers @{ Origin = 'http://localhost:4200' } -ContentType 'application/json' -Body $loginBody
 $headers = @{ Authorization = "Bearer $($login.accessToken)" }
 $productBody = @{ name = "Observability check $([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())"; description = "Temporary observability check"; category = "ACCESSORY"; price = 1.00; stockQuantity = 1; available = $true } | ConvertTo-Json
 $product = Invoke-RestMethod -Method Post -Uri 'http://localhost:8080/api/v1/products' -Headers $headers -ContentType 'application/json' -Body $productBody
 Start-Sleep -Seconds 20
-$after = [double](Invoke-RestMethod -Uri 'http://localhost:9090/api/v1/query?query=sum(products_created_events_total)').data.result[0].value[1]
+$after = [double](Invoke-RestMethod -Uri $counterQuery).data.result[0].value[1]
 if ($after -le $before) { throw "Counter did not increase: before=$before after=$after" }
 Invoke-RestMethod -Method Delete -Uri "http://localhost:8080/api/v1/products/$($product.id)" -Headers $headers
-Remove-Variable before, loginBody, login, headers, productBody, product, after
+Remove-Variable counterQuery, before, loginBody, login, headers, productBody, product, after
 ```
 
 ## Rétention, arrêt et reset
