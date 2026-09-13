@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.0</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -20,15 +20,15 @@
     <properties>
         <revision>0.1.0-SNAPSHOT</revision>
         <java.version>25</java.version>
-        <springdoc.version>3.0.3</springdoc.version>
+        <springdoc.version>3.1.1</springdoc.version>
         <testcontainers.version>2.0.5</testcontainers.version>
         <jacoco.version>0.8.15</jacoco.version>
-        <minio.version>9.0.1</minio.version>
-        <okhttp.version>5.3.2</okhttp.version>
+        <minio.version>9.0.3</minio.version>
+        <okhttp.version>5.5.0</okhttp.version>
         <postgresql.version>42.7.12</postgresql.version>
         <tomcat.version>11.0.25</tomcat.version>
-        <twelvemonkeys.version>3.13.1</twelvemonkeys.version>
-        <sonar-maven-plugin.version>5.5.0.6356</sonar-maven-plugin.version>
+        <twelvemonkeys.version>3.15.0</twelvemonkeys.version>
+        <sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
         <sonar.projectKey>devops-store-backend</sonar.projectKey>
         <sonar.projectName>DevOps Store Backend</sonar.projectName>
         <sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>

@@ -68,7 +68,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
 
       - name: Set up Trivy
-        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+        uses: aquasecurity/setup-trivy@81e514348e19b6112ce2a7e3ecbafe19c1e1f567 # v0.3.1
         with:
           version: v0.73.0
           cache: true
@@ -83,7 +83,7 @@ jobs:
         run: mkdir -p reports/security
 
       - name: Generate human-readable image report
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: devops-store-${{ matrix.name }}:ci
           scanners: vuln,misconfig,secret
@@ -96,7 +96,7 @@ jobs:
           skip-setup-trivy: true
 
       - name: Generate image SARIF report
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: devops-store-${{ matrix.name }}:ci
           scanners: vuln,misconfig,secret
@@ -110,7 +110,7 @@ jobs:
           skip-setup-trivy: true
 
       - name: Enforce image security gate
-        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: devops-store-${{ matrix.name }}:ci
           scanners: vuln,misconfig,secret
