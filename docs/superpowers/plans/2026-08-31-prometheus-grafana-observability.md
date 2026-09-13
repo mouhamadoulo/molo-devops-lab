@@ -942,7 +942,8 @@ Expected: UID exact, neuf panneaux, aucune intervention UI.
 - [x] **Step 5: Prouver l'évolution du compteur métier**
 
 ```powershell
-$before = [double](Invoke-RestMethod -Uri 'http://localhost:9090/api/v1/query?query=sum(products_created_events_total)').data.result[0].value[1]
+$counterQuery = 'http://localhost:9090/api/v1/query?query=' + [uri]::EscapeDataString('sum(products_created_events_total) or vector(0)')
+$before = [double](Invoke-RestMethod -Uri $counterQuery).data.result[0].value[1]
 $loginBody = @{ email = $env:BOOTSTRAP_ADMIN_EMAIL; password = $env:BOOTSTRAP_ADMIN_PASSWORD } | ConvertTo-Json
 $login = Invoke-RestMethod -Method Post -Uri 'http://localhost:8080/api/v1/auth/login' -Headers @{ Origin = 'http://localhost:4200' } -ContentType 'application/json' -Body $loginBody
 $headers = @{ Authorization = "Bearer $($login.accessToken)" }
@@ -956,10 +957,10 @@ $productBody = @{
 } | ConvertTo-Json
 $product = Invoke-RestMethod -Method Post -Uri 'http://localhost:8080/api/v1/products' -Headers $headers -ContentType 'application/json' -Body $productBody
 Start-Sleep -Seconds 20
-$after = [double](Invoke-RestMethod -Uri 'http://localhost:9090/api/v1/query?query=sum(products_created_events_total)').data.result[0].value[1]
+$after = [double](Invoke-RestMethod -Uri $counterQuery).data.result[0].value[1]
 if ($after -le $before) { throw "Counter did not increase: before=$before after=$after" }
 Invoke-RestMethod -Method Delete -Uri "http://localhost:8080/api/v1/products/$($product.id)" -Headers $headers
-Remove-Variable loginBody, login, headers, productBody, product, before, after
+Remove-Variable counterQuery, loginBody, login, headers, productBody, product, before, after
 ```
 
 Expected: compteur strictement supérieur après le scrape ; le produit temporaire est supprimé.
@@ -1004,7 +1005,7 @@ git diff -- . ':!task_plan.md' ':!findings.md' ':!progress.md'
 
 Expected: uniquement les fichiers phase 11 ; aucun `.env`, secret, volume, donnée Prometheus/Grafana ou changement utilisateur hors périmètre.
 
-- [ ] **Step 9: Commit final conditionnel**
+- [x] **Step 9: Commit final conditionnel**
 
 Uniquement après autorisation explicite :
 
@@ -1014,3 +1015,7 @@ git commit -m "feat: add Prometheus and Grafana observability"
 ```
 
 Ne pousser et ne créer une Pull Request qu'après autorisation séparée.
+
+Exécution réelle : les étapes de commit intermédiaires n'ont pas été utilisées ; le travail a été
+regroupé dans le commit final `fb55867`, complété par le correctif CVE `e4f9d07` et la clôture
+documentaire `4769a2e`, puis fusionné dans `main` via la Pull Request #29 (`90f1f26`).
