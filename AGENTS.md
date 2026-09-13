@@ -23,7 +23,9 @@ et l'observabilité.
   des rapports CI ; la phase 8 est terminée et fusionnée sur `main` via la PR #18 ; Artifactory
   OSS, PostgreSQL 17, le parcours Maven et la publication CI conditionnelle de phase 9 sont
   implémentés ; Terraform 1.15.4 décrit les cinq repositories avec tests simulés, tandis que son
-  application réelle, Kubernetes et l'observabilité restent planifiés ;
+  application réelle et Kubernetes restent planifiés ; Prometheus 3.12 et Grafana 13.1 sont
+  provisionnés dans le profil `observability` ; la phase 11 est terminée et fusionnée sur `main`
+  via la PR #29 ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
   (`frontend/package.json`, `Makefile`, fichiers Compose, etc.) n'existent pas.
 
@@ -38,7 +40,8 @@ Avant une modification importante, consulter :
 ### Implémentée
 
 - Java 25 ;
-- Spring Boot 4.1.0 et Maven Wrapper 3.9.13 ;
+- Spring Boot 4.1.0 et Maven Wrapper 3.9.13, avec Tomcat embarqué surchargé en 11.0.25 pour les
+  CVE critiques signalées par Trivy ;
 - Spring MVC, Jakarta Validation, Spring Data JPA et Actuator ;
 - PostgreSQL 18, Flyway et le pilote PostgreSQL ;
 - Micrometer avec registre Prometheus et logs structurés Logstash ;
@@ -58,11 +61,13 @@ Avant une modification importante, consulter :
   publication snapshot/candidate, promotion par checksum et résolution à cache vierge.
 - Terraform 1.15.4 et provider JFrog 12.11.3 avec garde Pro, lockfile multiplateforme et tests
   simulés des cinq repositories Maven.
+- Prometheus 3.12 distroless et Grafana 13.1 avec volumes bornés/persistants, provisioning fichier
+  et dashboard backend versionné.
 
 ### Cible planifiée
 
-- application réelle de Terraform sur Artifactory Pro, Kubernetes/Minikube, Prometheus, Grafana,
-  Loki et Grafana Alloy.
+- application réelle de Terraform sur Artifactory Pro, Kubernetes/Minikube, Loki et Grafana
+  Alloy.
 
 Toujours distinguer cette cible de ce qui est réellement disponible dans le dépôt.
 
@@ -85,7 +90,8 @@ migrations.
 
 L'API Products est versionnée sous `/api/v1/products`. Les erreurs HTTP utilisent `ProblemDetail`
 avec le type `application/problem+json`. Les endpoints Actuator exposés sont limités à `health`,
-`info` et `prometheus`.
+`info` et `prometheus`. Dans Compose, Actuator écoute sur le port management interne `8081`, non
+publié sur l'hôte ; l'API reste sur `8080`.
 
 Les métadonnées de galerie restent dans PostgreSQL et les objets dans AIStor. Une suppression
 publie un événement traité uniquement après commit, avec trois tentatives bornées. Un reconciler
@@ -121,6 +127,8 @@ Le backend lit les variables suivantes, avec des valeurs locales par défaut :
 - Terraform utilise `TF_VAR_artifactory_url`, `TF_VAR_artifactory_access_token` et
   `TF_VAR_confirm_pro_repository_api`. Le token reste hors Git et la confirmation Pro reste à
   `false` contre l'instance OSS locale.
+- Le profil observabilité utilise `PROMETHEUS_PORT`, `GRAFANA_PORT` et
+  `GRAFANA_ADMIN_PASSWORD`. Le mot de passe Grafana est obligatoire et reste hors Git.
 
 Ne jamais versionner de secret réel. Ajouter les exemples sans secret dans un fichier
 `.env.example` si nécessaire et conserver les valeurs sensibles hors de Git.
@@ -180,7 +188,9 @@ Avec GNU Make, les cibles disponibles sont `help`, `application`, `build`, `test
 `artifacts-reset`, `artifacts-verify`, `artifacts-bootstrap`, `artifacts-publish-snapshot`,
 `artifacts-publish-candidate`, `artifacts-promote`, `artifacts-resolve`, `registry-config`,
 `registry-up`, `registry-down`, `registry-status`, `registry-logs`, `registry-reset`, `ci-lint`,
-`trivy-verify`, `trivy-fs`, `trivy-config`, `trivy-images` et `security`.
+`observability-config`, `observability-up`, `observability-down`, `observability-status`,
+`observability-logs`, `observability-reset`, `trivy-verify`, `trivy-fs`, `trivy-config`,
+`trivy-images` et `security`.
 `down` et `quality-down` préservent les volumes nommés ; `quality-reset` les supprime. Le fichier
 de licence reste hors Git. AIStor Free est limité au single-node sans SLA/SLO.
 
@@ -195,6 +205,10 @@ configurations, construit les images applicatives puis les scanne.
 Le parcours JFrog est documenté dans `docs/devops/jfrog-artifactory.md`. En édition OSS, les cinq
 repositories sont créés une fois dans l'interface puis vérifiés par `make artifacts-verify` ; ne
 pas réintroduire les API de configuration ou de copie réservées à Artifactory Pro.
+
+Prometheus et Grafana sont documentés dans `docs/observability/prometheus.md` et
+`docs/observability/grafana.md`. `observability-down` préserve les deux volumes nommés ;
+`observability-reset` supprime uniquement les données locales Prometheus et Grafana.
 
 La configuration Terraform est documentée dans `docs/infrastructure/terraform.md`. Les commandes
 disponibles sans instance Pro sont :

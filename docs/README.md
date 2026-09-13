@@ -23,6 +23,8 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [Trivy](devops/trivy.md) | Scans du dépôt, des dépendances, des configurations et des images, politique et rapports |
 | [JFrog Artifactory](devops/jfrog-artifactory.md) | Artifactory OSS, topologie Maven, publication, promotion et limites de licence |
 | [Terraform et JFrog](infrastructure/terraform.md) | Configuration Pro-ready, tests simulés et parcours d’import sous licence |
+| [Prometheus](observability/prometheus.md) | Scrape interne, PromQL, rétention et exploitation locale |
+| [Grafana](observability/grafana.md) | Provisioning versionné, dashboard backend et vérification par API |
 | [Design Trivy](superpowers/specs/2026-08-28-trivy-security-design.md) | Périmètre, politique de sécurité, provenance et architecture des scans |
 | [Plan Trivy](superpowers/plans/2026-08-29-trivy-security.md) | Exécution et preuves de validation de la phase 8 |
 
@@ -54,9 +56,9 @@ Documents créés pendant les phases d'industrialisation :
 
 ## Observabilité
 
-- `observability/prometheus.md` — collecte des métriques ;
-- `observability/grafana.md` — provisioning et dashboards ;
-- `observability/loki.md` — collecte et requêtes de logs avec Alloy et Loki.
+- [Prometheus](observability/prometheus.md) — collecte, requêtes et diagnostic des métriques ;
+- [Grafana](observability/grafana.md) — provisioning et dashboard backend ;
+- `observability/loki.md` — planifié pour la collecte et les requêtes de logs avec Alloy et Loki.
 
 ## Sécurité et dépannage
 

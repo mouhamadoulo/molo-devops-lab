@@ -33,7 +33,7 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 
 ---
 
-## État du dépôt au 30 août 2026
+## État du dépôt au 13 septembre 2026
 
 - Le dépôt Git contient le backend, l'identité/RBAC, la galerie privée d'images produits, le CRUD
   produits Angular et l'administration des utilisateurs réservée au rôle `ADMIN`.
@@ -45,11 +45,14 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   Request #6 ; les rapports backend et frontend sont conservés 14 jours.
 - Trivy scanne le dépôt, les dépendances, les configurations et les images localement et en CI ;
   les rapports texte et SARIF sont conservés 14 jours.
+- Prometheus 3.12 et Grafana 13.1 collectent et affichent les métriques backend dans le profil
+  `observability`, avec dashboard provisionné et Actuator isolé sur le port interne `8081`.
 - Docker 29.7.2, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0, Maven 3.9.13,
   Terraform 1.15.4 Windows ARM64, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
   `maven:3.9.13-eclipse-temurin-25` compatible ARM64.
-- Minikube n'est pas encore installé ; GNU Make 3.81 est disponible sous Windows.
+- Minikube n'est pas encore installé ; GNU Make n'est pas disponible dans le `PATH` Windows
+  courant, les cibles sont validées dans un conteneur éphémère.
 - Docker fonctionne en ligne de commande, avec un avertissement d'accès au fichier de
   configuration utilisateur à recontrôler hors environnement restreint.
 
@@ -64,7 +67,7 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | TypeScript | 6.0.x | Plage imposée par Angular 22 : `>=6.0.0 <6.1.0` |
 | Node.js / npm | 24.18.0 / 11.16.0 | Node satisfait le minimum Angular `^24.15.0` |
 | Java | 25 LTS | Version source, cible, tests et runtime |
-| Spring Boot | 4.1.0 | Supporte Java 17 à 26 et Maven 3.6.3+ |
+| Spring Boot | 4.1.0 | Supporte Java 17 à 26 et Maven 3.6.3+ ; Tomcat surchargé en 11.0.25 (CVE) |
 | Maven Wrapper | 3.9.13 | Identique à l'installation locale actuelle |
 | Springdoc OpenAPI | 3.0.3 | Branche 3.x compatible Spring Boot 4 |
 | Testcontainers | 2.0.5 | Modules JUnit Jupiter et PostgreSQL |
@@ -124,6 +127,7 @@ uniquement après lecture des notes de version et relance de toutes les validati
 - Un `@RestControllerAdvice` centralise les Problem Details RFC 9457.
 - Spring Boot produit nativement des logs JSON Logstash ; le MDC porte `requestId`.
 - Seuls `health`, `info` et `prometheus` sont exposés par Actuator.
+- Dans Compose, l'API reste sur `8080` et Actuator écoute sur le port interne non publié `8081`.
 
 ### Infrastructure et DevSecOps
 
@@ -133,7 +137,8 @@ uniquement après lecture des notes de version et relance de toutes les validati
   exclue de Git ; cette édition ne fournit ni haute disponibilité ni SLA/SLO.
 - `docker-compose.devops.yml` utilise les profils `quality`, `artifacts`, `registry` et
   `observability` pour éviter de consommer toutes les ressources simultanément ; `registry` reste
-  optionnel et `observability` est encore planifié.
+  optionnel, tandis que Prometheus et Grafana sont implémentés dans `observability` ; Loki et Alloy
+  restent planifiés.
 - Terraform ne configurera les repositories JFrog qu'avec une souscription exposant les API de
   configuration ; l'édition OSS conserve la création initiale dans l'interface.
 - Kubernetes utilise des YAML natifs pédagogiques, sans Helm dans le MVP.
@@ -738,19 +743,31 @@ réel restent reportés.
 
 **Implémentation :**
 
-- [ ] Ajouter Prometheus 3.12 distroless et Grafana 13.1 au profil `observability`.
-- [ ] Scraper `/actuator/prometheus` avec labels service/environnement.
-- [ ] Provisionner la datasource Prometheus sans secret.
-- [ ] Créer un dashboard versionné : débit, p95, erreurs, CPU, heap, threads, GC et créations.
-- [ ] Utiliser des requêtes tolérant l'absence temporaire de séries.
-- [ ] Ajouter volumes, healthchecks et rétention locale bornée.
-- [ ] Documenter requêtes PromQL, génération de trafic et diagnostic de scrape.
+- [x] Ajouter Prometheus 3.12 distroless et Grafana 13.1 au profil `observability`.
+- [x] Scraper `/actuator/prometheus` avec labels service/environnement.
+- [x] Provisionner la datasource Prometheus sans secret.
+- [x] Créer un dashboard versionné : débit, p95, erreurs, CPU, heap, threads, GC et créations.
+- [x] Utiliser des requêtes tolérant l'absence temporaire de séries.
+- [x] Ajouter volumes, healthchecks et rétention locale bornée.
+- [x] Documenter requêtes PromQL, génération de trafic et diagnostic de scrape.
+
+**Statut :** terminée, validée localement le 13 septembre 2026 et fusionnée dans `main` via la
+[Pull Request #29](https://github.com/mouhamadoulo/molo-devops-lab/pull/29). Compose applicatif et profil
+`observability` valides (code retour 0), six services sains, target backend à `1`, dashboard
+`devops-store-backend` provisionné avec neuf panneaux, `products_created_events_total` passé de
+`0` à `1` après création d'un produit temporaire supprimé ensuite, puis arrêt de l'observabilité
+avec conservation des volumes `devops-store-prometheus-data` et `devops-store-grafana-data` et
+application toujours saine. Régressions du 2 septembre 2026 : Maven `clean verify` avec
+112 tests sans échec et Trivy configuration sans mauvaise configuration. La CI de la PR a révélé
+de nouvelles CVE sans lien avec la phase : Tomcat embarqué est surchargé en 11.0.25 et les images
+mettent à jour `libexpat` (backend et frontend) et `libuuid` (frontend).
 
 **Commandes de validation :**
 
 ```powershell
-docker compose -f docker-compose.devops.yml --profile observability config
-docker compose -f docker-compose.devops.yml --profile observability up -d
+make observability-config
+make observability-up
+make observability-status
 curl.exe http://localhost:9090/-/healthy
 curl.exe "http://localhost:9090/api/v1/query?query=up"
 curl.exe http://localhost:3000/api/health
@@ -758,9 +775,9 @@ curl.exe http://localhost:3000/api/health
 
 **Critères d'acceptation :**
 
-- [ ] La target backend est UP.
-- [ ] Le dashboard est provisionné automatiquement et sans clic manuel.
-- [ ] `products_created_events_total` évolue après création d'un produit.
+- [x] La target backend est UP.
+- [x] Le dashboard est provisionné automatiquement et sans clic manuel.
+- [x] `products_created_events_total` évolue après création d'un produit.
 
 **Dépendances :** phases 1 et 4.
 

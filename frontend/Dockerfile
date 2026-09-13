@@ -14,7 +14,7 @@ FROM nginxinc/nginx-unprivileged:1.31.3-alpine3.24@sha256:f972e5322b9797dc2a6b83
 
 USER root
 
-RUN apk upgrade --no-cache libcrypto3 libssl3
+RUN apk upgrade --no-cache libcrypto3 libssl3 libexpat libuuid
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /workspace/dist/frontend/browser /usr/share/nginx/html

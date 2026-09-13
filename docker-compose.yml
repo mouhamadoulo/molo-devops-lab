@@ -107,6 +107,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-devops_store}
       DB_USERNAME: ${DB_USERNAME:-devops_store}
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MANAGEMENT_SERVER_PORT: "8081"
       CORS_ALLOWED_ORIGIN: ${CORS_ALLOWED_ORIGIN:-http://localhost:4200}
       JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
       JWT_ISSUER: ${JWT_ISSUER:-https://devops-store.local}
@@ -125,13 +126,15 @@ services:
       MINIO_ORPHAN_RECONCILIATION_INTERVAL: ${MINIO_ORPHAN_RECONCILIATION_INTERVAL:-1h}
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8080}:8080"
+    expose:
+      - "8081"
     depends_on:
       postgres:
         condition: service_healthy
       object-storage:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8080/actuator/health"]
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8081/actuator/health"]
       interval: 5s
       timeout: 5s
       retries: 18
@@ -145,6 +148,7 @@ services:
       - ALL
     networks:
       - application
+      - observability-shared
     restart: unless-stopped
     stop_signal: SIGTERM
     stop_grace_period: 30s
@@ -188,6 +192,9 @@ services:
 
 networks:
   application:
+    driver: bridge
+  observability-shared:
+    name: devops-store-observability
     driver: bridge
 
 volumes:
