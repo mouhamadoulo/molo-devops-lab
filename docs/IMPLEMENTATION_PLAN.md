@@ -33,7 +33,7 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 
 ---
 
-## État du dépôt au 30 août 2026
+## État du dépôt au 13 septembre 2026
 
 - Le dépôt Git contient le backend, l'identité/RBAC, la galerie privée d'images produits, le CRUD
   produits Angular et l'administration des utilisateurs réservée au rôle `ADMIN`.
@@ -45,6 +45,8 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   Request #6 ; les rapports backend et frontend sont conservés 14 jours.
 - Trivy scanne le dépôt, les dépendances, les configurations et les images localement et en CI ;
   les rapports texte et SARIF sont conservés 14 jours.
+- Prometheus 3.12 et Grafana 13.1 collectent et affichent les métriques backend dans le profil
+  `observability`, avec dashboard provisionné et Actuator isolé sur le port interne `8081`.
 - Docker 29.7.2, Docker Compose 5.1.0, Node 24.18.0, npm 11.16.0, Maven 3.9.13,
   Terraform 1.15.4 Windows ARM64, kubectl 1.34.1 et Git 2.53.0 sont installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
@@ -65,7 +67,7 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | TypeScript | 6.0.x | Plage imposée par Angular 22 : `>=6.0.0 <6.1.0` |
 | Node.js / npm | 24.18.0 / 11.16.0 | Node satisfait le minimum Angular `^24.15.0` |
 | Java | 25 LTS | Version source, cible, tests et runtime |
-| Spring Boot | 4.1.0 | Supporte Java 17 à 26 et Maven 3.6.3+ |
+| Spring Boot | 4.1.0 | Supporte Java 17 à 26 et Maven 3.6.3+ ; Tomcat surchargé en 11.0.25 (CVE) |
 | Maven Wrapper | 3.9.13 | Identique à l'installation locale actuelle |
 | Springdoc OpenAPI | 3.0.3 | Branche 3.x compatible Spring Boot 4 |
 | Testcontainers | 2.0.5 | Modules JUnit Jupiter et PostgreSQL |
@@ -749,13 +751,16 @@ réel restent reportés.
 - [x] Ajouter volumes, healthchecks et rétention locale bornée.
 - [x] Documenter requêtes PromQL, génération de trafic et diagnostic de scrape.
 
-**Statut :** terminée et validée localement le 13 septembre 2026. Compose applicatif et profil
+**Statut :** terminée, validée localement le 13 septembre 2026 et fusionnée dans `main` via la
+[Pull Request #29](https://github.com/mouhamadoulo/molo-devops-lab/pull/29). Compose applicatif et profil
 `observability` valides (code retour 0), six services sains, target backend à `1`, dashboard
 `devops-store-backend` provisionné avec neuf panneaux, `products_created_events_total` passé de
 `0` à `1` après création d'un produit temporaire supprimé ensuite, puis arrêt de l'observabilité
 avec conservation des volumes `devops-store-prometheus-data` et `devops-store-grafana-data` et
 application toujours saine. Régressions du 2 septembre 2026 : Maven `clean verify` avec
-112 tests sans échec et Trivy configuration sans mauvaise configuration.
+112 tests sans échec et Trivy configuration sans mauvaise configuration. La CI de la PR a révélé
+de nouvelles CVE sans lien avec la phase : Tomcat embarqué est surchargé en 11.0.25 et les images
+mettent à jour `libexpat` (backend et frontend) et `libuuid` (frontend).
 
 **Commandes de validation :**
 

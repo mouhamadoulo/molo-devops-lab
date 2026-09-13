@@ -16,8 +16,9 @@ livraison.
 > Artifactory OSS, la publication/résolution Maven et une promotion compatible OSS. La phase 10
 > décrit les cinq repositories avec Terraform 1.15.4 et des tests simulés ; import, apply et
 > idempotence restent reportés faute de licence Artifactory Pro. La phase 11 Prometheus/Grafana
-> est terminée et validée localement. Kubernetes, Loki et Grafana Alloy
-> restent planifiés dans le
+> est terminée et fusionnée via la
+> [Pull Request #29](https://github.com/mouhamadoulo/molo-devops-lab/pull/29). Kubernetes, Loki
+> et Grafana Alloy restent planifiés dans le
 > [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture

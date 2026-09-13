@@ -24,7 +24,8 @@ et l'observabilité.
   OSS, PostgreSQL 17, le parcours Maven et la publication CI conditionnelle de phase 9 sont
   implémentés ; Terraform 1.15.4 décrit les cinq repositories avec tests simulés, tandis que son
   application réelle et Kubernetes restent planifiés ; Prometheus 3.12 et Grafana 13.1 sont
-  provisionnés dans le profil `observability`, et la phase 11 est terminée et validée localement ;
+  provisionnés dans le profil `observability` ; la phase 11 est terminée et fusionnée sur `main`
+  via la PR #29 ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
   (`frontend/package.json`, `Makefile`, fichiers Compose, etc.) n'existent pas.
 
@@ -39,7 +40,8 @@ Avant une modification importante, consulter :
 ### Implémentée
 
 - Java 25 ;
-- Spring Boot 4.1.0 et Maven Wrapper 3.9.13 ;
+- Spring Boot 4.1.0 et Maven Wrapper 3.9.13, avec Tomcat embarqué surchargé en 11.0.25 pour les
+  CVE critiques signalées par Trivy ;
 - Spring MVC, Jakarta Validation, Spring Data JPA et Actuator ;
 - PostgreSQL 18, Flyway et le pilote PostgreSQL ;
 - Micrometer avec registre Prometheus et logs structurés Logstash ;

@@ -25,9 +25,10 @@ tenir à jour pendant l'exécution d'un plan. Les spécifications et plans déta
 
 ### Worktrees
 
-Le travail de phase est isolé dans `.worktrees/<nom>` (ignoré par Git), sur une branche
-`codex/phase-<n>-<sujet>`. Travailler dans le worktree actif et ne pas modifier le checkout
-principal `main` en parallèle.
+Le travail de phase est isolé dans `.worktrees/<nom>` (ignoré par Git), sur une branche courte
+créée depuis un `main` à jour. Travailler dans le worktree actif et ne pas modifier le checkout
+principal `main` en parallèle. Suivre `docs/devops/git-workflow.md` : pas de push direct sur
+`main`, fusion par Pull Request après CI verte, puis suppression de la branche et du worktree.
 
 ### Environnement Windows local
 
