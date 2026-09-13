@@ -34,7 +34,7 @@ services:
 
   sonarqube:
     profiles: [quality]
-    image: sonarqube:26.8.0.126808-community@sha256:9026624a61cd25542a402a9e7213dd7dbb39724ac9597e331e6b85362558c079
+    image: sonarqube:26.9.0.129388-community@sha256:aa7146fd72ef79ea8ca06315ca3121db9bb1c24a83ba5255e8df67b43dee6e04
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/${SONAR_DB_NAME:-sonarqube}
       SONAR_JDBC_USERNAME: ${SONAR_DB_USERNAME:-sonarqube}
@@ -102,7 +102,7 @@ services:
 
   artifactory:
     profiles: [artifacts]
-    image: releases-docker.jfrog.io/jfrog/artifactory-oss:7.161.20@sha256:b0e71ce0c1cca3a4028c56e5afeacfe7280602f56be961e2c756e5a3deee482a
+    image: releases-docker.jfrog.io/jfrog/artifactory-oss:7.161.26@sha256:d103c0464d33645acdcbfbb6fc61310d7faf14c9893975cbee562487eaeac1d1
     environment:
       JF_SHARED_DATABASE_TYPE: postgresql
       JF_SHARED_DATABASE_DRIVER: org.postgresql.Driver
@@ -169,7 +169,7 @@ services:
 
   jcr:
     profiles: [registry]
-    image: releases-docker.jfrog.io/jfrog/artifactory-jcr:7.161.20@sha256:d17bb796de9e1f77e521e0b28b5121acc1edcc873ef308245865e04c343da2dc
+    image: releases-docker.jfrog.io/jfrog/artifactory-jcr:7.161.26@sha256:fd8d64416384c2ede4478c89bfa85ba7e9193db4db0dc36db3a307a0b9a5128b
     environment:
       JF_SHARED_DATABASE_TYPE: postgresql
       JF_SHARED_DATABASE_DRIVER: org.postgresql.Driver
@@ -205,7 +205,7 @@ services:
 
   artifactory-bootstrap:
     profiles: [artifacts-tools]
-    image: curlimages/curl:8.21.0@sha256:7c12af72ceb38b7432ab85e1a265cff6ae58e06f95539d539b654f2cfa64bb13
+    image: curlimages/curl:8.22.0@sha256:58adaa4e8dca9c988bae2aba4ab3434a0bb2da16bbe3f92dec39ec7785166777
     environment:
       JFROG_INTERNAL_URL: http://artifactory:8082/artifactory
       JFROG_ADMIN_TOKEN: ${JFROG_ADMIN_TOKEN:-}
@@ -227,7 +227,7 @@ services:
 
   artifactory-promote:
     profiles: [artifacts-tools]
-    image: curlimages/curl:8.21.0@sha256:7c12af72ceb38b7432ab85e1a265cff6ae58e06f95539d539b654f2cfa64bb13
+    image: curlimages/curl:8.22.0@sha256:58adaa4e8dca9c988bae2aba4ab3434a0bb2da16bbe3f92dec39ec7785166777
     environment:
       JFROG_INTERNAL_URL: http://artifactory:8082/artifactory
       JFROG_ADMIN_TOKEN: ${JFROG_ADMIN_TOKEN:-}
@@ -249,7 +249,7 @@ services:
 
   artifactory-resolve:
     profiles: [artifacts-tools]
-    image: maven:3.9.16-eclipse-temurin-25@sha256:31618505df21177d2baa3dc574be2d0b0b32614c8539baca1f23a9136b766eb0
+    image: maven:3-eclipse-temurin-26@sha256:2bc6924d954a6efefde0a9629228914acf72e4abcdb927b68f19edd1135a0cb1
     environment:
       JFROG_URL: http://artifactory:8082/artifactory
       JFROG_USERNAME: ${JFROG_USERNAME:-}
@@ -281,7 +281,7 @@ services:
 
   prometheus:
     profiles: [observability]
-    image: prom/prometheus:v3.12.0-distroless@sha256:f39df5334dee301b885f77e0ff1159f5d8a43bf9db518f885544594799a1e3c2
+    image: prom/prometheus:v3.14.0-distroless@sha256:50c707e96da5ade383cb1707790576480485e93de06aa60ad8802cb5f744bd0a
     user: "65532:65532"
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -315,7 +315,7 @@ services:
 
   grafana:
     profiles: [observability]
-    image: grafana/grafana:13.1.0@sha256:121a7a9ece6dc10b969f1f96eed64b4f07dfac0d0b8abc070f7cb83bbde86f63
+    image: grafana/grafana:13.2.1@sha256:f772d434e8fab0049deb2b1b30abd43342bcfca1537614aa8d36080232cf4283
     user: "472:0"
     environment:
       GF_SECURITY_ADMIN_USER: admin
