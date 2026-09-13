@@ -51,7 +51,7 @@ cible Make et exige une commande Docker explicite.
 
 ## Images applicatives
 
-Le backend utilise Maven 3.9.13/JDK 25 pour produire le jar, puis copie uniquement ce jar dans un
+Le backend utilise Maven 3.9.16/JDK 25 pour produire le jar, puis copie uniquement ce jar dans un
 runtime Temurin JRE 25 exécuté par `10001:10001`. Maven, Javac, les sources et la licence AIStor ne
 sont pas présents dans l'image finale.
 

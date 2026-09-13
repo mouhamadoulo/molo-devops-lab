@@ -40,20 +40,20 @@ Avant une modification importante, consulter :
 ### Implémentée
 
 - Java 25 ;
-- Spring Boot 4.1.0 et Maven Wrapper 3.9.13, avec Tomcat embarqué surchargé en 11.0.25 pour les
-  CVE critiques signalées par Trivy ;
+- Spring Boot 4.1.1 et Maven Wrapper 3.9.16, avec Tomcat embarqué surchargé en 11.0.25 pour les
+  CVE critiques signalées par Trivy (Spring Boot 4.1.1 fournit encore 11.0.24) ;
 - Spring MVC, Jakarta Validation, Spring Data JPA et Actuator ;
 - PostgreSQL 18, Flyway et le pilote PostgreSQL ;
 - Micrometer avec registre Prometheus et logs structurés Logstash ;
-- springdoc OpenAPI 3.0.3 ;
+- springdoc OpenAPI 3.1.1 ;
 - JUnit Jupiter, AssertJ, Mockito et Testcontainers PostgreSQL 2.0.5.
 - Angular 22, TypeScript 6, Node.js 24, npm 11, Vitest, ESLint et Playwright ;
 - session Angular par Signals, JWT en mémoire, refresh rotatif et navigation par rôle.
 - Docker Compose 5.1 avec PostgreSQL 18.4 et AIStor Free single-node épinglé.
 - MinIO Java 9, validation JPEG/PNG/WebP et stockage privé par URL présignée.
-- images Maven/JDK vers JRE 25 et Node 24 vers Nginx 1.31.3, avec runtimes non-root.
+- images Maven/JDK vers JRE 25 et Node 24 vers Nginx 1.31.5, avec runtimes non-root.
 - GitHub Actions et Dependabot avec actions épinglées par SHA.
-- SonarQube Community Build 26.7, Scanner Maven 5.5.0.6356, Scanner NPM 5.0.0 et import des
+- SonarQube Community Build 26.8, Scanner Maven 5.8.0.7211, Scanner NPM 5.0.0 et import des
   rapports JaCoCo, LCOV, Surefire et Vitest.
 - Trivy 0.73.0 conteneurisé et vérifié par Cosign, avec scans filesystem, configuration et images,
   rapports texte/SARIF et gate sur les vulnérabilités HIGH/CRITICAL corrigibles.
