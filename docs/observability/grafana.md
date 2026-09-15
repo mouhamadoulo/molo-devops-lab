@@ -19,6 +19,9 @@ GRAFANA_ADMIN_PASSWORD=<secret-local>
 Compose refuse de créer le service si cette variable manque. Ne jamais inclure sa valeur dans une
 commande versionnée, une capture ou un journal.
 
+Grafana n'applique ce mot de passe qu'à la création de sa base dans le volume
+`devops-store-grafana-data`. Le modifier ensuite dans `.env` n'a aucun effet sur un volume existant.
+
 ## Provisioning versionné
 
 La datasource définie dans `infrastructure/grafana/provisioning/datasources/prometheus.yml` porte
@@ -63,6 +66,9 @@ Remove-Variable grafanaCredential, grafanaAuth, dashboard
 ## Dépannage
 
 - Démarrage refusé : vérifier que `GRAFANA_ADMIN_PASSWORD` est défini dans `.env`.
+- API ou connexion en 401 alors que `.env` est correct : le volume a été initialisé avec un ancien
+  mot de passe. Supprimer uniquement les données d'observabilité avec `make observability-reset`,
+  puis relancer `make observability-up`.
 - Datasource indisponible : vérifier `make observability-status`, puis les logs Prometheus et
   Grafana avec `make observability-logs`.
 - Dashboard absent : vérifier les montages en lecture seule et les UID `prometheus` et

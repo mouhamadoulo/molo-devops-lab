@@ -45,7 +45,7 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   Request #6 ; les rapports backend et frontend sont conservés 14 jours.
 - Trivy scanne le dépôt, les dépendances, les configurations et les images localement et en CI ;
   les rapports texte et SARIF sont conservés 14 jours.
-- Prometheus 3.12 et Grafana 13.1 collectent et affichent les métriques backend dans le profil
+- Prometheus 3.14 et Grafana 13.2 collectent et affichent les métriques backend dans le profil
   `observability`, avec dashboard provisionné et Actuator isolé sur le port interne `8081`.
 - Docker 29.7.2, Docker Compose 5.4.0, Node 24.18.0, npm 11.16.0, Maven 3.9.13,
   Terraform 1.15.4 Windows ARM64, kubectl 1.34.1 et Git 2.53.0 sont installés.
@@ -74,14 +74,14 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | PostgreSQL | 18.4 | Version courante supportée jusqu'en 2030 |
 | MinIO AIStor Free | RELEASE.2026-04-14T21-32-45Z | Single-node licencié, corrigé pour GHSA-xh8f-g2qw-gcm7 |
 | Flyway | BOM Spring Boot 4.1 | Ajouter explicitement `flyway-database-postgresql` |
-| SonarQube Community | 26.8.0.126808-community | Support Java 25 ; scan TypeScript 6 exigé comme test d'acceptation |
+| SonarQube Community | 26.9.0.129388-community | Support Java 25 ; scan TypeScript 6 exigé comme test d'acceptation |
 | Trivy | 0.73.0 | Image multi-architecture immuable, signature Cosign vérifiée avant les scans |
 | Terraform | 1.15.4 | Version stable avec binaire Windows ARM64 |
 | Provider JFrog Artifactory | 12.11.3 | Provisionnement des repositories Artifactory |
 | Minikube | 1.38.1 | Cluster local ; installer avant la phase 13 |
 | Kubernetes | 1.35.6 | Version active compatible avec le kubectl 1.34 local selon la règle de skew |
-| Prometheus | 3.12.0 | Image distroless privilégiée |
-| Grafana | 13.1.0 | Provisioning fichiers versionné |
+| Prometheus | 3.14.0 | Image distroless privilégiée |
+| Grafana | 13.2.1 | Provisioning fichiers versionné |
 | Loki | 3.7.2 | Mode single-binary pour le laboratoire local |
 | Grafana Alloy | 1.18.0 | Collecteur moderne ; Promtail est exclu |
 

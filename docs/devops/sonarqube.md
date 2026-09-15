@@ -2,7 +2,7 @@
 
 ## Architecture et limites
 
-La stack locale isole SonarQube Community Build 26.8 et sa base PostgreSQL dans le profil Compose
+La stack locale isole SonarQube Community Build 26.9 et sa base PostgreSQL dans le profil Compose
 `quality`. La base n'est pas publiée sur l'hôte et l'interface SonarQube écoute uniquement sur
 `127.0.0.1`. Les données, extensions, journaux et fichiers temporaires utilisent des volumes
 nommés.

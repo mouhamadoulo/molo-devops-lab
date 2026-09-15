@@ -12,5 +12,5 @@ datasources:
     jsonData:
       httpMethod: POST
       prometheusType: Prometheus
-      prometheusVersion: 3.12.0
+      prometheusVersion: 3.14.0
       timeInterval: 15s

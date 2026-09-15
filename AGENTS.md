@@ -23,7 +23,7 @@ et l'observabilité.
   des rapports CI ; la phase 8 est terminée et fusionnée sur `main` via la PR #18 ; Artifactory
   OSS, PostgreSQL 17, le parcours Maven et la publication CI conditionnelle de phase 9 sont
   implémentés ; Terraform 1.15.4 décrit les cinq repositories avec tests simulés, tandis que son
-  application réelle et Kubernetes restent planifiés ; Prometheus 3.12 et Grafana 13.1 sont
+  application réelle et Kubernetes restent planifiés ; Prometheus 3.14 et Grafana 13.2 sont
   provisionnés dans le profil `observability` ; la phase 11 est terminée et fusionnée sur `main`
   via la PR #29 ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
@@ -53,15 +53,15 @@ Avant une modification importante, consulter :
 - MinIO Java 9, validation JPEG/PNG/WebP et stockage privé par URL présignée.
 - images Maven/JDK vers JRE 25 et Node 24 vers Nginx 1.31.5, avec runtimes non-root.
 - GitHub Actions et Dependabot avec actions épinglées par SHA.
-- SonarQube Community Build 26.8, Scanner Maven 5.8.0.7211, Scanner NPM 5.0.0 et import des
+- SonarQube Community Build 26.9, Scanner Maven 5.8.0.7211, Scanner NPM 5.0.0 et import des
   rapports JaCoCo, LCOV, Surefire et Vitest.
 - Trivy 0.73.0 conteneurisé et vérifié par Cosign, avec scans filesystem, configuration et images,
   rapports texte/SARIF et gate sur les vulnérabilités HIGH/CRITICAL corrigibles.
-- Artifactory OSS 7.161.20 avec PostgreSQL 17.10, repositories Maven local/remote/virtual,
+- Artifactory OSS 7.161.26 avec PostgreSQL 17.10, repositories Maven local/remote/virtual,
   publication snapshot/candidate, promotion par checksum et résolution à cache vierge.
 - Terraform 1.15.4 et provider JFrog 12.11.3 avec garde Pro, lockfile multiplateforme et tests
   simulés des cinq repositories Maven.
-- Prometheus 3.12 distroless et Grafana 13.1 avec volumes bornés/persistants, provisioning fichier
+- Prometheus 3.14 distroless et Grafana 13.2 avec volumes bornés/persistants, provisioning fichier
   et dashboard backend versionné.
 
 ### Cible planifiée

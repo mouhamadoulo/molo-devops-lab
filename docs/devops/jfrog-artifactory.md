@@ -1,6 +1,6 @@
 # JFrog Artifactory
 
-La phase 9 fournit un parcours Maven local avec Artifactory OSS 7.161.20 et PostgreSQL 17.10.
+La phase 9 fournit un parcours Maven local avec Artifactory OSS 7.161.26 et PostgreSQL 17.10.
 Elle publie des snapshots et des release candidates, promeut une candidate vers releases sans
 écrasement, puis résout les artefacts depuis un repository virtual. JFrog Container Registry (JCR)
 reste un profil Compose séparé et optionnel ; aucune image Docker n'est publiée par cette phase.
