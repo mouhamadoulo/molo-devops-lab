@@ -249,7 +249,7 @@ services:
 
   artifactory-resolve:
     profiles: [artifacts-tools]
-    image: maven:3.9.16-eclipse-temurin-25@sha256:31618505df21177d2baa3dc574be2d0b0b32614c8539baca1f23a9136b766eb0
+    image: maven:3-eclipse-temurin-26@sha256:2bc6924d954a6efefde0a9629228914acf72e4abcdb927b68f19edd1135a0cb1
     environment:
       JFROG_URL: http://artifactory:8082/artifactory
       JFROG_USERNAME: ${JFROG_USERNAME:-}
@@ -315,7 +315,7 @@ services:
 
   grafana:
     profiles: [observability]
-    image: grafana/grafana:13.2.1@sha256:f772d434e8fab0049deb2b1b30abd43342bcfca1537614aa8d36080232cf4283
+    image: grafana/grafana:13.2.2@sha256:ac461fb352abc50da10a51c7d02462e9c05488f11f53f14b3ad79a8145f638a0
     user: "472:0"
     environment:
       GF_SECURITY_ADMIN_USER: admin
