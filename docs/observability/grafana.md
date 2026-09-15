@@ -16,8 +16,9 @@ Le compte local est `admin`. Définir un mot de passe non vide dans `.env` ou da
 GRAFANA_ADMIN_PASSWORD=<secret-local>
 ```
 
-Compose refuse de créer le service si cette variable manque. Ne jamais inclure sa valeur dans une
-commande versionnée, une capture ou un journal.
+Le conteneur Grafana refuse de démarrer si cette variable manque ou est vide ; les autres profils
+du fichier Compose DevOps ne l'exigent pas. Ne jamais inclure sa valeur dans une commande
+versionnée, une capture ou un journal.
 
 Grafana n'applique ce mot de passe qu'à la création de sa base dans le volume
 `devops-store-grafana-data`. Le modifier ensuite dans `.env` n'a aucun effet sur un volume existant.
@@ -65,7 +66,8 @@ Remove-Variable grafanaCredential, grafanaAuth, dashboard
 
 ## Dépannage
 
-- Démarrage refusé : vérifier que `GRAFANA_ADMIN_PASSWORD` est défini dans `.env`.
+- Démarrage refusé : si `make observability-logs` affiche `GRAFANA_ADMIN_PASSWORD is required`,
+  définir la variable dans `.env`.
 - API ou connexion en 401 alors que `.env` est correct : le volume a été initialisé avec un ancien
   mot de passe. Supprimer uniquement les données d'observabilité avec `make observability-reset`,
   puis relancer `make observability-up`.
