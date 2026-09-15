@@ -41,7 +41,7 @@ Sans Make :
 
 ```powershell
 docker compose config --quiet
-docker run --rm -v "${PWD}/infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" --entrypoint /bin/promtool prom/prometheus:v3.12.0-distroless@sha256:f39df5334dee301b885f77e0ff1159f5d8a43bf9db518f885544594799a1e3c2 check config /etc/prometheus/prometheus.yml
+docker run --rm -v "${PWD}/infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" --entrypoint /bin/promtool prom/prometheus:v3.14.0-distroless@sha256:50c707e96da5ade383cb1707790576480485e93de06aa60ad8802cb5f744bd0a check config /etc/prometheus/prometheus.yml
 docker compose build --pull
 docker compose up -d --wait
 docker compose -f docker-compose.devops.yml --profile observability up -d --wait prometheus grafana
