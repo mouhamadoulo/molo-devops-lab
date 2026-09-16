@@ -1,0 +1,73 @@
+// Collecte des journaux des conteneurs du projet Compose applicatif `devops-store`.
+// Alloy n'a pas acces au socket Docker : toutes les requetes passent par socket-proxy,
+// qui n'autorise que la lecture des conteneurs et de leurs journaux.
+
+discovery.docker "project_containers" {
+	host             = "tcp://socket-proxy:2375"
+	refresh_interval = "15s"
+
+	filter {
+		name   = "label"
+		values = ["com.docker.compose.project=devops-store"]
+	}
+}
+
+discovery.relabel "project_containers" {
+	targets = discovery.docker.project_containers.targets
+
+	rule {
+		source_labels = [
+			"__meta_docker_container_label_com_docker_compose_project",
+			"__meta_docker_container_label_com_docker_compose_service",
+		]
+		separator    = "-"
+		regex        = "(.+)"
+		target_label = "service_name"
+		replacement  = "$1"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		regex         = "/?(.*)"
+		target_label  = "container"
+		replacement   = "$1"
+	}
+}
+
+loki.source.docker "project_containers" {
+	host             = "tcp://socket-proxy:2375"
+	targets          = discovery.relabel.project_containers.output
+	refresh_interval = "15s"
+	forward_to       = [loki.process.logstash_json.receiver]
+}
+
+// Le contenu de la ligne n'est jamais reecrit : stage.json n'extrait que des variables de
+// travail, donc requestId, logger_name, thread_name et message restent dans le JSON pousse.
+loki.process "logstash_json" {
+	forward_to = [loki.write.local.receiver]
+
+	stage.json {
+		expressions = {
+			level     = "level",
+			timestamp = "\"@timestamp\"",
+		}
+	}
+
+	stage.timestamp {
+		source            = "timestamp"
+		format            = "RFC3339"
+		action_on_failure = "skip"
+	}
+
+	stage.labels {
+		values = {
+			level = "level",
+		}
+	}
+}
+
+loki.write "local" {
+	endpoint {
+		url = "http://loki:3100/loki/api/v1/push"
+	}
+}

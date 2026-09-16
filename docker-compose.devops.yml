@@ -364,6 +364,102 @@ services:
     mem_limit: 512m
     pids_limit: 200
 
+  socket-proxy:
+    profiles: [observability]
+    image: wollomatic/socket-proxy:1.13.1@sha256:3935b709275e4ec35d6ed5a5c4a1f0d01ed31eec5e7234efc3357ecd47689002
+    user: "65534:${DOCKER_GID:-0}"
+    command:
+      - -loglevel=info
+      - -listenip=0.0.0.0
+      - -proxyport=2375
+      - -allowfrom=alloy
+      - -allowGET=/v1\..{1,2}/(version|containers|containers/.*|networks|networks/.*)
+      - -allowPOST=/v1\..{1,2}/containers/.*/logs
+      - -watchdoginterval=600
+      - -stoponwatchdog
+      - -shutdowngracetime=5
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - observability
+    restart: unless-stopped
+    stop_grace_period: 10s
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cpus: 0.5
+    mem_limit: 64m
+    pids_limit: 50
+
+  loki:
+    profiles: [observability]
+    image: grafana/loki:3.7.7@sha256:d70e4659623f3e109af669cae76fe2a5dd5be54e2298fe8aed380d982fbc2500
+    user: "10001:10001"
+    command:
+      - -config.file=/etc/loki/loki-config.yml
+    ports:
+      - "127.0.0.1:${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ./infrastructure/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki-data:/loki
+    networks:
+      - observability
+      - observability-shared
+    restart: unless-stopped
+    stop_grace_period: 30s
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cpus: 1.0
+    mem_limit: 512m
+    pids_limit: 200
+
+  alloy:
+    profiles: [observability]
+    image: grafana/alloy:v1.19.2@sha256:b8ec653c44235fbe910879145dac3597d66b0aaecf60bcbbe82580767771a839
+    user: "473:473"
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - --disable-reporting
+      - /etc/alloy/config.alloy
+    ports:
+      - "127.0.0.1:${ALLOY_PORT:-12345}:12345"
+    volumes:
+      - ./infrastructure/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy
+    healthcheck:
+      test:
+        - CMD
+        - /bin/bash
+        - -c
+        - 'exec 3<>/dev/tcp/127.0.0.1/12345; printf ''GET /-/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n'' >&3; grep -q ''200 OK'' <&3'
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 20s
+    depends_on:
+      socket-proxy:
+        condition: service_started
+      loki:
+        condition: service_started
+    networks:
+      - observability
+      - observability-shared
+    restart: unless-stopped
+    stop_grace_period: 30s
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    cpus: 1.0
+    mem_limit: 512m
+    pids_limit: 200
+
 networks:
   quality:
     driver: bridge
@@ -392,3 +488,7 @@ volumes:
     name: devops-store-prometheus-data
   grafana-data:
     name: devops-store-grafana-data
+  loki-data:
+    name: devops-store-loki-data
+  alloy-data:
+    name: devops-store-alloy-data
