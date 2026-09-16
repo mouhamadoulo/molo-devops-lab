@@ -98,15 +98,24 @@
       "targets": [{"datasource": {"type": "prometheus", "uid": "prometheus"}, "editorMode": "code", "expr": "sum(rate(jvm_gc_pause_seconds_sum{job=\"devops-store-backend\"}[$__rate_interval])) or vector(0)", "legendFormat": "pause seconds/s", "range": true, "refId": "A"}],
       "title": "GC pauses",
       "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "loki", "uid": "loki"},
+      "gridPos": {"h": 10, "w": 24, "x": 0, "y": 28},
+      "id": 10,
+      "options": {"dedupStrategy": "none", "enableLogDetails": true, "prettifyLogMessage": true, "showCommonLabels": false, "showLabels": false, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true},
+      "targets": [{"datasource": {"type": "loki", "uid": "loki"}, "editorMode": "code", "expr": "{service_name=\"devops-store-backend\"}", "queryType": "range", "refId": "A"}],
+      "title": "Backend logs",
+      "type": "logs"
     }
   ],
   "refresh": "15s",
   "schemaVersion": 42,
-  "tags": ["devops-store", "spring-boot", "prometheus"],
+  "tags": ["devops-store", "spring-boot", "prometheus", "loki"],
   "templating": {"list": []},
   "time": {"from": "now-1h", "to": "now"},
   "timezone": "browser",
   "title": "DevOps Store — Backend Overview",
   "uid": "devops-store-backend",
-  "version": 1
+  "version": 2
 }
