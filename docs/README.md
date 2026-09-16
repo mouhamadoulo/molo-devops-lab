@@ -25,6 +25,8 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [Terraform et JFrog](infrastructure/terraform.md) | Configuration Pro-ready, tests simulés et parcours d’import sous licence |
 | [Prometheus](observability/prometheus.md) | Scrape interne, PromQL, rétention et exploitation locale |
 | [Grafana](observability/grafana.md) | Provisioning versionné, dashboard backend et vérification par API |
+| [Loki](observability/loki.md) | Stockage des logs, rétention, LogQL et diagnostic |
+| [Alloy](observability/alloy.md) | Collecte des logs Docker par proxy de socket restreint |
 | [Design Trivy](superpowers/specs/2026-08-28-trivy-security-design.md) | Périmètre, politique de sécurité, provenance et architecture des scans |
 | [Plan Trivy](superpowers/plans/2026-08-29-trivy-security.md) | Exécution et preuves de validation de la phase 8 |
 
@@ -58,7 +60,8 @@ Documents créés pendant les phases d'industrialisation :
 
 - [Prometheus](observability/prometheus.md) — collecte, requêtes et diagnostic des métriques ;
 - [Grafana](observability/grafana.md) — provisioning et dashboard backend ;
-- `observability/loki.md` — planifié pour la collecte et les requêtes de logs avec Alloy et Loki.
+- [Loki](observability/loki.md) — stockage, rétention et requêtes LogQL des journaux ;
+- [Alloy](observability/alloy.md) — collecte des journaux Docker et proxy de socket restreint.
 
 ## Sécurité et dépannage
 

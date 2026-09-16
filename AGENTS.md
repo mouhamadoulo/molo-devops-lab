@@ -63,11 +63,13 @@ Avant une modification importante, consulter :
   simulés des cinq repositories Maven.
 - Prometheus 3.14 distroless et Grafana 13.2 avec volumes bornés/persistants, provisioning fichier
   et dashboard backend versionné.
+- Loki 3.7.7 single-binary sur stockage fichier, Grafana Alloy 1.19.2 et wollomatic/socket-proxy
+  1.13.1 : collecte des journaux des conteneurs du projet applicatif, labels `service_name`,
+  `container` et `level`, rétention 7 jours.
 
 ### Cible planifiée
 
-- application réelle de Terraform sur Artifactory Pro, Kubernetes/Minikube, Loki et Grafana
-  Alloy.
+- application réelle de Terraform sur Artifactory Pro et Kubernetes/Minikube.
 
 Toujours distinguer cette cible de ce qui est réellement disponible dans le dépôt.
 
@@ -127,8 +129,10 @@ Le backend lit les variables suivantes, avec des valeurs locales par défaut :
 - Terraform utilise `TF_VAR_artifactory_url`, `TF_VAR_artifactory_access_token` et
   `TF_VAR_confirm_pro_repository_api`. Le token reste hors Git et la confirmation Pro reste à
   `false` contre l'instance OSS locale.
-- Le profil observabilité utilise `PROMETHEUS_PORT`, `GRAFANA_PORT` et
-  `GRAFANA_ADMIN_PASSWORD`. Le mot de passe Grafana est obligatoire et reste hors Git.
+- Le profil observabilité utilise `PROMETHEUS_PORT`, `GRAFANA_PORT`, `GRAFANA_ADMIN_PASSWORD`,
+  `LOKI_PORT`, `ALLOY_PORT` et `DOCKER_GID`. Le mot de passe Grafana est obligatoire et reste hors
+  Git. `DOCKER_GID` est le groupe propriétaire du socket Docker : `0` sous Docker Desktop, le GID
+  du groupe `docker` sur une machine Linux.
 
 Ne jamais versionner de secret réel. Ajouter les exemples sans secret dans un fichier
 `.env.example` si nécessaire et conserver les valeurs sensibles hors de Git.
@@ -206,9 +210,11 @@ Le parcours JFrog est documenté dans `docs/devops/jfrog-artifactory.md`. En éd
 repositories sont créés une fois dans l'interface puis vérifiés par `make artifacts-verify` ; ne
 pas réintroduire les API de configuration ou de copie réservées à Artifactory Pro.
 
-Prometheus et Grafana sont documentés dans `docs/observability/prometheus.md` et
-`docs/observability/grafana.md`. `observability-down` préserve les deux volumes nommés ;
-`observability-reset` supprime uniquement les données locales Prometheus et Grafana.
+Prometheus, Grafana, Loki et Alloy sont documentés dans `docs/observability/prometheus.md`,
+`docs/observability/grafana.md`, `docs/observability/loki.md` et `docs/observability/alloy.md`.
+`observability-down` préserve les quatre volumes nommés ; `observability-reset` supprime uniquement
+les données locales Prometheus, Grafana, Loki et les positions d'Alloy. Alloy ne monte jamais le
+socket Docker : seul `socket-proxy` le fait, en lecture seule et avec une allowlist de routes.
 
 La configuration Terraform est documentée dans `docs/infrastructure/terraform.md`. Les commandes
 disponibles sans instance Pro sont :
