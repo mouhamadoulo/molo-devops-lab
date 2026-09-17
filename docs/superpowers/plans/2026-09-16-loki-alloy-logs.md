@@ -62,7 +62,7 @@ Aucun fichier du dépôt n'est modifié dans cette tâche. Elle produit les fait
 - Consumes: rien.
 - Produces: `DOCKER_GID` (entier), `LOKI_HEALTHCHECK` (recette ou `aucune`), `ALLOY_HEALTHCHECK` (recette ou `aucune`), `LOKI_VERIFY_CMD`, `ALLOY_VALIDATE_CMD`.
 
-- [ ] **Step 1: Vérifier l'état du worktree et l'arbre propre**
+- [x] **Step 1: Vérifier l'état du worktree et l'arbre propre**
 
 ```powershell
 Set-Location C:\Users\mouha\Documents\WorkspaceFullStack\molo-devops-lab\.worktrees\phase-12-loki-alloy
@@ -71,7 +71,7 @@ git status --short --branch
 
 Attendu : branche `feat/phase-12-loki-alloy`, seuls la spécification et ce plan apparaissent comme non suivis. Si d'autres modifications apparaissent, s'arrêter et demander à l'utilisateur.
 
-- [ ] **Step 2: Vérifier que Docker répond**
+- [x] **Step 2: Vérifier que Docker répond**
 
 ```powershell
 docker info --format '{{.ServerVersion}}'
@@ -79,7 +79,7 @@ docker info --format '{{.ServerVersion}}'
 
 Attendu : un numéro de version. En cas d'erreur HTTP 500 sur le named pipe, WSL2 est figé : demander l'autorisation avant tout `wsl --shutdown --force`, ne jamais l'exécuter d'initiative.
 
-- [ ] **Step 3: Télécharger les trois images par digest**
+- [x] **Step 3: Télécharger les trois images par digest**
 
 ```powershell
 docker pull grafana/loki:3.7.7@sha256:d70e4659623f3e109af669cae76fe2a5dd5be54e2298fe8aed380d982fbc2500
@@ -89,7 +89,7 @@ docker pull wollomatic/socket-proxy:1.13.1@sha256:3935b709275e4ec35d6ed5a5c4a1f0
 
 Attendu : trois `Status: Downloaded` ou `Image is up to date`.
 
-- [ ] **Step 4: Lire le GID réel du groupe `docker` dans la VM Docker Desktop**
+- [x] **Step 4: Lire le GID réel du groupe `docker` dans la VM Docker Desktop**
 
 ```powershell
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro busybox:1.37.0 stat -c '%g' /var/run/docker.sock
@@ -97,7 +97,7 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock:ro busybox:1.37.0 s
 
 Attendu : un entier, habituellement `999` sous Docker Desktop/WSL2. Consigner la valeur : elle devient la valeur par défaut de `DOCKER_GID` à la tâche 2. Ne pas supposer `999` sans cette sortie.
 
-- [ ] **Step 5: Inventorier les binaires utilisables comme sonde dans l'image Loki**
+- [x] **Step 5: Inventorier les binaires utilisables comme sonde dans l'image Loki**
 
 ```powershell
 docker run --rm --entrypoint /bin/sh grafana/loki:3.7.7 -c "command -v wget curl nc; echo '---'; /usr/bin/loki --help 2>&1 | Select-String -Pattern 'verify-config'"
@@ -110,7 +110,7 @@ Attendu : consigner quels binaires existent. `LOKI_HEALTHCHECK` vaut :
 - `["CMD-SHELL", "curl --fail --silent http://localhost:3100/ready"]` si `curl` existe ;
 - `aucune` sinon.
 
-- [ ] **Step 6: Vérifier la sous-commande de validation de configuration Loki**
+- [x] **Step 6: Vérifier la sous-commande de validation de configuration Loki**
 
 ```powershell
 docker run --rm --entrypoint /usr/bin/loki grafana/loki:3.7.7 -help 2>&1 | Select-String -Pattern 'verify-config'
@@ -118,7 +118,7 @@ docker run --rm --entrypoint /usr/bin/loki grafana/loki:3.7.7 -help 2>&1 | Selec
 
 Attendu : une ligne mentionnant `-verify-config`. `LOKI_VERIFY_CMD` vaut alors `-config.file=/etc/loki/loki-config.yml -verify-config`. Si l'option n'existe pas, consigner la sous-commande réellement disponible et l'utiliser partout où ce plan écrit `LOKI_VERIFY_CMD`.
 
-- [ ] **Step 7: Inventorier les capacités de l'image Alloy**
+- [x] **Step 7: Inventorier les capacités de l'image Alloy**
 
 ```powershell
 docker run --rm --entrypoint /bin/sh grafana/alloy:v1.19.2 -c "command -v wget curl; echo '---'; /bin/alloy --help 2>&1 | head -40"
@@ -128,11 +128,11 @@ Attendu : la liste des sous-commandes Alloy. Consigner si `fmt` et `validate` ex
 - `ALLOY_VALIDATE_CMD` vaut `validate /etc/alloy/config.alloy` si `validate` existe, sinon `fmt /etc/alloy/config.alloy` si seul `fmt` existe.
 - `ALLOY_HEALTHCHECK` vaut `["CMD-SHELL", "wget --spider -q http://localhost:12345/-/ready"]` si `wget` existe, la variante `curl` si `curl` existe, `aucune` sinon.
 
-- [ ] **Step 8: Consigner les faits**
+- [x] **Step 8: Consigner les faits**
 
 Ajouter à `findings.md` une section « Phase 12 — capacités des images » contenant les cinq valeurs produites, avec la commande exacte et la sortie réelle qui les justifie. Ces valeurs sont les seules autorisées dans les tâches suivantes.
 
-- [ ] **Step 9: Pas de commit**
+- [x] **Step 9: Pas de commit**
 
 Cette tâche ne modifie aucun fichier suivi. Ne rien committer.
 
@@ -149,7 +149,7 @@ Cette tâche ne modifie aucun fichier suivi. Ne rien committer.
 - Consumes: `LOKI_VERIFY_CMD` et `LOKI_HEALTHCHECK` de la tâche 0.
 - Produces: service Compose `loki`, joignable en `http://loki:3100` sur le réseau `observability` et en `http://127.0.0.1:${LOKI_PORT:-3100}` sur l'hôte ; volume nommé `devops-store-loki-data`.
 
-- [ ] **Step 1: Écrire la configuration Loki**
+- [x] **Step 1: Écrire la configuration Loki**
 
 Créer `infrastructure/loki/loki-config.yml` :
 
@@ -216,7 +216,7 @@ analytics:
   reporting_enabled: false
 ```
 
-- [ ] **Step 2: Valider la configuration sans démarrer le service**
+- [x] **Step 2: Valider la configuration sans démarrer le service**
 
 ```powershell
 docker run --rm `
@@ -227,7 +227,7 @@ docker run --rm `
 
 Attendu : sortie se terminant par une confirmation de configuration valide et code de sortie `0`. Si la configuration est refusée, corriger le fichier et relancer cette étape avant de continuer — ne pas passer à l'étape 3 sur une configuration invalide.
 
-- [ ] **Step 3: Ajouter le service `loki` à `docker-compose.devops.yml`**
+- [x] **Step 3: Ajouter le service `loki` à `docker-compose.devops.yml`**
 
 Insérer ce bloc dans `services:`, immédiatement après le service `grafana` et avant la clé `networks:` de premier niveau. Remplacer `<LOKI_HEALTHCHECK>` par la valeur produite à la tâche 0 ; si elle vaut `aucune`, supprimer entièrement la clé `healthcheck`.
 
@@ -264,7 +264,7 @@ Insérer ce bloc dans `services:`, immédiatement après le service `grafana` et
     pids_limit: 200
 ```
 
-- [ ] **Step 4: Déclarer le volume nommé**
+- [x] **Step 4: Déclarer le volume nommé**
 
 Dans la section `volumes:` de `docker-compose.devops.yml`, après `grafana-data`, ajouter :
 
@@ -273,7 +273,7 @@ Dans la section `volumes:` de `docker-compose.devops.yml`, après `grafana-data`
     name: devops-store-loki-data
 ```
 
-- [ ] **Step 5: Valider le modèle Compose**
+- [x] **Step 5: Valider le modèle Compose**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability config --quiet
@@ -281,7 +281,7 @@ docker compose -f docker-compose.devops.yml --profile observability config --qui
 
 Attendu : aucune sortie, code `0`. Une erreur `network devops-store-observability declared as external` signifie que le réseau applicatif n'existe pas encore ; ce n'est pas un défaut du bloc ajouté, démarrer l'application puis relancer.
 
-- [ ] **Step 6: Démarrer Loki seul et vérifier l'écriture dans le volume**
+- [x] **Step 6: Démarrer Loki seul et vérifier l'écriture dans le volume**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability up -d loki
@@ -310,7 +310,7 @@ Si les journaux montrent `permission denied` sur `/loki`, le volume nommé n'a p
 
 et faire dépendre `loki` de `loki-permissions` avec `condition: service_completed_successfully`. Ne pas ajouter ce service si le message d'erreur n'a pas été observé.
 
-- [ ] **Step 7: Vérifier la rétention appliquée**
+- [x] **Step 7: Vérifier la rétention appliquée**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability logs loki --tail=200 | Select-String -Pattern "retention|compactor"
@@ -318,14 +318,14 @@ docker compose -f docker-compose.devops.yml --profile observability logs loki --
 
 Attendu : au moins une ligne confirmant le démarrage du compacteur avec la rétention activée. Si le compacteur n'est pas démarré, la rétention déclarée n'est pas appliquée : corriger la section `compactor` avant de continuer.
 
-- [ ] **Step 8: Arrêter Loki en conservant le volume**
+- [x] **Step 8: Arrêter Loki en conservant le volume**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability stop loki
 docker compose -f docker-compose.devops.yml --profile observability rm -f loki
 ```
 
-- [ ] **Step 9: Commit (sur autorisation explicite uniquement)**
+- [x] **Step 9: Commit (sur autorisation explicite uniquement)**
 
 ```bash
 git add infrastructure/loki/loki-config.yml docker-compose.devops.yml
@@ -345,7 +345,7 @@ git commit -m "feat(observability): add Loki single-binary service"
 - Consumes: `DOCKER_GID` de la tâche 0.
 - Produces: service Compose `socket-proxy` exposant l'API Docker filtrée sur `tcp://socket-proxy:2375`, joignable uniquement depuis le réseau interne `observability`.
 
-- [ ] **Step 1: Ajouter le service `socket-proxy`**
+- [x] **Step 1: Ajouter le service `socket-proxy`**
 
 Insérer dans `services:` de `docker-compose.devops.yml`, juste avant le service `loki` :
 
@@ -380,7 +380,7 @@ Insérer dans `services:` de `docker-compose.devops.yml`, juste avant le service
 
 Remplacer `999` par la valeur réellement lue à la tâche 0 si elle diffère. Ce service ne publie aucun port et ne rejoint pas `observability-shared` : il ne doit pas être joignable depuis l'hôte.
 
-- [ ] **Step 2: Déclarer `DOCKER_GID` dans `.env.example`**
+- [x] **Step 2: Déclarer `DOCKER_GID` dans `.env.example`**
 
 Dans le bloc observabilité de `.env.example`, après `GRAFANA_ADMIN_PASSWORD=`, ajouter :
 
@@ -394,7 +394,7 @@ DOCKER_GID=999
 
 Aucun secret n'est introduit : ces trois valeurs sont des paramètres locaux.
 
-- [ ] **Step 3: Valider le modèle Compose**
+- [x] **Step 3: Valider le modèle Compose**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability config --quiet
@@ -402,7 +402,7 @@ docker compose -f docker-compose.devops.yml --profile observability config --qui
 
 Attendu : aucune sortie, code `0`.
 
-- [ ] **Step 4: Démarrer le proxy**
+- [x] **Step 4: Démarrer le proxy**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability up -d socket-proxy
@@ -411,7 +411,7 @@ docker compose -f docker-compose.devops.yml --profile observability logs socket-
 
 Attendu : le proxy annonce qu'il écoute sur `2375`. Un message de refus d'accès au socket signifie que `DOCKER_GID` est faux : corriger la valeur, pas les droits du socket.
 
-- [ ] **Step 5: Vérifier qu'une route autorisée passe**
+- [x] **Step 5: Vérifier qu'une route autorisée passe**
 
 ```powershell
 docker run --rm --network devops-store_observability `
@@ -422,7 +422,7 @@ docker run --rm --network devops-store_observability `
 
 Attendu : `200`. Le nom de réseau réel peut différer ; le lire avec `docker network ls` et utiliser celui du projet outillage. Le conteneur doit porter le nom d'hôte `alloy`, car `-allowfrom` filtre sur le nom résolu du client.
 
-- [ ] **Step 6: Vérifier qu'une route interdite est refusée**
+- [x] **Step 6: Vérifier qu'une route interdite est refusée**
 
 ```powershell
 docker run --rm --network devops-store_observability `
@@ -433,7 +433,7 @@ docker run --rm --network devops-store_observability `
 
 Attendu : un code `4xx` de refus, jamais `200` ni `201`. Ce contrôle est la preuve que le proxy restreint réellement l'API ; ne pas continuer sans cette sortie.
 
-- [ ] **Step 7: Vérifier que le proxy n'est pas joignable depuis l'hôte**
+- [x] **Step 7: Vérifier que le proxy n'est pas joignable depuis l'hôte**
 
 ```powershell
 curl.exe -s -o NUL -w "%{http_code}`n" --max-time 5 http://localhost:2375/v1.51/containers/json
@@ -441,14 +441,14 @@ curl.exe -s -o NUL -w "%{http_code}`n" --max-time 5 http://localhost:2375/v1.51/
 
 Attendu : échec de connexion, pas une réponse HTTP. Une réponse signifierait qu'un port a été publié par erreur.
 
-- [ ] **Step 8: Arrêter le proxy**
+- [x] **Step 8: Arrêter le proxy**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability stop socket-proxy
 docker compose -f docker-compose.devops.yml --profile observability rm -f socket-proxy
 ```
 
-- [ ] **Step 9: Commit (sur autorisation explicite uniquement)**
+- [x] **Step 9: Commit (sur autorisation explicite uniquement)**
 
 ```bash
 git add docker-compose.devops.yml .env.example
@@ -468,7 +468,7 @@ git commit -m "feat(observability): add restricted Docker socket proxy"
 - Consumes: `socket-proxy` (tâche 2), `loki` (tâche 1), `ALLOY_VALIDATE_CMD` et `ALLOY_HEALTHCHECK` (tâche 0).
 - Produces: service Compose `alloy` ; flux Loki étiquetés `service_name`, `container`, `level` ; `service_name` du backend vaut exactement `devops-store-backend`.
 
-- [ ] **Step 1: Écrire le pipeline Alloy**
+- [x] **Step 1: Écrire le pipeline Alloy**
 
 Créer `infrastructure/alloy/config.alloy` :
 
@@ -544,7 +544,7 @@ loki.write "local" {
 
 Le contenu de la ligne n'est jamais remplacé : `stage.json` n'extrait que des variables de travail, donc `requestId`, `logger_name`, `thread_name` et `message` restent dans le JSON poussé.
 
-- [ ] **Step 2: Valider la configuration sans démarrer le service**
+- [x] **Step 2: Valider la configuration sans démarrer le service**
 
 ```powershell
 docker run --rm `
@@ -555,7 +555,7 @@ docker run --rm `
 
 Utiliser `ALLOY_VALIDATE_CMD` de la tâche 0 si `validate` n'existe pas. Attendu : code `0`. Corriger toute erreur de syntaxe avant l'étape suivante.
 
-- [ ] **Step 3: Ajouter le service `alloy`**
+- [x] **Step 3: Ajouter le service `alloy`**
 
 Insérer dans `services:` de `docker-compose.devops.yml`, après le service `loki`. Remplacer `<ALLOY_HEALTHCHECK>` par la valeur de la tâche 0 ; si elle vaut `aucune`, supprimer la clé `healthcheck` entière.
 
@@ -603,7 +603,7 @@ Insérer dans `services:` de `docker-compose.devops.yml`, après le service `lok
 
 Si `loki` n'a pas de `healthcheck` (cas `aucune` de la tâche 0), utiliser `condition: service_started` pour `loki` également.
 
-- [ ] **Step 4: Déclarer le volume de positions**
+- [x] **Step 4: Déclarer le volume de positions**
 
 Dans la section `volumes:`, après `loki-data`, ajouter :
 
@@ -612,7 +612,7 @@ Dans la section `volumes:`, après `loki-data`, ajouter :
     name: devops-store-alloy-data
 ```
 
-- [ ] **Step 5: Valider le modèle Compose**
+- [x] **Step 5: Valider le modèle Compose**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability config --quiet
@@ -620,7 +620,7 @@ docker compose -f docker-compose.devops.yml --profile observability config --qui
 
 Attendu : aucune sortie, code `0`.
 
-- [ ] **Step 6: Démarrer l'application puis la chaîne de collecte**
+- [x] **Step 6: Démarrer l'application puis la chaîne de collecte**
 
 ```powershell
 docker compose up -d --wait
@@ -630,7 +630,7 @@ docker compose -f docker-compose.devops.yml --profile observability ps socket-pr
 
 Attendu : les trois conteneurs tournent. `alloy` doit rester en vie : un redémarrage en boucle signale une erreur de configuration visible dans ses journaux.
 
-- [ ] **Step 7: Vérifier les labels réellement indexés**
+- [x] **Step 7: Vérifier les labels réellement indexés**
 
 ```powershell
 curl.exe -s http://localhost:3100/loki/api/v1/labels
@@ -639,7 +639,7 @@ curl.exe -s "http://localhost:3100/loki/api/v1/label/service_name/values"
 
 Attendu : la liste des labels contient `service_name`, `container` et `level` et rien d'autre en dehors des labels techniques ajoutés par Loki. Les valeurs de `service_name` contiennent `devops-store-backend`. Si `requestId` ou `logger_name` apparaissent comme labels, la contrainte de cardinalité est violée : corriger `stage.labels` avant de continuer.
 
-- [ ] **Step 8: Vérifier que le contenu JSON est préservé**
+- [x] **Step 8: Vérifier que le contenu JSON est préservé**
 
 ```powershell
 curl.exe -s -G http://localhost:3100/loki/api/v1/query_range `
@@ -649,7 +649,7 @@ curl.exe -s -G http://localhost:3100/loki/api/v1/query_range `
 
 Attendu : la ligne retournée est le JSON Logstash d'origine, avec `@timestamp`, `level`, `logger_name`, `thread_name` et `message`.
 
-- [ ] **Step 9: Vérifier le comportement sur les conteneurs non JSON**
+- [x] **Step 9: Vérifier le comportement sur les conteneurs non JSON**
 
 ```powershell
 curl.exe -s "http://localhost:3100/loki/api/v1/label/service_name/values"
@@ -660,7 +660,7 @@ curl.exe -s -G http://localhost:3100/loki/api/v1/query_range `
 
 Attendu : `devops-store-postgres` et `devops-store-frontend` apparaissent, leurs lignes sont indexées sans label `level`, et le pipeline n'a pas échoué. Les journaux d'Alloy ne doivent pas être saturés d'erreurs de parsing.
 
-- [ ] **Step 10: Commit (sur autorisation explicite uniquement)**
+- [x] **Step 10: Commit (sur autorisation explicite uniquement)**
 
 ```bash
 git add infrastructure/alloy/config.alloy docker-compose.devops.yml
@@ -680,7 +680,7 @@ git commit -m "feat(observability): collect project container logs with Alloy"
 - Consumes: service `loki` (tâche 1) et labels produits par Alloy (tâche 3).
 - Produces: datasource Grafana d'UID `loki` ; panneau `id: 10`, type `logs`, titre `Backend logs` dans le dashboard d'UID `devops-store-backend`.
 
-- [ ] **Step 1: Créer la datasource Loki**
+- [x] **Step 1: Créer la datasource Loki**
 
 Créer `infrastructure/grafana/provisioning/datasources/loki.yml` :
 
@@ -703,7 +703,7 @@ datasources:
 
 Ne pas modifier `prometheus.yml` : l'UID `prometheus` et son statut `isDefault: true` restent inchangés.
 
-- [ ] **Step 2: Ajouter le panneau de logs au dashboard**
+- [x] **Step 2: Ajouter le panneau de logs au dashboard**
 
 Dans `infrastructure/grafana/dashboards/backend-overview.json`, ajouter cet objet à la fin du tableau `panels`, après le panneau `id: 9` :
 
@@ -721,7 +721,7 @@ Dans `infrastructure/grafana/dashboards/backend-overview.json`, ajouter cet obje
 
 Dans le même fichier, remplacer `"tags": ["devops-store", "spring-boot", "prometheus"]` par `"tags": ["devops-store", "spring-boot", "prometheus", "loki"]` et `"version": 1` par `"version": 2`.
 
-- [ ] **Step 3: Vérifier que le JSON reste valide et cohérent**
+- [x] **Step 3: Vérifier que le JSON reste valide et cohérent**
 
 ```powershell
 python -c "import json; d=json.load(open('infrastructure/grafana/dashboards/backend-overview.json')); print(len(d['panels']), d['version'], sorted({p['datasource']['uid'] for p in d['panels']}))"
@@ -729,7 +729,7 @@ python -c "import json; d=json.load(open('infrastructure/grafana/dashboards/back
 
 Attendu : `10 2 ['loki', 'prometheus']`. Tout autre UID signale une erreur de saisie.
 
-- [ ] **Step 4: Démarrer Grafana avec le reste de la chaîne**
+- [x] **Step 4: Démarrer Grafana avec le reste de la chaîne**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability up -d --wait prometheus grafana socket-proxy loki alloy
@@ -737,7 +737,7 @@ docker compose -f docker-compose.devops.yml --profile observability up -d --wait
 
 Attendu : les services deviennent sains. `GRAFANA_ADMIN_PASSWORD` doit être défini dans `.env` ; ne jamais deviner ni inventer ce mot de passe.
 
-- [ ] **Step 5: Vérifier la datasource provisionnée**
+- [x] **Step 5: Vérifier la datasource provisionnée**
 
 ```powershell
 $pair = "admin:$($env:GRAFANA_ADMIN_PASSWORD)"
@@ -746,7 +746,7 @@ curl.exe -s -u $pair http://localhost:3000/api/datasources | python -c "import j
 
 Attendu : les deux entrées `('prometheus', 'prometheus', True)` et `('loki', 'loki', True)`.
 
-- [ ] **Step 6: Vérifier le dashboard provisionné**
+- [x] **Step 6: Vérifier le dashboard provisionné**
 
 ```powershell
 curl.exe -s -u $pair http://localhost:3000/api/dashboards/uid/devops-store-backend | python -c "import json,sys; d=json.load(sys.stdin); print(d['meta']['provisioned'], len(d['dashboard']['panels']), d['dashboard']['panels'][-1]['type'])"
@@ -754,7 +754,7 @@ curl.exe -s -u $pair http://localhost:3000/api/dashboards/uid/devops-store-backe
 
 Attendu : `True 10 logs`.
 
-- [ ] **Step 7: Vérifier que la datasource Loki répond réellement depuis Grafana**
+- [x] **Step 7: Vérifier que la datasource Loki répond réellement depuis Grafana**
 
 ```powershell
 curl.exe -s -u $pair "http://localhost:3000/api/datasources/uid/loki/health"
@@ -762,7 +762,7 @@ curl.exe -s -u $pair "http://localhost:3000/api/datasources/uid/loki/health"
 
 Attendu : un statut `OK`. Un échec ici, alors que `curl` direct sur `3100` fonctionne, signale un problème de réseau Docker entre Grafana et Loki, pas de provisioning.
 
-- [ ] **Step 8: Commit (sur autorisation explicite uniquement)**
+- [x] **Step 8: Commit (sur autorisation explicite uniquement)**
 
 ```bash
 git add infrastructure/grafana/provisioning/datasources/loki.yml infrastructure/grafana/dashboards/backend-overview.json
@@ -781,7 +781,7 @@ git commit -m "feat(observability): provision Loki datasource and backend log pa
 - Consumes: services des tâches 1 à 4.
 - Produces: `observability-config`, `observability-up`, `observability-down`, `observability-status`, `observability-logs`, `observability-reset` couvrant les cinq services.
 
-- [ ] **Step 1: Ajouter les variables d'images**
+- [x] **Step 1: Ajouter les variables d'images**
 
 Après la ligne `PROMETHEUS_IMAGE ?= ...` du `Makefile`, ajouter :
 
@@ -791,7 +791,7 @@ ALLOY_IMAGE ?= grafana/alloy:v1.19.2@sha256:b8ec653c44235fbe910879145dac3597d66b
 OBSERVABILITY_SERVICES ?= prometheus grafana socket-proxy loki alloy
 ```
 
-- [ ] **Step 2: Étendre `observability-config`**
+- [x] **Step 2: Étendre `observability-config`**
 
 Remplacer la recette existante par :
 
@@ -815,7 +815,7 @@ observability-config: ## Validate Prometheus, Loki, Alloy and the observability 
 
 Si la tâche 0 a montré que `validate` n'existe pas, utiliser `fmt /etc/alloy/config.alloy` à la place, et seulement dans ce cas.
 
-- [ ] **Step 3: Étendre les quatre recettes de cycle de vie**
+- [x] **Step 3: Étendre les quatre recettes de cycle de vie**
 
 ```make
 observability-up: ## Start the application, Prometheus, Grafana, Loki and Alloy
@@ -835,7 +835,7 @@ observability-logs: ## Follow observability logs
 
 L'ordre d'arrêt est volontairement l'inverse de l'ordre de démarrage : Alloy d'abord, pour qu'il cesse d'écrire avant l'arrêt de Loki.
 
-- [ ] **Step 4: Étendre `observability-reset`**
+- [x] **Step 4: Étendre `observability-reset`**
 
 ```make
 observability-reset: observability-down ## Delete only Prometheus, Grafana, Loki and Alloy local data
@@ -846,11 +846,11 @@ observability-reset: observability-down ## Delete only Prometheus, Grafana, Loki
 	done
 ```
 
-- [ ] **Step 5: Mettre à jour l'aide**
+- [x] **Step 5: Mettre à jour l'aide**
 
 Dans le bloc `$(info ...)` du `Makefile`, remplacer les quatre descriptions d'observabilité concernées pour qu'elles mentionnent Loki et Alloy, en gardant l'alignement des colonnes existant.
 
-- [ ] **Step 6: Vérifier la syntaxe des recettes**
+- [x] **Step 6: Vérifier la syntaxe des recettes**
 
 GNU Make peut être absent du `PATH` Windows. Utiliser un conteneur éphémère :
 
@@ -861,7 +861,7 @@ docker run --rm -v "${PWD}:/workspace" -w /workspace maven:3.9.16-eclipse-temuri
 
 Attendu : les commandes sont développées sans erreur de syntaxe Make, et les cinq services apparaissent dans les listes. `--dry-run` n'exécute rien : ce n'est pas une preuve de fonctionnement, seulement de syntaxe.
 
-- [ ] **Step 7: Exécuter réellement les cibles de lecture sur l'hôte**
+- [x] **Step 7: Exécuter réellement les cibles de lecture sur l'hôte**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability config --quiet
@@ -870,7 +870,7 @@ docker compose -f docker-compose.devops.yml --profile observability ps prometheu
 
 Attendu : validation silencieuse, puis les cinq services listés. Cette étape établit l'équivalent réel des recettes sans dépendre de GNU Make.
 
-- [ ] **Step 8: Commit (sur autorisation explicite uniquement)**
+- [x] **Step 8: Commit (sur autorisation explicite uniquement)**
 
 ```bash
 git add Makefile
@@ -890,7 +890,7 @@ git commit -m "chore(observability): extend observability targets to Loki and Al
 - Consumes: tâches 1 à 5.
 - Produces: guides d'exploitation et index à jour, sans affirmation non vérifiée.
 
-- [ ] **Step 1: Écrire `docs/observability/loki.md`**
+- [x] **Step 1: Écrire `docs/observability/loki.md`**
 
 Structure imposée, sur le modèle de `docs/observability/prometheus.md` :
 
@@ -910,7 +910,7 @@ Structure imposée, sur le modèle de `docs/observability/prometheus.md` :
 6. diagnostic : `/ready` en `503` au démarrage, entrées rejetées hors fenêtre `reject_old_samples_max_age`, volume saturé ;
 7. limites assumées : pas d'authentification, instance mono-nœud, pas de stockage objet.
 
-- [ ] **Step 2: Écrire `docs/observability/alloy.md`**
+- [x] **Step 2: Écrire `docs/observability/alloy.md`**
 
 Structure imposée :
 
@@ -922,23 +922,23 @@ Structure imposée :
 6. comportement attendu sur les conteneurs non JSON ;
 7. diagnostic : `http://localhost:12345/-/ready`, page d'état d'Alloy, volume de positions.
 
-- [ ] **Step 3: Compléter `docs/observability/grafana.md`**
+- [x] **Step 3: Compléter `docs/observability/grafana.md`**
 
 Ajouter une section décrivant la datasource `loki`, le panneau `Backend logs` et le fait que les deux datasources sont provisionnées en lecture seule. Ne pas réécrire les sections existantes.
 
-- [ ] **Step 4: Mettre à jour `docs/README.md`**
+- [x] **Step 4: Mettre à jour `docs/README.md`**
 
 Ajouter les deux nouveaux guides à l'index, dans la même section que Prometheus et Grafana.
 
-- [ ] **Step 5: Mettre à jour `README.md`**
+- [x] **Step 5: Mettre à jour `README.md`**
 
 Ajouter Loki et Alloy à la description du profil `observability`, avec leurs URLs locales `http://localhost:3100` et `http://localhost:12345`. Distinguer explicitement ce qui est disponible de ce qui reste planifié (Kubernetes, phase 13).
 
-- [ ] **Step 6: Mettre à jour `AGENTS.md`**
+- [x] **Step 6: Mettre à jour `AGENTS.md`**
 
 Dans « Stack / Implémentée », ajouter Loki 3.7.7, Alloy 1.19.2 et socket-proxy 1.13.1. Dans « Configuration locale », ajouter `LOKI_PORT`, `ALLOY_PORT` et `DOCKER_GID`. Mettre à jour la phrase décrivant `observability-down` et `observability-reset` pour mentionner les quatre volumes. Retirer Loki et Alloy de la cible planifiée.
 
-- [ ] **Step 7: Vérifier qu'aucune commande documentée n'est inventée**
+- [x] **Step 7: Vérifier qu'aucune commande documentée n'est inventée**
 
 ```powershell
 Select-String -Path docs/observability/loki.md, docs/observability/alloy.md, README.md, AGENTS.md -Pattern "make " | Select-Object -ExpandProperty Line
@@ -946,7 +946,7 @@ Select-String -Path docs/observability/loki.md, docs/observability/alloy.md, REA
 
 Attendu : chaque cible Make citée existe réellement dans le `Makefile`. Toute cible citée mais absente est un défaut à corriger immédiatement.
 
-- [ ] **Step 8: Commit (sur autorisation explicite uniquement)**
+- [x] **Step 8: Commit (sur autorisation explicite uniquement)**
 
 ```bash
 git add docs/observability/loki.md docs/observability/alloy.md docs/observability/grafana.md docs/README.md README.md AGENTS.md
@@ -965,7 +965,7 @@ git commit -m "docs(observability): document the Loki and Alloy log pipeline"
 - Consumes: tâches 1 à 6.
 - Produces: preuves réelles des six critères d'acceptation de la spécification.
 
-- [ ] **Step 1: Repartir d'un état propre**
+- [x] **Step 1: Repartir d'un état propre**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability down
@@ -978,7 +978,7 @@ Attendu : les cinq services sont `healthy`, ou `running` pour ceux dont la tâch
 
 Si le nom de projet Compose dérive vers `devops-store_application` depuis le worktree, forcer `--project-directory` sur le répertoire historique, comme en phase 11.
 
-- [ ] **Step 2: Vérifier les deux points de disponibilité**
+- [x] **Step 2: Vérifier les deux points de disponibilité**
 
 ```powershell
 curl.exe -s -o NUL -w "loki=%{http_code}`n" http://localhost:3100/ready
@@ -987,11 +987,11 @@ curl.exe -s -o NUL -w "alloy=%{http_code}`n" http://localhost:12345/-/ready
 
 Attendu : `loki=200` et `alloy=200`.
 
-- [ ] **Step 3: Générer du trafic applicatif réel**
+- [x] **Step 3: Générer du trafic applicatif réel**
 
 Réutiliser le script d'acceptance de la phase 11 : connexion avec l'en-tête `Origin: http://localhost:4200` obligatoire, création puis suppression d'un produit, et au moins une requête invalide pour produire une ligne `WARN` ou `ERROR`. Ne jamais deviner un mot de passe : utiliser l'identité de validation autorisée par l'utilisateur, conservée hors Git.
 
-- [ ] **Step 4: Vérifier la présence d'un log backend récent avec ses champs**
+- [x] **Step 4: Vérifier la présence d'un log backend récent avec ses champs**
 
 ```powershell
 curl.exe -s -G http://localhost:3100/loki/api/v1/query_range `
@@ -1001,7 +1001,7 @@ curl.exe -s -G http://localhost:3100/loki/api/v1/query_range `
 
 Attendu : des lignes récentes contenant `@timestamp`, `level`, `logger_name` et `requestId`. C'est la preuve du premier critère d'acceptation, complétée à l'étape 6 côté Grafana.
 
-- [ ] **Step 5: Exécuter les quatre recherches imposées**
+- [x] **Step 5: Exécuter les quatre recherches imposées**
 
 ```powershell
 $queries = @(
@@ -1018,11 +1018,11 @@ foreach ($q in $queries) {
 
 Attendu : un nombre de flux non nul pour chaque requête dont les événements ont réellement été produits à l'étape 3. Si une requête retourne zéro, déterminer si l'événement correspondant a bien été généré avant de conclure à un défaut du pipeline.
 
-- [ ] **Step 6: Vérifier le panneau de logs dans Grafana**
+- [x] **Step 6: Vérifier le panneau de logs dans Grafana**
 
 Ouvrir `http://localhost:3000`, dossier `DevOps Store`, dashboard `DevOps Store — Backend Overview`. Attendu : le panneau `Backend logs` affiche des lignes récentes avec horodatage, niveau et logger lisibles après ouverture du détail d'une ligne.
 
-- [ ] **Step 7: Vérifier l'absence de secret, de prix et de description produit**
+- [x] **Step 7: Vérifier l'absence de secret, de prix et de description produit**
 
 ```powershell
 docker compose logs backend --tail=500 | Select-String -Pattern "password|secret|token|jwt|price|description" -CaseSensitive:$false
@@ -1030,7 +1030,7 @@ docker compose logs backend --tail=500 | Select-String -Pattern "password|secret
 
 Attendu : aucune correspondance révélant une valeur réelle. Une correspondance sur un nom de champ technique sans valeur sensible est acceptable et doit être justifiée explicitement dans `progress.md`. C'est le troisième critère d'acceptation.
 
-- [ ] **Step 8: Vérifier le périmètre de collecte et la cardinalité**
+- [x] **Step 8: Vérifier le périmètre de collecte et la cardinalité**
 
 ```powershell
 curl.exe -s http://localhost:3100/loki/api/v1/labels
@@ -1040,7 +1040,7 @@ docker inspect --format '{{range .Mounts}}{{.Source}} {{end}}' $(docker compose 
 
 Attendu : labels limités à `service_name`, `container`, `level` ; valeurs de `service_name` toutes préfixées par `devops-store-` ; aucun montage de `docker.sock` dans Alloy. Ce sont les quatrième et cinquième critères.
 
-- [ ] **Step 9: Vérifier la sémantique de `down` et de `reset`**
+- [x] **Step 9: Vérifier la sémantique de `down` et de `reset`**
 
 ```powershell
 docker compose -f docker-compose.devops.yml --profile observability stop alloy loki socket-proxy grafana prometheus
@@ -1051,11 +1051,11 @@ docker compose ps
 
 Attendu : le volume Loki existe toujours et l'application reste saine. C'est le sixième critère ; la suppression par `observability-reset` n'est vérifiée qu'ensuite, et seulement si l'utilisateur accepte de perdre les données locales collectées.
 
-- [ ] **Step 10: Mettre à jour `docs/IMPLEMENTATION_PLAN.md`**
+- [x] **Step 10: Mettre à jour `docs/IMPLEMENTATION_PLAN.md`**
 
 Cocher les cases d'implémentation et d'acceptation de la phase 12 uniquement pour ce qui a produit une sortie réelle. Corriger les versions annoncées (`Loki 3.7.7` et `Alloy 1.19.2` au lieu de `3.7` et `1.18`) et dater le statut. Ne cocher aucune case dont la preuve manque.
 
-- [ ] **Step 11: Commit (sur autorisation explicite uniquement)**
+- [x] **Step 11: Commit (sur autorisation explicite uniquement)**
 
 ```bash
 git add docs/IMPLEMENTATION_PLAN.md
