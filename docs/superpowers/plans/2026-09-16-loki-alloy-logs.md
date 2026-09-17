@@ -1074,7 +1074,7 @@ git commit -m "docs: record phase 12 acceptance evidence"
 - Consumes: tâches 0 à 7.
 - Produces: diff revu, preuves consolidées, décision de livraison.
 
-- [ ] **Step 1: Contrôles de forme**
+- [x] **Step 1: Contrôles de forme**
 
 ```powershell
 git diff --check
@@ -1083,7 +1083,7 @@ git status --short
 
 Attendu : aucune erreur d'espaces, et seuls les fichiers du périmètre apparaissent.
 
-- [ ] **Step 2: Régression Compose et Prometheus**
+- [x] **Step 2: Régression Compose et Prometheus**
 
 ```powershell
 docker compose config --quiet
@@ -1095,7 +1095,7 @@ docker run --rm -v "${PWD}\infrastructure\prometheus\prometheus.yml:/etc/prometh
 
 Attendu : trois validations vertes. Le backend et le frontend n'étant pas modifiés, aucun build Maven ni npm n'est requis par ce périmètre.
 
-- [ ] **Step 3: Régression Trivy sur les configurations**
+- [x] **Step 3: Régression Trivy sur les configurations**
 
 ```powershell
 make trivy-config
@@ -1103,7 +1103,7 @@ make trivy-config
 
 Si GNU Make est absent, exécuter la commande Trivy équivalente lue dans le `Makefile`. Attendu : aucune mauvaise configuration nouvelle sur les fichiers ajoutés. Toute alerte sur `socket-proxy`, `loki` ou `alloy` doit être corrigée ou justifiée explicitement.
 
-- [ ] **Step 4: Relire le diff complet**
+- [x] **Step 4: Relire le diff complet**
 
 ```powershell
 git diff --stat
@@ -1112,11 +1112,11 @@ git diff
 
 Vérifier point par point : aucun secret, aucun montage de socket hors `socket-proxy`, aucune modification des neuf panneaux existants, aucun fichier backend ou frontend touché.
 
-- [ ] **Step 5: Mettre à jour les fichiers de suivi**
+- [x] **Step 5: Mettre à jour les fichiers de suivi**
 
 Consigner dans `progress.md` les preuves réelles par critère d'acceptation, et dans `findings.md` les écarts rencontrés (sondes indisponibles, GID, droits de volume, dérive du nom de projet Compose). Marquer les phases de `task_plan.md`.
 
-- [ ] **Step 6: Demander la décision de livraison**
+- [x] **Step 6: Demander la décision de livraison**
 
 Présenter à l'utilisateur : le diff résumé, les preuves, les points restés ouverts. Rappeler que la PR #42 (`fix/grafana-password-check`) touche le même service Grafana et devrait être fusionnée avant cette branche pour éviter un conflit. Ne créer aucun commit, push ou PR sans autorisation explicite.
 
