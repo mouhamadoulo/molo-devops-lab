@@ -31,19 +31,28 @@ l'UID stable `prometheus`. Le provider
 lecture seule dans le dossier Grafana `DevOps Store`. Les modifications depuis l'interface sont
 désactivées afin que Git reste la source de vérité.
 
+## Datasource Loki
+
+La datasource définie dans `infrastructure/grafana/provisioning/datasources/loki.yml` porte l'UID
+stable `loki` et pointe sur `http://loki:3100`. Comme la datasource Prometheus, elle est
+provisionnée en lecture seule : Git reste la source de vérité. Prometheus demeure la datasource par
+défaut. Le détail de la collecte est dans [Loki](loki.md) et [Alloy](alloy.md).
+
 ## Dashboard backend
 
-Le dashboard `DevOps Store — Backend Overview` porte l'UID `devops-store-backend` et contient neuf
+Le dashboard `DevOps Store — Backend Overview` porte l'UID `devops-store-backend` et contient dix
 panneaux : état de la target, créations de produits, débit HTTP, latence p95, erreurs 5xx, CPU du
-processus, heap JVM, threads vivants et pauses GC. Il est chargé automatiquement au démarrage,
-sans import ni clic manuel.
+processus, heap JVM, threads vivants, pauses GC, puis `Backend logs`. Ce dernier est un panneau de
+logs alimenté par la datasource `loki` avec la requête `{service_name="devops-store-backend"}`. Le
+dashboard est chargé automatiquement au démarrage, sans import ni clic manuel.
 
 ## Persistance, arrêt et reset
 
 Les données Grafana résident dans `devops-store-grafana-data`. `make observability-down` retire
-Prometheus et Grafana tout en préservant leurs volumes. `make observability-reset` supprime
-uniquement les deux volumes d'observabilité ; les dashboards provisionnés seront recréés au
-prochain démarrage, mais les autres données locales Grafana seront perdues.
+les cinq services d'observabilité tout en préservant leurs volumes. `make observability-reset`
+supprime uniquement les quatre volumes d'observabilité (Prometheus, Grafana, Loki et les positions
+d'Alloy) ; les dashboards provisionnés seront recréés au prochain démarrage, mais les autres
+données locales Grafana et les journaux déjà collectés seront perdus.
 
 ## Vérification par API
 
@@ -60,7 +69,7 @@ $grafanaCredential = "admin:$env:GRAFANA_ADMIN_PASSWORD"
 $grafanaAuth = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($grafanaCredential))
 $dashboard = Invoke-RestMethod -Uri 'http://localhost:3000/api/dashboards/uid/devops-store-backend' -Headers @{ Authorization = "Basic $grafanaAuth" }
 if ($dashboard.dashboard.uid -ne 'devops-store-backend') { throw 'Dashboard UID mismatch' }
-if ($dashboard.dashboard.panels.Count -ne 9) { throw 'Expected 9 dashboard panels' }
+if ($dashboard.dashboard.panels.Count -ne 10) { throw 'Expected 10 dashboard panels' }
 Remove-Variable grafanaCredential, grafanaAuth, dashboard
 ```
 
@@ -73,8 +82,10 @@ Remove-Variable grafanaCredential, grafanaAuth, dashboard
   puis relancer `make observability-up`.
 - Datasource indisponible : vérifier `make observability-status`, puis les logs Prometheus et
   Grafana avec `make observability-logs`.
-- Dashboard absent : vérifier les montages en lecture seule et les UID `prometheus` et
+- Dashboard absent : vérifier les montages en lecture seule et les UID `prometheus`, `loki` et
   `devops-store-backend` dans les fichiers versionnés.
+- Panneau `Backend logs` vide : la datasource `loki` répond mais aucun flux n'existe encore ;
+  vérifier le collecteur avec `curl.exe http://localhost:12345/-/ready` et [Alloy](alloy.md).
 - Port occupé : modifier `GRAFANA_PORT` dans `.env`; le port interne reste `3000`.
 - Base Grafana non saine : consulter le healthcheck `/api/health`, les permissions du volume et les
   logs du service.

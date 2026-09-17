@@ -17,8 +17,9 @@ livraison.
 > décrit les cinq repositories avec Terraform 1.15.4 et des tests simulés ; import, apply et
 > idempotence restent reportés faute de licence Artifactory Pro. La phase 11 Prometheus/Grafana
 > est terminée et fusionnée via la
-> [Pull Request #29](https://github.com/mouhamadoulo/molo-devops-lab/pull/29). Kubernetes, Loki
-> et Grafana Alloy restent planifiés dans le
+> [Pull Request #29](https://github.com/mouhamadoulo/molo-devops-lab/pull/29). La phase 12 ajoute
+> la collecte des journaux Docker avec Loki 3.7.7 et Grafana Alloy 1.19.2, derrière un proxy de
+> socket Docker restreint. Kubernetes reste planifié dans le
 > [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
@@ -31,6 +32,8 @@ flowchart LR
     CI[GitHub Actions] --> QA[Tests / SonarQube / Trivy]
     QA --> ART[JFrog Artifactory]
     API --> OBS[Prometheus / Grafana]
+    API -. journaux Docker .-> LOGS[Alloy / Loki]
+    LOGS --> OBS
     ART -. phase planifiée .-> K8S[Minikube / Kubernetes]
 ```
 
@@ -42,7 +45,7 @@ flowchart LR
 | Build et tests | npm, Maven, Vitest, JUnit 5, Mockito, Testcontainers |
 | DevSecOps | GitHub Actions, SonarQube Community Build, Trivy, JFrog Artifactory |
 | Infrastructure | Docker Compose, Terraform, Kubernetes, Minikube |
-| Observabilité | Actuator, Micrometer, Prometheus et Grafana ; Loki et Grafana Alloy planifiés |
+| Observabilité | Actuator, Micrometer, Prometheus, Grafana, Loki et Grafana Alloy |
 | Planification | Jira, Confluence |
 
 ## Prérequis
@@ -91,6 +94,8 @@ Les tests natifs restent disponibles avec `./mvnw clean verify` dans `backend/`,
 | Artifactory OSS (profil `artifacts`) | <http://localhost:8082/ui/> |
 | Prometheus (profil `observability`) | <http://localhost:9090> |
 | Grafana (profil `observability`) | <http://localhost:3000> |
+| Loki (profil `observability`) | <http://localhost:3100> |
+| Alloy (profil `observability`) | <http://localhost:12345> |
 
 AIStor et SonarQube utilisent tous deux le port 9000 par défaut. Pour les exécuter en parallèle,
 modifier `SONAR_PORT` comme indiqué dans le [guide SonarQube](docs/devops/sonarqube.md).
@@ -134,5 +139,7 @@ make observability-reset
 - [Artefacts Maven avec JFrog](docs/devops/jfrog-artifactory.md)
 - [Métriques Prometheus](docs/observability/prometheus.md)
 - [Dashboard Grafana](docs/observability/grafana.md)
+- [Journaux Loki](docs/observability/loki.md)
+- [Collecte Grafana Alloy](docs/observability/alloy.md)
 - [Plan d'implémentation](docs/IMPLEMENTATION_PLAN.md)
 - [Cahier des charges](Prompt-DevSecOps-Lab.md)

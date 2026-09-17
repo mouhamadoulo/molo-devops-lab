@@ -82,8 +82,8 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | Kubernetes | 1.35.6 | Version active compatible avec le kubectl 1.34 local selon la règle de skew |
 | Prometheus | 3.14.0 | Image distroless privilégiée |
 | Grafana | 13.2.1 | Provisioning fichiers versionné |
-| Loki | 3.7.2 | Mode single-binary pour le laboratoire local |
-| Grafana Alloy | 1.18.0 | Collecteur moderne ; Promtail est exclu |
+| Loki | 3.7.7 | Mode single-binary pour le laboratoire local |
+| Grafana Alloy | 1.19.2 | Collecteur moderne ; Promtail est exclu |
 
 ### Politique d'images
 
@@ -139,8 +139,8 @@ uniquement après lecture des notes de version et relance de toutes les validati
   exclue de Git ; cette édition ne fournit ni haute disponibilité ni SLA/SLO.
 - `docker-compose.devops.yml` utilise les profils `quality`, `artifacts`, `registry` et
   `observability` pour éviter de consommer toutes les ressources simultanément ; `registry` reste
-  optionnel, tandis que Prometheus et Grafana sont implémentés dans `observability` ; Loki et Alloy
-  restent planifiés.
+  optionnel, tandis que Prometheus, Grafana, Loki, Alloy et `socket-proxy` sont implémentés dans
+  `observability`.
 - Terraform ne configurera les repositories JFrog qu'avec une souscription exposant les API de
   configuration ; l'édition OSS conserve la création initiale dans l'interface.
 - Kubernetes utilise des YAML natifs pédagogiques, sans Helm dans le MVP.
@@ -792,13 +792,14 @@ curl.exe http://localhost:3000/api/health
 
 **Implémentation :**
 
-- [ ] Ajouter Loki 3.7 single-binary et Alloy 1.18 au profil `observability`.
-- [ ] Monter le socket Docker en lecture seule et restreindre Alloy aux conteneurs du projet.
-- [ ] Parser le format Docker puis le JSON Logstash du backend.
-- [ ] Conserver service/container/level comme labels à faible cardinalité.
-- [ ] Garder requestId, logger et message dans le contenu structuré, pas comme labels globaux.
-- [ ] Provisionner Loki dans Grafana et ajouter un panneau de logs au dashboard.
-- [ ] Documenter les requêtes LogQL pour ERROR, WARN, ProductController et ProductService.
+- [x] Ajouter Loki 3.7.7 single-binary et Alloy 1.19.2 au profil `observability`.
+- [x] Monter le socket Docker en lecture seule et restreindre Alloy aux conteneurs du projet.
+      Le socket n'est monté que dans `socket-proxy`, en `:ro` ; Alloy passe par l'API HTTP du proxy.
+- [x] Parser le format Docker puis le JSON Logstash du backend.
+- [x] Conserver service/container/level comme labels à faible cardinalité.
+- [x] Garder requestId, logger et message dans le contenu structuré, pas comme labels globaux.
+- [x] Provisionner Loki dans Grafana et ajouter un panneau de logs au dashboard.
+- [x] Documenter les requêtes LogQL pour ERROR, WARN, ProductController et ProductService.
 
 **Commandes de validation :**
 
@@ -811,9 +812,21 @@ curl.exe -G http://localhost:3100/loki/api/v1/query_range --data-urlencode "quer
 
 **Critères d'acceptation :**
 
-- [ ] Un log backend récent est visible dans Grafana avec timestamp, niveau et logger.
-- [ ] Les quatre recherches imposées retournent des résultats quand les événements existent.
-- [ ] Aucun secret, prix ou description produit n'est ajouté aux logs applicatifs.
+- [x] Un log backend récent est visible dans Grafana avec timestamp, niveau et logger.
+- [x] Les quatre recherches imposées retournent des résultats quand les événements existent.
+      `level="ERROR"` et `level="WARN"` retournent des flux. Les deux filtres
+      `| json | logger_name =~ ".*ProductController"` et `".*ProductService"` retournent zéro parce
+      que ces classes ne contiennent aucune instruction de log : `grep -c` sur les journaux bruts du
+      conteneur backend donne `0` pour les deux noms, donc la source est vide, pas le pipeline. Le
+      mécanisme du filtre est prouvé avec un logger réellement émis
+      (`| json | logger_name =~ ".*DispatcherServlet"` retourne deux flux).
+- [x] Aucun secret, prix ou description produit n'est ajouté aux logs applicatifs.
+- [x] Alloy ne monte pas le socket Docker et ne collecte que les conteneurs du projet
+      `devops-store`.
+- [x] Les labels Loki se limitent à `service_name`, `container` et `level`.
+- [x] `observability-down` préserve les données Loki et `observability-reset` les supprime.
+
+**Statut :** implémentée et acceptée dynamiquement le 2026-09-17.
 
 **Dépendances :** phases 4 et 11.
 

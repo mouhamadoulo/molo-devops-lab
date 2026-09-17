@@ -9,6 +9,9 @@ MAVEN_IMAGE ?= maven:3.9.16-eclipse-temurin-25@sha256:31618505df21177d2baa3dc574
 TRIVY_IMAGE ?= ghcr.io/aquasecurity/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c
 COSIGN_IMAGE ?= gcr.io/projectsigstore/cosign:v3.1.3@sha256:9e5c2f2edc34351160407ca3416c61855bdf9403c3c5936e0f0be7fc261611b8
 PROMETHEUS_IMAGE ?= prom/prometheus:v3.14.0-distroless@sha256:50c707e96da5ade383cb1707790576480485e93de06aa60ad8802cb5f744bd0a
+LOKI_IMAGE ?= grafana/loki:3.7.7@sha256:d70e4659623f3e109af669cae76fe2a5dd5be54e2298fe8aed380d982fbc2500
+ALLOY_IMAGE ?= grafana/alloy:v1.19.2@sha256:b8ec653c44235fbe910879145dac3597d66b0aaecf60bcbbe82580767771a839
+OBSERVABILITY_SERVICES ?= prometheus grafana socket-proxy loki alloy
 TRIVY_CACHE_DIR ?= $(CURDIR)/.trivycache
 SECURITY_REPORTS_DIR ?= $(CURDIR)/reports/security
 MAVEN_CACHE_DIR ?= $(CURDIR)/.m2
@@ -70,12 +73,12 @@ help: ## Show available commands
 	$(info   quality-status    Show SonarQube container and health status)
 	$(info   quality-logs      Follow SonarQube and database logs)
 	$(info   quality-reset     Delete the local SonarQube stack and its volumes)
-	$(info   observability-config Validate Prometheus and the observability Compose profile)
-	$(info   observability-up  Start the application, Prometheus and Grafana)
+	$(info   observability-config Validate Prometheus, Loki, Alloy and the Compose profile)
+	$(info   observability-up  Start the application, Prometheus, Grafana, Loki and Alloy)
 	$(info   observability-down Stop observability while preserving its data)
-	$(info   observability-status Show Prometheus and Grafana health)
-	$(info   observability-logs Follow Prometheus and Grafana logs)
-	$(info   observability-reset Delete only Prometheus and Grafana local data)
+	$(info   observability-status Show observability container health)
+	$(info   observability-logs Follow observability logs)
+	$(info   observability-reset Delete only Prometheus, Grafana, Loki and Alloy data)
 	$(info   artifacts-config  Validate the Artifactory OSS Compose profile)
 	$(info   artifacts-up      Start Artifactory OSS and its PostgreSQL database)
 	$(info   artifacts-down    Stop Artifactory while preserving artifact data)
@@ -203,30 +206,38 @@ quality-logs: ## Follow SonarQube and database logs
 quality-reset: ## Delete the local SonarQube stack and its volumes
 	$(DEVOPS_COMPOSE) --profile quality down --volumes
 
-observability-config: ## Validate Prometheus and the observability Compose profile
+observability-config: ## Validate Prometheus, Loki, Alloy and the observability Compose profile
 	$(COMPOSE) config --quiet
 	$(DEVOPS_COMPOSE) --profile observability config --quiet
 	$(DOCKER) run --rm \
 		-v "$(CURDIR)/infrastructure/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro" \
 		--entrypoint /bin/promtool $(PROMETHEUS_IMAGE) \
 		check config /etc/prometheus/prometheus.yml
+	$(DOCKER) run --rm \
+		-v "$(CURDIR)/infrastructure/loki/loki-config.yml:/etc/loki/loki-config.yml:ro" \
+		--entrypoint /usr/bin/loki $(LOKI_IMAGE) \
+		-config.file=/etc/loki/loki-config.yml -verify-config
+	$(DOCKER) run --rm \
+		-v "$(CURDIR)/infrastructure/alloy/config.alloy:/etc/alloy/config.alloy:ro" \
+		--entrypoint /bin/alloy $(ALLOY_IMAGE) \
+		validate /etc/alloy/config.alloy
 
-observability-up: ## Start the application, Prometheus and Grafana
+observability-up: ## Start the application, Prometheus, Grafana, Loki and Alloy
 	$(MAKE) application
-	$(DEVOPS_COMPOSE) --profile observability up -d --wait prometheus grafana
+	$(DEVOPS_COMPOSE) --profile observability up -d --wait $(OBSERVABILITY_SERVICES)
 
 observability-down: ## Stop observability while preserving its data
-	$(DEVOPS_COMPOSE) --profile observability stop grafana prometheus
-	$(DEVOPS_COMPOSE) --profile observability rm -f grafana prometheus
+	$(DEVOPS_COMPOSE) --profile observability stop alloy loki socket-proxy grafana prometheus
+	$(DEVOPS_COMPOSE) --profile observability rm -f alloy loki socket-proxy grafana prometheus
 
-observability-status: ## Show Prometheus and Grafana health
-	$(DEVOPS_COMPOSE) --profile observability ps prometheus grafana
+observability-status: ## Show observability container health
+	$(DEVOPS_COMPOSE) --profile observability ps $(OBSERVABILITY_SERVICES)
 
-observability-logs: ## Follow Prometheus and Grafana logs
-	$(DEVOPS_COMPOSE) --profile observability logs --follow --tail=200 prometheus grafana
+observability-logs: ## Follow observability logs
+	$(DEVOPS_COMPOSE) --profile observability logs --follow --tail=200 $(OBSERVABILITY_SERVICES)
 
-observability-reset: observability-down ## Delete only Prometheus and Grafana local data
-	@for volume in devops-store-prometheus-data devops-store-grafana-data; do \
+observability-reset: observability-down ## Delete only Prometheus, Grafana, Loki and Alloy local data
+	@for volume in devops-store-prometheus-data devops-store-grafana-data devops-store-loki-data devops-store-alloy-data; do \
 		if $(DOCKER) volume inspect "$$volume" >/dev/null 2>&1; then \
 			$(DOCKER) volume rm "$$volume"; \
 		fi; \
