@@ -1,9 +1,9 @@
-# Design — Déploiement Kubernetes sur Minikube
+# Design — Déploiement Kubernetes local
 
 - **Date :** 17 septembre 2026
 - **Statut :** proposé, à valider en conversation
-- **Périmètre :** phase 13, cluster Minikube local, manifests YAML bruts pour PostgreSQL, AIStor,
-  backend et frontend
+- **Périmètre :** phase 13, cluster Kubernetes local de Docker Desktop, manifests YAML bruts pour
+  PostgreSQL, AIStor, backend et frontend
 
 ## Contexte
 
@@ -28,13 +28,17 @@ Contraintes relevées dans le dépôt avant conception :
   `management.endpoint.health.probes.enabled: true` : `/actuator/health/liveness` et
   `/actuator/health/readiness` sont déjà disponibles.
 - La licence AIStor Free est un fichier local hors Git, monté en lecture seule sur
-  `/run/secrets/minio.license`.
+  `/etc/minio-license/minio.license` : un Secret monté sur `/run/secrets` masquerait le point de
+  montage du token ServiceAccount et empêcherait le conteneur de démarrer. Aucun pod n'appelle
+  l'API Kubernetes : `automountServiceAccountToken: false` sur les quatre workloads.
 - Outillage local au moment de la conception : `kubectl` v1.36.1 avec Kustomize v5.8.1, Docker
-  29.7.2. `minikube` et `helm` sont absents du `PATH`.
+  29.7.2. `helm` est absent du `PATH`. L'hôte est une machine Windows ARM64 : aucun binaire
+  Windows ARM64 de Minikube ou de kind n'est publié, et le Kubernetes intégré de Docker Desktop est
+  le seul cluster local disponible (voir la décision 2).
 
 ## Objectifs
 
-- déployer la stack applicative complète sur un cluster Minikube local et persistant ;
+- déployer la stack applicative complète sur un cluster Kubernetes local et persistant ;
 - garder les manifests lisibles et applicables par `kubectl apply -R -f`, sans outil supplémentaire ;
 - reproduire le durcissement du Compose : non-root, capacités supprimées, systèmes de fichiers en
   lecture seule quand l'image le supporte, requests et limits explicites ;
@@ -48,7 +52,7 @@ Contraintes relevées dans le dépôt avant conception :
 
 - observabilité dans le cluster : Prometheus, Grafana, Loki et Alloy restent en Docker Compose et
   ne scrutent pas les workloads Kubernetes ;
-- Ingress, TLS, noms de domaine locaux et addons Minikube ;
+- Ingress, TLS, noms de domaine locaux et addons de distribution ;
 - Helm, Kustomize, opérateurs et GitOps ;
 - HPA, PodDisruptionBudget, NetworkPolicy et multi-réplica ;
 - distribution des images par un registre : Artifactory OSS n'héberge aujourd'hui que du Maven ;
@@ -59,15 +63,23 @@ Contraintes relevées dans le dépôt avant conception :
 1. **Périmètre des workloads.** PostgreSQL, AIStor, backend et frontend sont tous déployés dans le
    cluster. Écarté : désactiver la galerie, qui casserait l'upload d'images ; pointer vers l'AIStor
    de l'hôte, qui couplerait le cluster à la machine hôte.
-2. **Installation de Minikube.** Minikube est installé pendant la phase, avec le driver Docker, afin
-   que les critères d'acceptation dynamiques soient réellement exécutés. La version exacte obtenue à
-   l'installation est relevée et inscrite dans la documentation et le socle de versions.
+2. **Distribution du cluster.** Le Kubernetes intégré de Docker Desktop est utilisé, afin que les
+   critères d'acceptation dynamiques soient réellement exécutés. Minikube a d'abord été installé
+   (v1.38.1) puis écarté : le projet ne publie aucun binaire Windows ARM64, et le binaire x64
+   provisionne une image `kicbase` amd64 émulée dans laquelle le daemon Docker interne ne démarre
+   pas (`GUEST_NOT_FOUND`). kind présente la même absence de binaire Windows ARM64. Docker Desktop
+   exécute son cluster en mode `kind` sur un nœud unique ARM64 natif. Sa version réelle est relevée
+   et inscrite dans la documentation et le socle de versions. Le cluster n'a pas de commande CLI de
+   démarrage ou d'arrêt : son cycle de vie appartient à Docker Desktop, et `make k8s-cluster` se
+   limite donc à vérifier que le contexte `docker-desktop` répond et que le nœud est `Ready`.
 3. **Format des manifests.** YAML brut organisé en sous-dossiers par workload, conformément au texte
    du plan. Écartés : Kustomize et Helm, qui ajoutent une indirection sans besoin actuel.
 4. **Exposition.** Services `NodePort` déclarés pour le frontend et AIStor, accès pratique par
    `kubectl port-forward` sur des ports fixes.
-5. **Images.** `make build` produit les images locales, `minikube image load` les injecte dans le
-   cluster, `imagePullPolicy: IfNotPresent`.
+5. **Images.** `make build` produit les images locales. Le nœud du cluster possède son propre
+   magasin containerd, distinct de celui du daemon Docker : les images y sont injectées par
+   `docker save <image> | docker exec -i desktop-control-plane ctr -n k8s.io images import -`,
+   avec `imagePullPolicy: IfNotPresent`.
 6. **Observabilité.** Aucun composant d'observabilité n'est déployé ni recablé dans cette phase.
 
 ## Architecture
@@ -133,9 +145,9 @@ d'elles manque. Il ne génère ni ne devine aucune valeur.
 
 ## Exposition depuis l'hôte
 
-Avec le driver Docker sous Windows, l'IP du nœud Minikube n'est pas routable depuis l'hôte, et
-`minikube service --url` ouvre un tunnel sur un port éphémère différent à chaque invocation. Une
-ConfigMap versionnée ne peut donc pas contenir l'origine CORS correspondante.
+Le nœud du cluster est un conteneur sur un réseau Docker interne, dont l'IP n'est pas routable
+depuis Windows. L'origine réellement vue par le navigateur dépend donc du mode d'accès, et une
+ConfigMap versionnée ne peut pas contenir une origine dont le port varie.
 
 La phase déclare donc les Services `NodePort` — contrat Kubernetes versionné, ports `30080` et
 `30900` — mais l'accès de travail passe par `make k8s-forward`, qui ouvre deux `kubectl port-forward`
@@ -148,9 +160,10 @@ Ces deux valeurs correspondent exactement à `CORS_ALLOWED_ORIGIN` et `MINIO_PUB
 CSP du frontend accepte déjà `http://localhost:*` pour `img-src` : la galerie fonctionne sans
 modifier l'image.
 
-`minikube service frontend -n devops-store` est documenté comme accès alternatif, avec son
-avertissement : le port éphémère ne correspond pas à l'origine CORS configurée, donc ce mode ne
-convient qu'à un affichage rapide de la page, pas au parcours authentifié.
+Tout autre mode d'accès est documenté avec le même avertissement : si l'origine vue par le
+navigateur ne correspond pas à `CORS_ALLOWED_ORIGIN`, elle ne convient qu'à un affichage rapide de
+la page, pas au parcours authentifié — `AuthCookieService.validate` exige un en-tête `Origin`
+autorisé.
 
 Le port 9000 est partagé avec l'AIStor du Compose et avec SonarQube. La documentation impose
 d'arrêter la stack Compose avant `make k8s-forward` ; les deux cibles d'exécution ne sont pas
@@ -184,9 +197,10 @@ Autres workloads :
 `capabilities.drop: [ALL]`, `seccompProfile.type: RuntimeDefault`. UIDs repris du Compose : backend
 `10001`, frontend `101`, AIStor `1000` avec `fsGroup: 1000`, PostgreSQL `999` avec `fsGroup: 999`.
 
-`readOnlyRootFilesystem: true` pour backend, frontend et AIStor, avec des `emptyDir` sur `/tmp`
-dimensionnés comme les `tmpfs` du Compose. Exception documentée pour PostgreSQL : l'image officielle
-écrit hors de son volume de données et le Compose ne la passe pas non plus en lecture seule.
+`readOnlyRootFilesystem: true` pour les quatre workloads, avec des `emptyDir` sur `/tmp`
+dimensionnés comme les `tmpfs` du Compose. PostgreSQL reçoit en plus un `emptyDir` sur
+`/var/run/postgresql` : l'image 18.4-alpine initialise, écrit et redémarre sans erreur avec une
+racine en lecture seule, ce qui satisfait le contrôle Trivy `KSV-0014` (HIGH).
 
 Requests et limits alignées sur les limites du Compose, requests à environ la moitié des limits :
 
@@ -281,7 +295,8 @@ Acceptation dynamique, une manipulation par critère du plan :
 
 ## Documentation
 
-`docs/infrastructure/kubernetes.md` couvre les prérequis, l'installation de Minikube, la création
+`docs/infrastructure/kubernetes.md` couvre les prérequis, l'activation du Kubernetes de Docker
+Desktop, la création
 des Secrets, le déploiement, l'accès, les probes et leur justification, le nettoyage des PVC et les
 pannes réellement rencontrées. L'index `docs/README.md`, la liste des commandes d'`AGENTS.md`, le
 socle de versions et les cases de `docs/IMPLEMENTATION_PLAN.md` sont mis à jour en fin de phase.

@@ -23,6 +23,7 @@ reste volontairement court et sert uniquement de point d'entrée.
 | [Trivy](devops/trivy.md) | Scans du dépôt, des dépendances, des configurations et des images, politique et rapports |
 | [JFrog Artifactory](devops/jfrog-artifactory.md) | Artifactory OSS, topologie Maven, publication, promotion et limites de licence |
 | [Terraform et JFrog](infrastructure/terraform.md) | Configuration Pro-ready, tests simulés et parcours d’import sous licence |
+| [Kubernetes local](infrastructure/kubernetes.md) | Cluster Docker Desktop, manifests, Secrets, accès hôte, probes et nettoyage |
 | [Prometheus](observability/prometheus.md) | Scrape interne, PromQL, rétention et exploitation locale |
 | [Grafana](observability/grafana.md) | Provisioning versionné, dashboard backend et vérification par API |
 | [Loki](observability/loki.md) | Stockage des logs, rétention, LogQL et diagnostic |
@@ -54,7 +55,7 @@ Documents créés pendant les phases d'industrialisation :
 
 - [Images et stack Docker Compose](infrastructure/docker.md) — images, réseau et exploitation locale ;
 - [Terraform et JFrog](infrastructure/terraform.md) — configuration Pro-ready, tests simulés et parcours d’import sous licence ;
-- `infrastructure/kubernetes.md` — déploiement Minikube et gestion des secrets.
+- [Kubernetes local](infrastructure/kubernetes.md) — déploiement Kubernetes local et gestion des secrets.
 
 ## Observabilité
 

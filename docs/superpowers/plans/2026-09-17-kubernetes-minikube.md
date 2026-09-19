@@ -1,12 +1,12 @@
-# Kubernetes et Minikube — Plan d'implémentation
+# Kubernetes local — Plan d'implémentation
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** déployer PostgreSQL, AIStor, le backend Spring Boot et le frontend Nginx sur un cluster Minikube local, avec manifests YAML versionnés, secrets hors Git, probes correctes et commandes Make.
+**Goal:** déployer PostgreSQL, AIStor, le backend Spring Boot et le frontend Nginx sur le cluster Kubernetes local de Docker Desktop, avec manifests YAML versionnés, secrets hors Git, probes correctes et commandes Make.
 
 **Architecture:** namespace unique `devops-store` ; PostgreSQL et AIStor en StatefulSet avec PVC ; backend et frontend en Deployment ; un initContainer sérialise le démarrage du backend derrière ses deux dépendances ; accès hôte par `kubectl port-forward` sur des ports fixes alignés avec `CORS_ALLOWED_ORIGIN` et `MINIO_PUBLIC_ENDPOINT`.
 
-**Tech Stack:** Minikube (driver Docker), kubectl 1.36.1, YAML brut, images locales `devops-store-backend:local` et `devops-store-frontend:local`, PostgreSQL 18.4-alpine, AIStor Free, GNU Make.
+**Tech Stack:** Kubernetes intégré de Docker Desktop (mode `kind`, nœud unique), kubectl 1.36.1, YAML brut, images locales `devops-store-backend:local` et `devops-store-frontend:local`, PostgreSQL 18.4-alpine, AIStor Free, GNU Make.
 
 **Spec:** `docs/superpowers/specs/2026-09-17-kubernetes-minikube-design.md`
 
@@ -16,10 +16,10 @@
 - Aucune valeur secrète réelle dans Git. Seuls des `secret.example.yaml` à valeurs vides sont versionnés.
 - Aucune modification du code applicatif backend ou frontend, ni de `frontend/nginx.conf`, ni de `backend/src/main/resources/application.yml`.
 - Toutes les images tierces sont épinglées par digest. PostgreSQL : `postgres:18.4-alpine@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15`. AIStor : `quay.io/minio/aistor/minio:RELEASE.2026-04-14T21-32-45Z@sha256:3fe2c9acc9bf79ce982fa61d4befb97556a34e44e278395152ed54de471bb95d`.
-- Images applicatives : `devops-store-backend:local` et `devops-store-frontend:local`, `imagePullPolicy: IfNotPresent`, chargées par `minikube image load`.
+- Images applicatives : `devops-store-backend:local` et `devops-store-frontend:local`, `imagePullPolicy: IfNotPresent`, importées dans le magasin containerd du nœud par `docker save | docker exec -i desktop-control-plane ctr -n k8s.io images import -`.
 - `securityContext` de tous les pods : `runAsNonRoot: true`, `allowPrivilegeEscalation: false`, `capabilities.drop: [ALL]`, `seccompProfile.type: RuntimeDefault`.
 - UIDs : backend `10001`, frontend `101`, AIStor `1000` (`fsGroup: 1000`), PostgreSQL `999` (`fsGroup: 999`).
-- `readOnlyRootFilesystem: true` partout sauf PostgreSQL.
+- `readOnlyRootFilesystem: true` partout, PostgreSQL compris (`emptyDir` sur `/var/run/postgresql` et `/tmp`).
 - Ports fixes côté hôte : frontend `127.0.0.1:8088`, AIStor `127.0.0.1:9000`.
 - NodePorts déclarés : frontend `30080`, AIStor API `30900`, AIStor console `30901`.
 - Aucune probe, ni liveness ni readiness, ne doit dépendre de PostgreSQL.
@@ -39,7 +39,7 @@
 - Consumes: rien.
 - Produces: un worktree `.worktrees/phase-13-kubernetes` sur la branche `feat/phase-13-kubernetes`, contenant la spec et le plan committés. Toutes les tâches suivantes s'exécutent dans ce répertoire.
 
-- [ ] **Step 1: Vérifier que `main` est propre et à jour**
+- [x] **Step 1: Vérifier que `main` est propre et à jour**
 
 ```powershell
 git -C C:\Users\mouha\Documents\WorkspaceFullStack\molo-devops-lab status --short --branch
@@ -48,7 +48,7 @@ git -C C:\Users\mouha\Documents\WorkspaceFullStack\molo-devops-lab fetch origin
 
 Attendu : seuls la spec et le plan apparaissent comme fichiers non suivis (`?? docs/superpowers/`), branche `main` synchronisée avec `origin/main`.
 
-- [ ] **Step 2: Créer le worktree et la branche**
+- [x] **Step 2: Créer le worktree et la branche**
 
 ```powershell
 git -C C:\Users\mouha\Documents\WorkspaceFullStack\molo-devops-lab worktree add -b feat/phase-13-kubernetes .worktrees\phase-13-kubernetes origin/main
@@ -56,7 +56,7 @@ git -C C:\Users\mouha\Documents\WorkspaceFullStack\molo-devops-lab worktree add 
 
 Attendu : `Preparing worktree` puis `HEAD is now at 6f512b8`.
 
-- [ ] **Step 3: Déplacer la spec et le plan dans le worktree**
+- [x] **Step 3: Déplacer la spec et le plan dans le worktree**
 
 Déplacer les deux fichiers non suivis du checkout principal vers le worktree, puis vérifier que le checkout principal est redevenu propre :
 
@@ -68,7 +68,7 @@ git -C C:\Users\mouha\Documents\WorkspaceFullStack\molo-devops-lab status --shor
 
 Attendu : sortie vide pour le checkout principal.
 
-- [ ] **Step 4: Committer spec et plan dans le worktree**
+- [x] **Step 4: Committer spec et plan dans le worktree**
 
 ```powershell
 Set-Location C:\Users\mouha\Documents\WorkspaceFullStack\molo-devops-lab\.worktrees\phase-13-kubernetes
@@ -76,48 +76,54 @@ git add docs/superpowers/specs/2026-09-17-kubernetes-minikube-design.md docs/sup
 git commit -m "docs: add phase 13 Kubernetes design and plan"
 ```
 
-- [ ] **Step 5: Initialiser les fichiers de suivi de session**
+- [x] **Step 5: Initialiser les fichiers de suivi de session**
 
 Écrire dans `task_plan.md` la phase courante (phase 13, worktree, branche, tâches 0 à 9), vider `progress.md` et `findings.md` des traces de la phase 12 en gardant leur structure. Ces trois fichiers sont ignorés par Git : aucun commit.
 
 ---
 
-### Task 1: Installation de Minikube et démarrage du cluster
+### Task 1: Activation et vérification du cluster Kubernetes local
 
 **Files:**
 - Modify: `findings.md` (versions réelles relevées ; fichier ignoré par Git)
 
 **Interfaces:**
 - Consumes: le worktree de la tâche 0.
-- Produces: un cluster Minikube nommé `devops-store` démarré avec le driver Docker, et le contexte kubectl actif du même nom. Les tâches 2 à 8 supposent ce cluster disponible.
+- Produces: le cluster Kubernetes de Docker Desktop actif, contexte `docker-desktop`, nœud `desktop-control-plane` `Ready`. Les tâches 2 à 8 supposent ce cluster disponible.
 
-- [ ] **Step 1: Installer Minikube**
+> **Révision en cours d'exécution.** Le plan d'origine installait Minikube. Sur cet hôte Windows ARM64, Minikube v1.38.1 (binaire x64, seule cible Windows publiée) provisionne une image `kicbase` amd64 émulée dans laquelle le daemon Docker interne ne démarre pas, et la phase échoue en `GUEST_NOT_FOUND`. kind ne publie pas non plus de binaire Windows ARM64. Le Kubernetes intégré de Docker Desktop, natif ARM64, remplace Minikube. Voir la décision 2 de la spec.
 
-```powershell
-winget install --id Kubernetes.minikube --exact --accept-source-agreements --accept-package-agreements
+- [x] **Step 1: Activer le Kubernetes de Docker Desktop**
+
+`docker desktop` n'expose aucune commande d'activation : la clé se règle dans `%APPDATA%\Docker\settings-store.json`, **Docker Desktop arrêté** (l'application réécrit le fichier au démarrage et supprime toute clé ajoutée à chaud). Sauvegarder le fichier, puis y placer :
+
+```json
+"KubernetesEnabled": true,
+"KubernetesInitialInstallPerformed": true
 ```
 
-Attendu : `Successfully installed`. Si `winget` échoue, télécharger `minikube-windows-amd64.exe` depuis la page des releases officielles et le placer dans un répertoire du `PATH`. Ouvrir un nouveau terminal pour que le `PATH` soit rechargé.
+Redémarrer Docker Desktop. L'alternative supportée est la case « Enable Kubernetes » des réglages de Docker Desktop.
 
-- [ ] **Step 2: Relever les versions réelles**
+- [x] **Step 2: Relever les versions réelles**
 
 ```powershell
-minikube version
 kubectl version --client
 docker info --format '{{.ServerVersion}}'
+kubectl get nodes -o wide
 ```
 
-Attendu : une version de minikube affichée. Noter la version exacte de minikube et la version Kubernetes par défaut dans `findings.md` : elles seront inscrites dans la documentation et le socle de versions à la tâche 9. Ne pas inventer les valeurs `1.38.1` / `1.35.6` du plan d'origine si l'installation en fournit d'autres.
+Noter dans `findings.md` la version Kubernetes réelle du nœud, son architecture et son runtime : elles seront inscrites dans la documentation et le socle de versions à la tâche 9. Ne pas reprendre les valeurs `1.38.1` / `1.35.6` du plan d'origine.
 
-- [ ] **Step 3: Démarrer le cluster**
+- [x] **Step 3: Sélectionner le contexte et attendre le nœud**
 
 ```powershell
-minikube start --profile devops-store --driver=docker --cpus=4 --memory=6144
+kubectl config use-context docker-desktop
+kubectl wait --for=condition=Ready node --all --timeout=180s
 ```
 
-Attendu : `Done! kubectl is now configured to use "devops-store" cluster`. Si la mémoire demandée dépasse celle allouée à Docker Desktop, réduire `--memory` à `4096` et le noter dans `findings.md`.
+Attendu : `Switched to context "docker-desktop"` puis `node/desktop-control-plane condition met`. Ces deux commandes sont exactement le contenu de la cible `k8s-cluster`.
 
-- [ ] **Step 4: Vérifier le nœud et le contexte**
+- [x] **Step 4: Vérifier le nœud et le contexte**
 
 ```powershell
 kubectl config current-context
@@ -126,7 +132,7 @@ kubectl get nodes -o wide
 
 Attendu : contexte `devops-store`, un nœud `Ready` avec sa version de kubelet.
 
-- [ ] **Step 5: Vérifier la classe de stockage par défaut**
+- [x] **Step 5: Vérifier la classe de stockage par défaut**
 
 ```powershell
 kubectl get storageclass
@@ -149,7 +155,7 @@ Attendu : `standard (default)` fourni par le provisionneur hostpath. Les PVC des
 - Consumes: le cluster de la tâche 1.
 - Produces: le namespace `devops-store` ; le Service ClusterIP `postgres` sur le port `5432` ; la ConfigMap `postgres-config` avec les clés `POSTGRES_DB` et `POSTGRES_USER` ; le Secret `postgres-credentials` avec la clé `POSTGRES_PASSWORD`. Les tâches 4 et 8 consomment `postgres:5432`.
 
-- [ ] **Step 1: Écrire le namespace**
+- [x] **Step 1: Écrire le namespace**
 
 `infrastructure/kubernetes/namespace.yaml` :
 
@@ -162,7 +168,7 @@ metadata:
     app.kubernetes.io/part-of: devops-store
 ```
 
-- [ ] **Step 2: Écrire la ConfigMap PostgreSQL**
+- [x] **Step 2: Écrire la ConfigMap PostgreSQL**
 
 `infrastructure/kubernetes/postgres/configmap.yaml` :
 
@@ -180,7 +186,7 @@ data:
   POSTGRES_USER: devops_store
 ```
 
-- [ ] **Step 3: Écrire l'exemple de Secret**
+- [x] **Step 3: Écrire l'exemple de Secret**
 
 `infrastructure/kubernetes/postgres/secret.example.yaml` :
 
@@ -202,7 +208,7 @@ stringData:
   POSTGRES_PASSWORD: ""
 ```
 
-- [ ] **Step 4: Écrire le StatefulSet**
+- [x] **Step 4: Écrire le StatefulSet**
 
 `infrastructure/kubernetes/postgres/statefulset.yaml` :
 
@@ -227,6 +233,7 @@ spec:
         app.kubernetes.io/name: postgres
         app.kubernetes.io/part-of: devops-store
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 999
@@ -281,7 +288,7 @@ spec:
               memory: 512Mi
           securityContext:
             allowPrivilegeEscalation: false
-            readOnlyRootFilesystem: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
@@ -302,7 +309,7 @@ spec:
             storage: 2Gi
 ```
 
-- [ ] **Step 5: Écrire le Service**
+- [x] **Step 5: Écrire le Service**
 
 `infrastructure/kubernetes/postgres/service.yaml` :
 
@@ -325,7 +332,7 @@ spec:
       targetPort: postgres
 ```
 
-- [ ] **Step 6: Valider les manifests avant application**
+- [x] **Step 6: Valider les manifests avant application**
 
 ```powershell
 kubectl apply --dry-run=client -R -f infrastructure/kubernetes
@@ -333,7 +340,7 @@ kubectl apply --dry-run=client -R -f infrastructure/kubernetes
 
 Attendu : une ligne `... created (dry run)` par objet, aucune erreur de schéma.
 
-- [ ] **Step 7: Créer le namespace et le Secret réel**
+- [x] **Step 7: Créer le namespace et le Secret réel**
 
 ```powershell
 kubectl apply -f infrastructure/kubernetes/namespace.yaml
@@ -342,7 +349,7 @@ kubectl create secret generic postgres-credentials -n devops-store --from-litera
 
 `$env:DB_PASSWORD` doit être défini dans la session depuis le `.env` local. Si la variable est vide, la commande crée un mot de passe vide : vérifier d'abord avec `if (-not $env:DB_PASSWORD) { "DB_PASSWORD manquant" }`.
 
-- [ ] **Step 8: Déployer PostgreSQL et vérifier**
+- [x] **Step 8: Déployer PostgreSQL et vérifier**
 
 ```powershell
 kubectl apply -R -f infrastructure/kubernetes/postgres
@@ -352,7 +359,7 @@ kubectl get pods,pvc -n devops-store
 
 Attendu : `partitioned roll out complete` ou `statefulset rolling update complete`, pod `postgres-0` en `1/1 Running`, PVC `data-postgres-0` en `Bound`.
 
-- [ ] **Step 9: Vérifier la base réellement accessible**
+- [x] **Step 9: Vérifier la base réellement accessible**
 
 ```powershell
 kubectl exec -n devops-store postgres-0 -- psql -U devops_store -d devops_store -c "select 1;"
@@ -381,7 +388,7 @@ git commit -m "feat(k8s): add namespace and PostgreSQL manifests"
 - Consumes: le namespace `devops-store` de la tâche 2.
 - Produces: le Service `object-storage` (ClusterIP interne + NodePorts `30900` pour l'API `9000` et `30901` pour la console `9001`) ; le Secret `object-storage-credentials` avec la clé `MINIO_ROOT_PASSWORD` ; le Secret `object-storage-license` avec la clé `minio.license`. La tâche 4 consomme `http://object-storage:9000`.
 
-- [ ] **Step 1: Écrire la ConfigMap**
+- [x] **Step 1: Écrire la ConfigMap**
 
 `infrastructure/kubernetes/object-storage/configmap.yaml` :
 
@@ -399,7 +406,7 @@ data:
   HOME: /tmp
 ```
 
-- [ ] **Step 2: Écrire l'exemple de Secret**
+- [x] **Step 2: Écrire l'exemple de Secret**
 
 `infrastructure/kubernetes/object-storage/secret.example.yaml` :
 
@@ -423,7 +430,7 @@ stringData:
   MINIO_ROOT_PASSWORD: ""
 ```
 
-- [ ] **Step 3: Écrire le StatefulSet**
+- [x] **Step 3: Écrire le StatefulSet**
 
 `infrastructure/kubernetes/object-storage/statefulset.yaml` :
 
@@ -448,6 +455,7 @@ spec:
         app.kubernetes.io/name: object-storage
         app.kubernetes.io/part-of: devops-store
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -465,7 +473,7 @@ spec:
             - --console-address
             - :9001
             - --license
-            - /run/secrets/minio.license
+            - /etc/minio-license/minio.license
           ports:
             - name: api
               containerPort: 9000
@@ -484,7 +492,7 @@ spec:
             - name: data
               mountPath: /mnt/data
             - name: license
-              mountPath: /run/secrets
+              mountPath: /etc/minio-license
               readOnly: true
             - name: tmp
               mountPath: /tmp
@@ -541,7 +549,7 @@ spec:
             storage: 2Gi
 ```
 
-- [ ] **Step 4: Écrire le Service**
+- [x] **Step 4: Écrire le Service**
 
 `infrastructure/kubernetes/object-storage/service.yaml` :
 
@@ -569,7 +577,7 @@ spec:
       nodePort: 30901
 ```
 
-- [ ] **Step 5: Créer les deux Secrets réels**
+- [x] **Step 5: Créer les deux Secrets réels**
 
 ```powershell
 kubectl create secret generic object-storage-credentials -n devops-store --from-literal=MINIO_ROOT_PASSWORD=$env:MINIO_SECRET_KEY
@@ -578,7 +586,7 @@ kubectl create secret generic object-storage-license -n devops-store --from-file
 
 Vérifier d'abord que les deux variables sont définies et que le fichier de licence existe : `Test-Path $env:MINIO_LICENSE_FILE` doit renvoyer `True`.
 
-- [ ] **Step 6: Valider puis déployer**
+- [x] **Step 6: Valider puis déployer**
 
 ```powershell
 kubectl apply --dry-run=client -R -f infrastructure/kubernetes/object-storage
@@ -588,7 +596,7 @@ kubectl rollout status statefulset/object-storage -n devops-store --timeout=180s
 
 Attendu : pod `object-storage-0` en `1/1 Running`.
 
-- [ ] **Step 7: Vérifier la santé réelle**
+- [x] **Step 7: Vérifier la santé réelle**
 
 ```powershell
 kubectl get pods -n devops-store -o wide
@@ -618,7 +626,7 @@ git commit -m "feat(k8s): add AIStor object storage manifests"
 - Consumes: `postgres:5432` (tâche 2) et `object-storage:9000` (tâche 3).
 - Produces: le Service ClusterIP `backend` exposant le port `8080` nommé `http` et le port `8081` nommé `management` ; le Secret `backend-credentials` avec les clés `DB_PASSWORD`, `JWT_SECRET`, `BOOTSTRAP_ADMIN_PASSWORD` et `MINIO_SECRET_KEY`. La tâche 5 consomme `http://backend:8080` par le proxy Nginx.
 
-- [ ] **Step 1: Résoudre le digest de l'image de l'initContainer**
+- [x] **Step 1: Résoudre le digest de l'image de l'initContainer**
 
 ```powershell
 docker pull busybox:1.37.0
@@ -627,7 +635,7 @@ docker inspect --format '{{index .RepoDigests 0}}' busybox:1.37.0
 
 Attendu : une ligne `busybox@sha256:...`. Reporter cette valeur exacte à l'étape 3 à la place de `<BUSYBOX_DIGEST>` et la noter dans `findings.md`.
 
-- [ ] **Step 2: Écrire la ConfigMap**
+- [x] **Step 2: Écrire la ConfigMap**
 
 `infrastructure/kubernetes/backend/configmap.yaml` :
 
@@ -659,7 +667,7 @@ data:
   MINIO_ORPHAN_RECONCILIATION_INTERVAL: 1h
 ```
 
-- [ ] **Step 3: Écrire l'exemple de Secret**
+- [x] **Step 3: Écrire l'exemple de Secret**
 
 `infrastructure/kubernetes/backend/secret.example.yaml` :
 
@@ -687,7 +695,7 @@ stringData:
   MINIO_SECRET_KEY: ""
 ```
 
-- [ ] **Step 4: Écrire le Deployment**
+- [x] **Step 4: Écrire le Deployment**
 
 `infrastructure/kubernetes/backend/deployment.yaml`, en remplaçant `<BUSYBOX_DIGEST>` par la valeur relevée à l'étape 1 :
 
@@ -711,6 +719,7 @@ spec:
         app.kubernetes.io/name: backend
         app.kubernetes.io/part-of: devops-store
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
@@ -803,7 +812,7 @@ spec:
       terminationGracePeriodSeconds: 30
 ```
 
-- [ ] **Step 5: Écrire le Service**
+- [x] **Step 5: Écrire le Service**
 
 `infrastructure/kubernetes/backend/service.yaml` :
 
@@ -829,24 +838,24 @@ spec:
       targetPort: management
 ```
 
-- [ ] **Step 6: Construire et charger les images**
+- [x] **Step 6: Construire et charger les images**
 
 ```powershell
 docker compose build backend frontend
-minikube image load devops-store-backend:local --profile devops-store
-minikube image load devops-store-frontend:local --profile devops-store
-minikube image ls --profile devops-store | Select-String devops-store
+docker save devops-store-backend:local | docker exec -i desktop-control-plane ctr -n k8s.io images import -
+docker save devops-store-frontend:local | docker exec -i desktop-control-plane ctr -n k8s.io images import -
+docker exec desktop-control-plane ctr -n k8s.io images ls -q | Select-String devops-store
 ```
 
 Attendu : les deux images listées dans le cluster. `docker compose build` exige les variables obligatoires du `.env` : exécuter depuis un shell où elles sont chargées.
 
-- [ ] **Step 7: Créer le Secret réel du backend**
+- [x] **Step 7: Créer le Secret réel du backend**
 
 ```powershell
 kubectl create secret generic backend-credentials -n devops-store --from-literal=DB_PASSWORD=$env:DB_PASSWORD --from-literal=JWT_SECRET=$env:JWT_SECRET --from-literal=BOOTSTRAP_ADMIN_PASSWORD=$env:BOOTSTRAP_ADMIN_PASSWORD --from-literal=MINIO_SECRET_KEY=$env:MINIO_SECRET_KEY
 ```
 
-- [ ] **Step 8: Déployer et vérifier le rollout**
+- [x] **Step 8: Déployer et vérifier le rollout**
 
 ```powershell
 kubectl apply --dry-run=client -R -f infrastructure/kubernetes/backend
@@ -857,7 +866,7 @@ kubectl get pods -n devops-store
 
 Attendu : pod backend `1/1 Running`, zéro redémarrage. Si le pod boucle, vérifier d'abord les logs de l'initContainer : `kubectl logs deploy/backend -n devops-store -c wait-for-dependencies`.
 
-- [ ] **Step 9: Vérifier l'API et Actuator depuis le cluster**
+- [x] **Step 9: Vérifier l'API et Actuator depuis le cluster**
 
 ```powershell
 kubectl run curl-check -n devops-store --rm -i --restart=Never --image=curlimages/curl:8.11.1 -- curl -s -o /dev/null -w "%{http_code}" http://backend:8080/api/v1/products
@@ -866,7 +875,7 @@ kubectl exec -n devops-store deploy/backend -- wget -qO- http://localhost:8081/a
 
 Attendu : code HTTP `200` sur l'API, et `{"status":"UP"}` sur la readiness.
 
-- [ ] **Step 10: Vérifier que le bucket a bien été créé**
+- [x] **Step 10: Vérifier que le bucket a bien été créé**
 
 ```powershell
 kubectl logs deploy/backend -n devops-store | Select-String -Pattern "bucket|storage" | Select-Object -First 10
@@ -893,7 +902,7 @@ git commit -m "feat(k8s): add backend manifests with dependency init container"
 - Consumes: le Service `backend` de la tâche 4, atteint par `http://backend:8080` codé dans `frontend/nginx.conf`.
 - Produces: le Service NodePort `frontend` exposant le port `8080` sur le NodePort `30080`. La tâche 6 y branche `kubectl port-forward` sur `127.0.0.1:8088`.
 
-- [ ] **Step 1: Écrire le Deployment**
+- [x] **Step 1: Écrire le Deployment**
 
 `infrastructure/kubernetes/frontend/deployment.yaml` :
 
@@ -917,6 +926,7 @@ spec:
         app.kubernetes.io/name: frontend
         app.kubernetes.io/part-of: devops-store
     spec:
+      automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true
         runAsUser: 101
@@ -973,7 +983,7 @@ spec:
       terminationGracePeriodSeconds: 15
 ```
 
-- [ ] **Step 2: Écrire le Service**
+- [x] **Step 2: Écrire le Service**
 
 `infrastructure/kubernetes/frontend/service.yaml` :
 
@@ -997,7 +1007,7 @@ spec:
       nodePort: 30080
 ```
 
-- [ ] **Step 3: Déployer et vérifier le rollout**
+- [x] **Step 3: Déployer et vérifier le rollout**
 
 ```powershell
 kubectl apply --dry-run=client -R -f infrastructure/kubernetes/frontend
@@ -1007,7 +1017,7 @@ kubectl rollout status deployment/frontend -n devops-store --timeout=120s
 
 Attendu : `deployment "frontend" successfully rolled out`.
 
-- [ ] **Step 4: Vérifier la page et le proxy API depuis le cluster**
+- [x] **Step 4: Vérifier la page et le proxy API depuis le cluster**
 
 ```powershell
 kubectl run curl-front -n devops-store --rm -i --restart=Never --image=curlimages/curl:8.11.1 -- sh -c "curl -s -o /dev/null -w 'page=%{http_code} ' http://frontend:8080/ ; curl -s -o /dev/null -w 'api=%{http_code}\n' http://frontend:8080/api/v1/products"
@@ -1031,39 +1041,44 @@ git commit -m "feat(k8s): add frontend manifests"
 
 **Interfaces:**
 - Consumes: tous les manifests des tâches 2 à 5.
-- Produces: les cibles `k8s-start`, `k8s-config`, `k8s-images`, `k8s-secrets`, `k8s-deploy`, `k8s-rollout`, `k8s-status`, `k8s-forward`, `k8s-logs`, `k8s-delete`, `k8s-reset`, `k8s-stop`. La tâche 9 les documente.
+- Produces: les cibles `k8s-cluster`, `k8s-config`, `k8s-images`, `k8s-secrets`, `k8s-deploy`, `k8s-rollout`, `k8s-status`, `k8s-forward`, `k8s-logs`, `k8s-delete`, `k8s-reset`. La tâche 9 les documente. `k8s-stop` du plan d'origine est supprimée : le cycle de vie du cluster appartient à Docker Desktop.
 
-- [ ] **Step 1: Ajouter les variables**
+- [x] **Step 1: Ajouter les variables**
 
 Après la ligne `ALLOY_IMAGE ?= ...` du `Makefile` :
 
 ```makefile
 KUBECTL ?= kubectl
-MINIKUBE ?= minikube
-K8S_PROFILE ?= devops-store
+K8S_CONTEXT ?= docker-desktop
+K8S_NODE ?= desktop-control-plane
 K8S_NAMESPACE ?= devops-store
 K8S_MANIFESTS ?= infrastructure/kubernetes
+K8S_WORKLOADS ?= $(K8S_MANIFESTS)/postgres $(K8S_MANIFESTS)/object-storage \
+	$(K8S_MANIFESTS)/backend $(K8S_MANIFESTS)/frontend
+K8S_NAMESPACE_FILE ?= $(K8S_MANIFESTS)/namespace.yaml
+K8S_APPLY_FLAGS = $(addprefix -f ,$(K8S_NAMESPACE_FILE) $(K8S_WORKLOADS))
+K8S_WORKLOAD_FLAGS = $(addprefix -f ,$(K8S_WORKLOADS))
 K8S_FRONTEND_PORT ?= 8088
 K8S_STORAGE_PORT ?= 9000
 ```
 
-- [ ] **Step 2: Déclarer les cibles dans `.PHONY`**
+- [x] **Step 2: Déclarer les cibles dans `.PHONY`**
 
 Ajouter une ligne à la déclaration `.PHONY` existante :
 
 ```makefile
-	k8s-start k8s-config k8s-images k8s-secrets k8s-deploy k8s-rollout k8s-status \
-	k8s-forward k8s-logs k8s-delete k8s-reset k8s-stop
+	k8s-cluster k8s-config k8s-images k8s-secrets k8s-deploy k8s-rollout k8s-status \
+	k8s-forward k8s-logs k8s-delete k8s-reset
 ```
 
-- [ ] **Step 3: Compléter l'aide**
+- [x] **Step 3: Compléter l'aide**
 
 Ajouter dans la cible `help`, après les lignes d'observabilité :
 
 ```makefile
-	$(info   k8s-start         Start the local Minikube cluster)
+	$(info   k8s-cluster       Verify the local Docker Desktop Kubernetes cluster)
 	$(info   k8s-config        Validate the Kubernetes manifests)
-	$(info   k8s-images        Build and load the application images into Minikube)
+	$(info   k8s-images        Build and load the application images into the cluster)
 	$(info   k8s-secrets       Create the cluster secrets from the current environment)
 	$(info   k8s-deploy        Apply every Kubernetes manifest)
 	$(info   k8s-rollout       Wait until every workload is ready)
@@ -1072,25 +1087,25 @@ Ajouter dans la cible `help`, après les lignes d'observabilité :
 	$(info   k8s-logs          Follow the backend logs)
 	$(info   k8s-delete        Delete the workloads and keep the volumes)
 	$(info   k8s-reset         Delete the namespace and its volumes)
-	$(info   k8s-stop          Stop the cluster without deleting it)
 ```
 
-- [ ] **Step 4: Écrire les cibles**
+- [x] **Step 4: Écrire les cibles**
 
 À la fin du `Makefile` :
 
 ```makefile
-k8s-start: ## Start the local Minikube cluster
-	$(MINIKUBE) start --profile $(K8S_PROFILE) --driver=docker --cpus=4 --memory=6144
+k8s-cluster: ## Verify the local Docker Desktop Kubernetes cluster
+	$(KUBECTL) config use-context $(K8S_CONTEXT)
+	$(KUBECTL) wait --for=condition=Ready node --all --timeout=180s
 
 k8s-config: ## Validate the Kubernetes manifests
 	$(KUBECTL) apply --dry-run=client -R -f $(K8S_MANIFESTS)
 	$(KUBECTL) apply --dry-run=server -R -f $(K8S_MANIFESTS)
 
-k8s-images: ## Build and load the application images into Minikube
+k8s-images: ## Build and load the application images into the cluster
 	$(MAKE) build
-	$(MINIKUBE) image load devops-store-backend:local --profile $(K8S_PROFILE)
-	$(MINIKUBE) image load devops-store-frontend:local --profile $(K8S_PROFILE)
+	$(DOCKER) save devops-store-backend:local | $(DOCKER) exec -i $(K8S_NODE) ctr -n k8s.io images import -
+	$(DOCKER) save devops-store-frontend:local | $(DOCKER) exec -i $(K8S_NODE) ctr -n k8s.io images import -
 
 k8s-secrets: ## Create the cluster secrets from the current environment
 	@test -n "$$DB_PASSWORD" || { echo "DB_PASSWORD is required"; exit 1; }
@@ -1139,14 +1154,11 @@ k8s-delete: ## Delete the workloads and keep the volumes
 
 k8s-reset: ## Delete the namespace and its volumes
 	$(KUBECTL) delete namespace $(K8S_NAMESPACE) --ignore-not-found
-
-k8s-stop: ## Stop the cluster without deleting it
-	$(MINIKUBE) stop --profile $(K8S_PROFILE)
 ```
 
 `k8s-delete` supprime aussi le namespace déclaré dans `namespace.yaml`, donc les PVC partent avec lui : corriger en excluant le namespace du `delete` si la vérification de l'étape 6 le montre. La cible doit finir par conserver les PVC.
 
-- [ ] **Step 5: Vérifier l'aide et la syntaxe**
+- [x] **Step 5: Vérifier l'aide et la syntaxe**
 
 ```powershell
 make help
@@ -1155,7 +1167,7 @@ make k8s-config
 
 Attendu : les douze nouvelles lignes d'aide, puis les deux validations `--dry-run=client` et `--dry-run=server` sans erreur. La validation serveur exige le cluster démarré. Si `make` est absent du `PATH`, exécuter les commandes des cibles à la main et le noter dans `findings.md`.
 
-- [ ] **Step 6: Vérifier que `k8s-delete` préserve les PVC**
+- [x] **Step 6: Vérifier que `k8s-delete` préserve les PVC**
 
 ```powershell
 make k8s-delete
@@ -1170,7 +1182,7 @@ Attendu : les deux PVC `data-postgres-0` et `data-object-storage-0` restent `Bou
 
 ```powershell
 git add Makefile
-git commit -m "feat(k8s): add Minikube lifecycle make targets"
+git commit -m "feat(k8s): add Kubernetes lifecycle make targets"
 ```
 
 ---
@@ -1185,7 +1197,7 @@ git commit -m "feat(k8s): add Minikube lifecycle make targets"
 - Consumes: les manifests des tâches 2 à 5.
 - Produces: la garantie que le scan de configuration couvre `infrastructure/kubernetes` sans misconfiguration HIGH ou CRITICAL, sur laquelle la CI de la tâche 9 s'appuie.
 
-- [ ] **Step 1: Lire la cible existante**
+- [x] **Step 1: Lire la cible existante**
 
 ```powershell
 Select-String -Path Makefile -Pattern "trivy-config" -Context 0,10
@@ -1193,7 +1205,7 @@ Select-String -Path Makefile -Pattern "trivy-config" -Context 0,10
 
 Relever si le scan porte sur tout le dépôt ou sur des chemins explicites.
 
-- [ ] **Step 2: Lancer le scan de configuration**
+- [x] **Step 2: Lancer le scan de configuration**
 
 ```powershell
 make trivy-config
@@ -1201,15 +1213,15 @@ make trivy-config
 
 Si `make` est absent, exécuter la commande `docker run` équivalente relevée à l'étape 1, avec `MSYS_NO_PATHCONV=1` en préfixe si le shell est Git Bash.
 
-- [ ] **Step 3: Vérifier la couverture réelle des manifests**
+- [x] **Step 3: Vérifier la couverture réelle des manifests**
 
 Dans la sortie, confirmer la présence d'au moins un fichier `infrastructure/kubernetes/...`. Si aucun manifest n'apparaît, ajouter le chemin au scan dans la cible `trivy-config`, puis relancer.
 
-- [ ] **Step 4: Traiter les misconfigurations**
+- [x] **Step 4: Traiter les misconfigurations**
 
 Attendu : zéro finding HIGH ou CRITICAL. Pour chaque finding, soit corriger le manifest, soit — si le contrôle est inapplicable au laboratoire — documenter la raison dans `findings.md` et ne rien ignorer silencieusement. Les contrôles attendus comme satisfaits sont : conteneur non-root, privilèges non escaladables, capacités supprimées, système de fichiers racine en lecture seule, requests et limits définies.
 
-- [ ] **Step 5: Revalider la totalité des manifests**
+- [x] **Step 5: Revalider la totalité des manifests**
 
 ```powershell
 git diff --check
@@ -1219,7 +1231,7 @@ kubectl apply --dry-run=server -R -f infrastructure/kubernetes
 
 Attendu : aucune erreur d'espace en fin de ligne, puis `... (dry run)` pour chaque objet, y compris côté serveur.
 
-- [ ] **Step 6: Commit si le Makefile a changé**
+- [x] **Step 6: Commit si le Makefile a changé**
 
 ```powershell
 git add Makefile
@@ -1240,7 +1252,7 @@ Si aucun fichier n'a changé, sauter le commit et le noter dans `progress.md`.
 - Consumes: le cluster complet déployé après les tâches 2 à 6.
 - Produces: les preuves réelles des quatre critères d'acceptation du plan de phase, réutilisées par la documentation de la tâche 9.
 
-- [ ] **Step 1: État initial**
+- [x] **Step 1: État initial**
 
 ```powershell
 make k8s-status
@@ -1249,7 +1261,7 @@ kubectl get pods -n devops-store -o "custom-columns=NAME:.metadata.name,READY:.s
 
 Attendu : quatre pods Ready, `restartCount` à `0`. Copier la sortie dans `progress.md`.
 
-- [ ] **Step 2: Ouvrir les redirections de ports**
+- [x] **Step 2: Ouvrir les redirections de ports**
 
 Arrêter d'abord la stack Compose si elle tourne (`docker compose down`), puis, dans deux terminaux distincts :
 
@@ -1260,7 +1272,7 @@ kubectl port-forward -n devops-store service/object-storage 9000:9000
 
 Attendu : `Forwarding from 127.0.0.1:8088 -> 8080` et l'équivalent sur 9000.
 
-- [ ] **Step 3: Parcours applicatif réel**
+- [x] **Step 3: Parcours applicatif réel**
 
 ```powershell
 $login = Invoke-RestMethod -Uri http://localhost:8088/api/v1/auth/login -Method Post -ContentType application/json -Body (@{ email = $env:BOOTSTRAP_ADMIN_EMAIL; password = $env:BOOTSTRAP_ADMIN_PASSWORD } | ConvertTo-Json)
@@ -1271,7 +1283,7 @@ $created.id
 
 Attendu : un identifiant entier. Si le contrat du corps JSON diffère, le relever depuis `backend/src/main/java/com/molo/devopsstore/product/api/dto/` et adapter, sans modifier le code applicatif. Noter l'identifiant : il sert à l'étape 5.
 
-- [ ] **Step 4: Critère 1 — stabilité après suppression de pods**
+- [x] **Step 4: Critère 1 — stabilité après suppression de pods**
 
 ```powershell
 kubectl delete pod -n devops-store -l app.kubernetes.io/name=backend
@@ -1283,7 +1295,7 @@ make k8s-status
 
 Attendu : les deux workloads reviennent Ready sans intervention.
 
-- [ ] **Step 5: Critère 2 — persistance PostgreSQL**
+- [x] **Step 5: Critère 2 — persistance PostgreSQL**
 
 ```powershell
 kubectl delete pod -n devops-store postgres-0
@@ -1294,7 +1306,7 @@ kubectl exec -n devops-store postgres-0 -- psql -U devops_store -d devops_store 
 
 Attendu : l'historique Flyway est non vide et le produit créé à l'étape 3 est toujours présent après recréation du pod.
 
-- [ ] **Step 6: Critère 4 — niveau des probes pendant une panne base**
+- [x] **Step 6: Critère 4 — niveau des probes pendant une panne base**
 
 ```powershell
 kubectl get pod -n devops-store -l app.kubernetes.io/name=backend -o "jsonpath={.items[0].status.containerStatuses[0].restartCount}"
@@ -1311,7 +1323,7 @@ kubectl get pod -n devops-store -l app.kubernetes.io/name=backend -o "jsonpath={
 
 Attendu : `restartCount` identique à la valeur initiale, pod toujours `Ready`. C'est la preuve que PostgreSQL n'entre ni dans la liveness ni dans la readiness.
 
-- [ ] **Step 7: Retour au nominal**
+- [x] **Step 7: Retour au nominal**
 
 ```powershell
 kubectl scale statefulset/postgres -n devops-store --replicas=1
@@ -1321,7 +1333,7 @@ Invoke-RestMethod -Uri http://localhost:8088/api/v1/products -Method Get | Selec
 
 Attendu : l'API répond de nouveau avec des données.
 
-- [ ] **Step 8: Critère 3 — aucun secret dans le dépôt**
+- [x] **Step 8: Critère 3 — aucun secret dans le dépôt**
 
 ```powershell
 Select-String -Path infrastructure/kubernetes/*/*.yaml -Pattern "$env:JWT_SECRET" -SimpleMatch
@@ -1333,7 +1345,7 @@ kubectl get secrets -n devops-store
 
 Attendu : aucune correspondance dans les trois recherches, aucune licence dans les manifests, et quatre Secrets listés dans le cluster seulement.
 
-- [ ] **Step 9: Nettoyer la donnée de test**
+- [x] **Step 9: Nettoyer la donnée de test**
 
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:8088/api/v1/products/$($created.id)" -Method Delete -Headers $headers
@@ -1341,7 +1353,7 @@ Invoke-RestMethod -Uri "http://localhost:8088/api/v1/products/$($created.id)" -M
 
 Attendu : suppression acceptée. Consigner dans `progress.md` la sortie réelle de chaque étape 1 à 9.
 
-- [ ] **Step 10: Vérifier `k8s-reset`**
+- [x] **Step 10: Vérifier `k8s-reset`**
 
 ```powershell
 make k8s-reset
@@ -1366,23 +1378,23 @@ Attendu : le namespace disparaît avec ses PVC. Redéployer ensuite pour laisser
 - Consumes: toutes les tâches précédentes et les preuves de la tâche 8.
 - Produces: la phase documentée, la branche poussée et la Pull Request ouverte.
 
-- [ ] **Step 1: Écrire `docs/infrastructure/kubernetes.md`**
+- [x] **Step 1: Écrire `docs/infrastructure/kubernetes.md`**
 
-Sections obligatoires : prérequis et versions réelles relevées à la tâche 1 ; installation de Minikube ; démarrage du cluster ; création des quatre Secrets, dont la licence AIStor ; chargement des images ; déploiement et attente du rollout ; accès par `make k8s-forward` sur `127.0.0.1:8088` et `127.0.0.1:9000`, avec l'avertissement sur le conflit du port 9000 avec la stack Compose et SonarQube ; mention de `minikube service frontend -n devops-store` comme accès alternatif et de sa limite d'origine CORS ; tableau des probes avec la justification de l'absence de PostgreSQL dans la liveness et la readiness ; `k8s-delete` contre `k8s-reset` et le sort des PVC ; pannes réellement rencontrées avec leur résolution.
+Sections obligatoires : prérequis et versions réelles relevées à la tâche 1 ; activation du Kubernetes de Docker Desktop ; création des quatre Secrets, dont la licence AIStor ; chargement des images ; déploiement et attente du rollout ; accès par `make k8s-forward` sur `127.0.0.1:8088` et `127.0.0.1:9000`, avec l'avertissement sur le conflit du port 9000 avec la stack Compose et SonarQube ; avertissement sur tout accès dont l'origine ne correspond pas à `CORS_ALLOWED_ORIGIN` ; tableau des probes avec la justification de l'absence de PostgreSQL dans la liveness et la readiness ; `k8s-delete` contre `k8s-reset` et le sort des PVC ; pannes réellement rencontrées avec leur résolution.
 
-- [ ] **Step 2: Référencer le document dans l'index**
+- [x] **Step 2: Référencer le document dans l'index**
 
 Ajouter la ligne correspondante dans `docs/README.md`, à côté de `docs/infrastructure/terraform.md`.
 
-- [ ] **Step 3: Mettre à jour `AGENTS.md`**
+- [x] **Step 3: Mettre à jour `AGENTS.md`**
 
-Ajouter Minikube et sa version réelle à la section « Implémentée » de la stack, retirer Kubernetes de la « Cible planifiée », ajouter les douze cibles `k8s-*` à la liste des cibles Make et pointer vers `docs/infrastructure/kubernetes.md`.
+Ajouter le Kubernetes de Docker Desktop et sa version réelle à la section « Implémentée » de la stack, retirer Kubernetes de la « Cible planifiée », ajouter les onze cibles `k8s-*` à la liste des cibles Make et pointer vers `docs/infrastructure/kubernetes.md`.
 
-- [ ] **Step 4: Mettre à jour `docs/IMPLEMENTATION_PLAN.md`**
+- [x] **Step 4: Mettre à jour `docs/IMPLEMENTATION_PLAN.md`**
 
-Cocher les neuf cases d'implémentation et les quatre critères d'acceptation de la phase 13 avec une preuve en ligne pour chacun, corriger les versions annoncées (minikube, Kubernetes, kubectl) par les valeurs réellement installées, et mettre à jour le socle de versions et l'état du dépôt.
+Cocher les neuf cases d'implémentation et les quatre critères d'acceptation de la phase 13 avec une preuve en ligne pour chacun, corriger les versions annoncées (Kubernetes, kubectl) par les valeurs réellement installées, et mettre à jour le socle de versions et l'état du dépôt.
 
-- [ ] **Step 5: Régression**
+- [x] **Step 5: Régression**
 
 ```powershell
 git diff --check
@@ -1394,7 +1406,7 @@ make trivy-config
 
 Attendu : toutes les commandes en succès. Consigner les sorties réelles dans `progress.md`.
 
-- [ ] **Step 6: Revue du diff complet**
+- [x] **Step 6: Revue du diff complet**
 
 ```powershell
 git diff origin/main --stat
@@ -1407,7 +1419,7 @@ Vérifier : aucun secret, aucune licence, aucun fichier `target/` ou `node_modul
 
 ```powershell
 git add docs/infrastructure/kubernetes.md docs/README.md AGENTS.md docs/IMPLEMENTATION_PLAN.md README.md docs/superpowers/plans/2026-09-17-kubernetes-minikube.md
-git commit -m "docs(k8s): document the Minikube deployment and record phase 13 evidence"
+git commit -m "docs(k8s): document the Kubernetes deployment and record phase 13 evidence"
 ```
 
 - [ ] **Step 8: Pousser et ouvrir la Pull Request**
@@ -1416,7 +1428,7 @@ Uniquement après autorisation explicite de l'utilisateur :
 
 ```powershell
 git push -u origin feat/phase-13-kubernetes
-gh pr create --title "feat(k8s): deploy the application on a local Minikube cluster" --body-file .worktrees-pr-body.md
+gh pr create --title "feat(k8s): deploy the application on a local Kubernetes cluster" --body-file .worktrees-pr-body.md
 ```
 
 Le corps de la PR, écrit dans un fichier temporaire hors du dépôt, contient : le périmètre (namespace, quatre workloads, Secrets hors Git, cibles Make, documentation), les quatre critères d'acceptation avec la preuve réelle relevée à la tâche 8, les validations statiques de l'étape 5, et les limites connues (accès par redirection de ports, conflit du port 9000, aucune observabilité dans le cluster).

@@ -33,7 +33,7 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
 
 ---
 
-## État du dépôt au 13 septembre 2026
+## État du dépôt au 19 septembre 2026
 
 - Le dépôt Git contient le backend, l'identité/RBAC, la galerie privée d'images produits, le CRUD
   produits Angular et l'administration des utilisateurs réservée au rôle `ADMIN`.
@@ -47,12 +47,16 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   les rapports texte et SARIF sont conservés 14 jours.
 - Prometheus 3.14 et Grafana 13.2 collectent et affichent les métriques backend dans le profil
   `observability`, avec dashboard provisionné et Actuator isolé sur le port interne `8081`.
+- La stack applicative complète tourne aussi sur le Kubernetes de Docker Desktop, dans le namespace
+  `devops-store`, avec Secrets créés hors Git et accès hôte par `kubectl port-forward`.
 - Docker 29.7.2, Docker Compose 5.4.0, Node 24.18.0, npm 11.16.0, Maven 3.9.13,
-  Terraform 1.15.4 Windows ARM64, kubectl 1.34.1 et Git 2.53.0 sont installés.
+  Terraform 1.15.4 Windows ARM64, kubectl 1.36.1 (fourni par Docker Desktop) et Git 2.53.0 sont
+  installés.
 - Java 21 est installé sur l'hôte ; les builds Java 25 utilisent l'image officielle
   `maven:3.9.16-eclipse-temurin-25` compatible ARM64.
-- Minikube n'est pas encore installé ; GNU Make n'est pas disponible dans le `PATH` Windows
-  courant, les cibles sont validées dans un conteneur éphémère.
+- Le cluster Kubernetes local est celui intégré à Docker Desktop (mode `kind`, nœud unique ARM64) ;
+  Minikube et kind ne publient aucun binaire Windows ARM64. GNU Make n'est pas disponible dans le
+  `PATH` Windows courant, les cibles sont validées dans un conteneur éphémère.
 - Docker fonctionne en ligne de commande, avec un avertissement d'accès au fichier de
   configuration utilisateur à recontrôler hors environnement restreint.
 
@@ -78,8 +82,8 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | Trivy | 0.73.0 | Image multi-architecture immuable, signature Cosign vérifiée avant les scans |
 | Terraform | 1.15.4 | Version stable avec binaire Windows ARM64 |
 | Provider JFrog Artifactory | 12.11.3 | Provisionnement des repositories Artifactory |
-| Minikube | 1.38.1 | Cluster local ; installer avant la phase 13 |
-| Kubernetes | 1.35.6 | Version active compatible avec le kubectl 1.34 local selon la règle de skew |
+| Kubernetes | 1.36.1 | Cluster local intégré à Docker Desktop, mode `kind`, nœud unique ARM64 |
+| containerd | 2.3.1 | Runtime du nœud Kubernetes ; magasin d'images distinct du daemon Docker |
 | Prometheus | 3.14.0 | Image distroless privilégiée |
 | Grafana | 13.2.1 | Provisioning fichiers versionné |
 | Loki | 3.7.7 | Mode single-binary pour le laboratoire local |
@@ -223,7 +227,7 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | SonarQube, Trivy, JFrog Maven | Oui | Non |
 | Prometheus, Grafana, Loki, Alloy | Oui | Non |
 | Terraform JFrog | Configuration et tests simulés | Instance Pro/Enterprise pour import/apply |
-| Kubernetes avec Minikube | Oui | Non |
+| Kubernetes avec Docker Desktop | Oui | Non |
 | Workflows GitHub Actions | Fichiers testables partiellement | Dépôt GitHub et secrets |
 | Publication Maven/images distante | Non | Instance JFrog accessible et credentials |
 | Jira backlog/sprints | Documentation locale seulement | Site Jira et droits projet |
@@ -256,7 +260,7 @@ Leur activation exige des identifiants fournis hors Git et une autorisation expl
 | EPIC-4 Quality & Security | Quality gate et scans | DEVOPS-8 SonarQube, DEVOPS-9 Trivy |
 | EPIC-5 Artifact Management | Artefacts versionnés | DEVOPS-10 JFrog, DEVOPS-13 publication Maven |
 | EPIC-6 Infrastructure | IaC reproductible | DEVOPS-14 Terraform JFrog |
-| EPIC-7 Kubernetes | Déploiement Minikube | DEVOPS-15 manifests et probes |
+| EPIC-7 Kubernetes | Déploiement Kubernetes local | DEVOPS-15 manifests et probes |
 | EPIC-8 Observability | Métriques, dashboards et logs | DEVOPS-16 Prometheus/Grafana, DEVOPS-17 Loki/Alloy |
 
 ---
@@ -830,31 +834,41 @@ curl.exe -G http://localhost:3100/loki/api/v1/query_range --data-urlencode "quer
 
 **Dépendances :** phases 4 et 11.
 
-## PHASE 13 — Kubernetes et Minikube
+## PHASE 13 — Kubernetes local
 
-**Objectif :** déployer l'application sur un cluster Minikube persistant et observable.
+**Objectif :** déployer l'application sur un cluster Kubernetes local persistant et observable.
 
-**Fichiers concernés :** `infrastructure/kubernetes/namespace.yaml`, sous-dossiers frontend,
-backend et postgres, `Makefile`, `docs/infrastructure/kubernetes.md`.
+**Fichiers concernés :** `infrastructure/kubernetes/namespace.yaml`, sous-dossiers `postgres`,
+`object-storage`, `backend`, `frontend` et `examples`, `Makefile`,
+`docs/infrastructure/kubernetes.md`.
 
 **Implémentation :**
 
-- [ ] Installer Minikube 1.38.1 et utiliser Kubernetes 1.35.6 avec le kubectl 1.34 local.
-- [ ] Créer namespace, ConfigMaps, exemple de Secret et procédure `kubectl create secret`.
-- [ ] Déployer PostgreSQL en StatefulSet avec PVC et service ClusterIP.
-- [ ] Déployer backend/frontend avec Deployments, Services et images chargées dans Minikube.
-- [ ] Définir requests/limits, securityContext non-root et filesystem read-only si compatible.
-- [ ] Configurer startup, readiness et liveness sur les groupes Actuator adaptés.
-- [ ] Ne jamais inclure PostgreSQL dans la liveness du backend.
-- [ ] Ajouter commandes Makefile start/deploy/status/delete et tests de rollout.
-- [ ] Documenter accès `minikube service`, tunnel éventuel et nettoyage des PVC.
+- [x] Activer le Kubernetes de Docker Desktop et relever ses versions réelles.
+      Kubernetes 1.36.1, containerd 2.3.1, nœud unique ARM64 `desktop-control-plane`.
+- [x] Créer namespace, ConfigMaps, exemple de Secret et procédure `kubectl create secret`.
+      Exemples vides dans `examples/`, jamais appliqués ; quatre Secrets par `k8s-secrets`.
+- [x] Déployer PostgreSQL en StatefulSet avec PVC et service ClusterIP.
+      AIStor suit le même modèle (StatefulSet, PVC, licence en Secret).
+- [x] Déployer backend/frontend avec Deployments, Services et images importées dans le nœud.
+- [x] Définir requests/limits, securityContext non-root et filesystem read-only si compatible.
+      Racine en lecture seule pour les quatre workloads, PostgreSQL compris ; aucun token
+      ServiceAccount monté ; aucun finding Trivy HIGH ou CRITICAL.
+- [x] Configurer startup, readiness et liveness sur les groupes Actuator adaptés.
+- [x] Ne jamais inclure PostgreSQL dans la liveness du backend.
+- [x] Ajouter commandes Makefile start/deploy/status/delete et tests de rollout.
+      Onze cibles `k8s-*`, dont `k8s-cluster`, `k8s-rollout`, `k8s-delete` et `k8s-reset`.
+- [x] Documenter l'accès depuis l'hôte, ses contraintes d'origine CORS et le nettoyage des PVC.
+      `docs/infrastructure/kubernetes.md` ; les NodePorts ne sont pas joignables depuis Windows.
 
 **Commandes de validation :**
 
 ```powershell
-minikube start --kubernetes-version=v1.35.6
-kubectl apply --dry-run=server -R -f infrastructure/kubernetes
-kubectl apply -R -f infrastructure/kubernetes
+kubectl config use-context docker-desktop
+kubectl wait --for=condition=Ready node --all --timeout=180s
+kubectl apply -f infrastructure/kubernetes/namespace.yaml
+kubectl apply --dry-run=server -R -f infrastructure/kubernetes/postgres -f infrastructure/kubernetes/object-storage -f infrastructure/kubernetes/backend -f infrastructure/kubernetes/frontend
+kubectl apply -R -f infrastructure/kubernetes/namespace.yaml -f infrastructure/kubernetes/postgres -f infrastructure/kubernetes/object-storage -f infrastructure/kubernetes/backend -f infrastructure/kubernetes/frontend
 kubectl get pods,svc,deployments,statefulsets,pvc -n devops-store
 kubectl rollout status deployment/backend -n devops-store
 kubectl rollout status deployment/frontend -n devops-store
@@ -862,12 +876,22 @@ kubectl rollout status deployment/frontend -n devops-store
 
 **Critères d'acceptation :**
 
-- [ ] Tous les workloads deviennent Ready et restent stables après redémarrage d'un pod.
-- [ ] Le schéma PostgreSQL et les données persistent après recréation du pod.
-- [ ] Une valeur secrète réelle n'existe que dans le cluster, jamais dans le dépôt.
-- [ ] Les probes vérifient le bon niveau de santé sans provoquer de restart en cascade.
+- [x] Tous les workloads deviennent Ready et restent stables après redémarrage d'un pod.
+      Pods backend puis frontend supprimés : rollouts terminés en une minute, quatre pods `Ready`,
+      aucun redémarrage ; déploiement à froid après `k8s-reset` en 74 secondes.
+- [x] Le schéma PostgreSQL et les données persistent après recréation du pod.
+      `postgres-0` recréé : `flyway_schema_history` contient 5 lignes et le produit de test créé
+      via l'API est toujours présent avec son image.
+- [x] Une valeur secrète réelle n'existe que dans le cluster, jamais dans le dépôt.
+      341 fichiers suivis et non suivis comparés aux quatre valeurs secrètes et à la licence :
+      aucune correspondance ; quatre Secrets présents dans le cluster uniquement.
+- [x] Les probes vérifient le bon niveau de santé sans provoquer de restart en cascade.
+      PostgreSQL à zéro réplique pendant 136 secondes : backend toujours `Ready`,
+      `restartCount` 0.
 
-**Dépendances :** phases 4, 8, 11 et 12 ; Minikube/kubectl alignés.
+**Statut :** implémentée et acceptée dynamiquement le 2026-09-19.
+
+**Dépendances :** phases 4, 8, 11 et 12 ; Kubernetes de Docker Desktop et kubectl alignés.
 
 ## PHASE 14 — Documentation finale
 
