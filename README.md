@@ -19,7 +19,8 @@ livraison.
 > est terminée et fusionnée via la
 > [Pull Request #29](https://github.com/mouhamadoulo/molo-devops-lab/pull/29). La phase 12 ajoute
 > la collecte des journaux Docker avec Loki 3.7.7 et Grafana Alloy 1.19.2, derrière un proxy de
-> socket Docker restreint. Kubernetes reste planifié dans le
+> socket Docker restreint. La phase 13 déploie la stack applicative sur le Kubernetes de Docker
+> Desktop ; voir [Kubernetes local](docs/infrastructure/kubernetes.md) et le
 > [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
 
 ## Architecture
@@ -34,7 +35,7 @@ flowchart LR
     API --> OBS[Prometheus / Grafana]
     API -. journaux Docker .-> LOGS[Alloy / Loki]
     LOGS --> OBS
-    ART -. phase planifiée .-> K8S[Minikube / Kubernetes]
+    ART --> K8S[Kubernetes Docker Desktop]
 ```
 
 ## Stack
@@ -44,7 +45,7 @@ flowchart LR
 | Application | Angular 22, TypeScript 6, Java 25, Spring Boot 4.1, PostgreSQL 18, AIStor Free |
 | Build et tests | npm, Maven, Vitest, JUnit 5, Mockito, Testcontainers |
 | DevSecOps | GitHub Actions, SonarQube Community Build, Trivy, JFrog Artifactory |
-| Infrastructure | Docker Compose, Terraform, Kubernetes, Minikube |
+| Infrastructure | Docker Compose, Terraform, Kubernetes (Docker Desktop) |
 | Observabilité | Actuator, Micrometer, Prometheus, Grafana, Loki et Grafana Alloy |
 | Planification | Jira, Confluence |
 
@@ -58,7 +59,7 @@ flowchart LR
 - Git ;
 - GNU Make est optionnel ; les commandes Docker Compose directes sont documentées pour Windows ;
 - Terraform 1.15.4 pour valider la configuration JFrog simulée ;
-- kubectl et Minikube restent requis uniquement pour les phases Kubernetes à venir.
+- le Kubernetes intégré à Docker Desktop et kubectl pour le déploiement Kubernetes local.
 
 Les versions de référence et l'état de l'outillage local sont détaillés dans le
 [plan](docs/IMPLEMENTATION_PLAN.md#socle-de-versions).

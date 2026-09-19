@@ -12,6 +12,17 @@ Trivy 0.73.0 ne possède pas de scanner `config` natif pour Docker Compose ou Gi
 `docker compose config` valide Compose, actionlint valide les workflows, et le scanner de secrets
 filesystem parcourt néanmoins ces fichiers.
 
+Les manifests `infrastructure/kubernetes/` sont couverts par le scan `config` (type
+`kubernetes`) et ne présentent aucun finding `HIGH` ou `CRITICAL`. Les findings de sévérité
+inférieure, hors gate, sont acceptés pour le laboratoire :
+
+| Contrôle | Sévérité | Raison |
+|---|---|---|
+| `KSV-0020`, `KSV-0021` | LOW | UID/GID imposés par les images officielles (`999`, `101`, `1000`) |
+| `KSV-0125` | MEDIUM | AIStor n'est publié que sur `quay.io` ; image épinglée par digest |
+| `KSV-01010` | MEDIUM | noms de clés non secrètes (`DB_USERNAME`, `MINIO_ACCESS_KEY`, `BOOTSTRAP_ADMIN_EMAIL`) dans `backend-config` ; les mots de passe sont dans des Secrets |
+| `DS-0026` | LOW | pas de `HEALTHCHECK` Dockerfile ; Compose et Kubernetes déclarent leurs propres sondes |
+
 ## Versions et provenance
 
 - Trivy : `ghcr.io/aquasecurity/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c` ;

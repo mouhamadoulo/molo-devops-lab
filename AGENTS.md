@@ -23,9 +23,11 @@ et l'observabilité.
   des rapports CI ; la phase 8 est terminée et fusionnée sur `main` via la PR #18 ; Artifactory
   OSS, PostgreSQL 17, le parcours Maven et la publication CI conditionnelle de phase 9 sont
   implémentés ; Terraform 1.15.4 décrit les cinq repositories avec tests simulés, tandis que son
-  application réelle et Kubernetes restent planifiés ; Prometheus 3.14 et Grafana 13.2 sont
-  provisionnés dans le profil `observability` ; la phase 11 est terminée et fusionnée sur `main`
-  via la PR #29 ;
+  application réelle reste planifiée ; Prometheus 3.14 et Grafana 13.2 sont provisionnés dans le
+  profil `observability` ; la phase 11 est terminée et fusionnée sur `main` via la PR #29 ;
+- `infrastructure/kubernetes/` déploie PostgreSQL, AIStor, le backend et le frontend sur le
+  Kubernetes de Docker Desktop (phase 13), avec Secrets créés hors Git et accès hôte par
+  `kubectl port-forward` ;
 - ne pas annoncer ni utiliser une commande planifiée tant que les fichiers correspondants
   (`frontend/package.json`, `Makefile`, fichiers Compose, etc.) n'existent pas.
 
@@ -66,10 +68,13 @@ Avant une modification importante, consulter :
 - Loki 3.7.7 single-binary sur stockage fichier, Grafana Alloy 1.19.2 et wollomatic/socket-proxy
   1.13.1 : collecte des journaux des conteneurs du projet applicatif, labels `service_name`,
   `container` et `level`, rétention 7 jours.
+- Kubernetes 1.36.1 intégré à Docker Desktop (mode `kind`, nœud unique ARM64, containerd 2.3.1)
+  et kubectl 1.36.1 : namespace `devops-store`, StatefulSets PostgreSQL et AIStor avec PVC,
+  Deployments backend et frontend, probes Actuator, pods non-root en racine lecture seule.
 
 ### Cible planifiée
 
-- application réelle de Terraform sur Artifactory Pro et Kubernetes/Minikube.
+- application réelle de Terraform sur Artifactory Pro.
 
 Toujours distinguer cette cible de ce qui est réellement disponible dans le dépôt.
 
@@ -194,7 +199,9 @@ Avec GNU Make, les cibles disponibles sont `help`, `application`, `build`, `test
 `registry-up`, `registry-down`, `registry-status`, `registry-logs`, `registry-reset`, `ci-lint`,
 `observability-config`, `observability-up`, `observability-down`, `observability-status`,
 `observability-logs`, `observability-reset`, `trivy-verify`, `trivy-fs`, `trivy-config`,
-`trivy-images` et `security`.
+`trivy-images`, `security`, `k8s-cluster`, `k8s-config`, `k8s-images`, `k8s-secrets`,
+`k8s-deploy`, `k8s-rollout`, `k8s-status`, `k8s-forward`, `k8s-logs`, `k8s-delete` et
+`k8s-reset`.
 `down` et `quality-down` préservent les volumes nommés ; `quality-reset` les supprime. Le fichier
 de licence reste hors Git. AIStor Free est limité au single-node sans SLA/SLO.
 
@@ -228,6 +235,13 @@ terraform test
 ```
 
 Ne pas exécuter `plan`, `import`, `apply` ou `destroy` contre l'instance Artifactory OSS locale.
+
+Le déploiement Kubernetes est documenté dans `docs/infrastructure/kubernetes.md`. Les images
+locales doivent être importées dans le magasin containerd du nœud (`make k8s-images`), les quatre
+Secrets sont créés depuis l'environnement par `make k8s-secrets` et les fichiers
+`infrastructure/kubernetes/examples/` ne sont jamais appliqués. Les NodePorts ne sont pas
+joignables depuis Windows : utiliser `make k8s-forward` (`localhost:8088` et `localhost:9000`).
+`k8s-delete` conserve les PVC, `k8s-reset` supprime le namespace et ses volumes.
 
 ## Tests
 

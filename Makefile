@@ -12,6 +12,18 @@ PROMETHEUS_IMAGE ?= prom/prometheus:v3.14.0-distroless@sha256:50c707e96da5ade383
 LOKI_IMAGE ?= grafana/loki:3.7.7@sha256:d70e4659623f3e109af669cae76fe2a5dd5be54e2298fe8aed380d982fbc2500
 ALLOY_IMAGE ?= grafana/alloy:v1.19.2@sha256:b8ec653c44235fbe910879145dac3597d66b0aaecf60bcbbe82580767771a839
 OBSERVABILITY_SERVICES ?= prometheus grafana socket-proxy loki alloy
+KUBECTL ?= kubectl
+K8S_CONTEXT ?= docker-desktop
+K8S_NODE ?= desktop-control-plane
+K8S_NAMESPACE ?= devops-store
+K8S_MANIFESTS ?= infrastructure/kubernetes
+K8S_WORKLOADS ?= $(K8S_MANIFESTS)/postgres $(K8S_MANIFESTS)/object-storage \
+	$(K8S_MANIFESTS)/backend $(K8S_MANIFESTS)/frontend
+K8S_NAMESPACE_FILE ?= $(K8S_MANIFESTS)/namespace.yaml
+K8S_APPLY_FLAGS = $(addprefix -f ,$(K8S_NAMESPACE_FILE) $(K8S_WORKLOADS))
+K8S_WORKLOAD_FLAGS = $(addprefix -f ,$(K8S_WORKLOADS))
+K8S_FRONTEND_PORT ?= 8088
+K8S_STORAGE_PORT ?= 9000
 TRIVY_CACHE_DIR ?= $(CURDIR)/.trivycache
 SECURITY_REPORTS_DIR ?= $(CURDIR)/reports/security
 MAVEN_CACHE_DIR ?= $(CURDIR)/.m2
@@ -46,7 +58,9 @@ TRIVY_IMAGE_RUN = $(DOCKER) run --rm \
 	registry-config registry-up registry-down registry-status registry-logs registry-reset \
 	sonar sonar-backend sonar-frontend \
 	trivy-verify trivy-prepare-maven trivy-fs trivy-config trivy-image-backend trivy-image-frontend \
-	trivy-images security
+	trivy-images security \
+	k8s-cluster k8s-config k8s-images k8s-secrets k8s-deploy k8s-rollout k8s-status \
+	k8s-forward k8s-logs k8s-delete k8s-reset
 
 help: ## Show available commands
 	$(info Usage: make [target])
@@ -100,6 +114,17 @@ help: ## Show available commands
 	$(info   sonar             Analyze backend and frontend with SonarQube)
 	$(info   sonar-backend     Verify and analyze the backend with SonarQube)
 	$(info   sonar-frontend    Verify and analyze the frontend with SonarQube)
+	$(info   k8s-cluster       Verify the local Docker Desktop Kubernetes cluster)
+	$(info   k8s-config        Validate the Kubernetes manifests)
+	$(info   k8s-images        Build and load the application images into the cluster)
+	$(info   k8s-secrets       Create the cluster secrets from the current environment)
+	$(info   k8s-deploy        Apply every Kubernetes manifest)
+	$(info   k8s-rollout       Wait until every workload is ready)
+	$(info   k8s-status        Show pods, services, workloads and volumes)
+	$(info   k8s-forward       Forward the frontend and object storage ports)
+	$(info   k8s-logs          Follow the backend logs)
+	$(info   k8s-delete        Delete the workloads and keep the volumes)
+	$(info   k8s-reset         Delete the namespace and its volumes)
 
 application: build up ## Build and start the complete application
 
@@ -309,3 +334,65 @@ sonar-backend: ## Verify and analyze the backend with SonarQube
 
 sonar-frontend: ## Verify and analyze the frontend with SonarQube
 	cd frontend && npm ci && npm run lint && npm run test:ci && npm run build && SONAR_SCANNER_JAVA_EXE_PATH="$$JAVA_HOME/bin/java" npm run sonar
+
+k8s-cluster: ## Verify the local Docker Desktop Kubernetes cluster
+	$(KUBECTL) config use-context $(K8S_CONTEXT)
+	$(KUBECTL) wait --for=condition=Ready node --all --timeout=180s
+
+k8s-config: ## Validate the Kubernetes manifests
+	$(KUBECTL) apply --dry-run=client -R $(K8S_APPLY_FLAGS)
+	$(KUBECTL) apply -f $(K8S_NAMESPACE_FILE)
+	$(KUBECTL) apply --dry-run=server -R $(K8S_APPLY_FLAGS)
+
+k8s-images: ## Build and load the application images into the cluster
+	$(MAKE) build
+	$(DOCKER) save devops-store-backend:local | $(DOCKER) exec -i $(K8S_NODE) ctr -n k8s.io images import -
+	$(DOCKER) save devops-store-frontend:local | $(DOCKER) exec -i $(K8S_NODE) ctr -n k8s.io images import -
+
+k8s-secrets: ## Create the cluster secrets from the current environment
+	@test -n "$$DB_PASSWORD" || { echo "DB_PASSWORD is required"; exit 1; }
+	@test -n "$$JWT_SECRET" || { echo "JWT_SECRET is required"; exit 1; }
+	@test -n "$$BOOTSTRAP_ADMIN_PASSWORD" || { echo "BOOTSTRAP_ADMIN_PASSWORD is required"; exit 1; }
+	@test -n "$$MINIO_SECRET_KEY" || { echo "MINIO_SECRET_KEY is required"; exit 1; }
+	@test -n "$$MINIO_LICENSE_FILE" || { echo "MINIO_LICENSE_FILE is required"; exit 1; }
+	$(KUBECTL) apply -f $(K8S_NAMESPACE_FILE)
+	$(KUBECTL) create secret generic postgres-credentials -n $(K8S_NAMESPACE) \
+		--from-literal=POSTGRES_PASSWORD="$$DB_PASSWORD" \
+		--dry-run=client -o yaml | $(KUBECTL) apply -f -
+	$(KUBECTL) create secret generic object-storage-credentials -n $(K8S_NAMESPACE) \
+		--from-literal=MINIO_ROOT_PASSWORD="$$MINIO_SECRET_KEY" \
+		--dry-run=client -o yaml | $(KUBECTL) apply -f -
+	$(KUBECTL) create secret generic object-storage-license -n $(K8S_NAMESPACE) \
+		--from-file=minio.license="$$MINIO_LICENSE_FILE" \
+		--dry-run=client -o yaml | $(KUBECTL) apply -f -
+	$(KUBECTL) create secret generic backend-credentials -n $(K8S_NAMESPACE) \
+		--from-literal=DB_PASSWORD="$$DB_PASSWORD" \
+		--from-literal=JWT_SECRET="$$JWT_SECRET" \
+		--from-literal=BOOTSTRAP_ADMIN_PASSWORD="$$BOOTSTRAP_ADMIN_PASSWORD" \
+		--from-literal=MINIO_SECRET_KEY="$$MINIO_SECRET_KEY" \
+		--dry-run=client -o yaml | $(KUBECTL) apply -f -
+
+k8s-deploy: ## Apply every Kubernetes manifest
+	$(KUBECTL) apply -R $(K8S_APPLY_FLAGS)
+
+k8s-rollout: ## Wait until every workload is ready
+	$(KUBECTL) rollout status statefulset/postgres -n $(K8S_NAMESPACE) --timeout=180s
+	$(KUBECTL) rollout status statefulset/object-storage -n $(K8S_NAMESPACE) --timeout=180s
+	$(KUBECTL) rollout status deployment/backend -n $(K8S_NAMESPACE) --timeout=240s
+	$(KUBECTL) rollout status deployment/frontend -n $(K8S_NAMESPACE) --timeout=120s
+
+k8s-status: ## Show pods, services, workloads and volumes
+	$(KUBECTL) get pods,svc,deployments,statefulsets,pvc -n $(K8S_NAMESPACE)
+
+k8s-forward: ## Forward the frontend and object storage ports
+	$(KUBECTL) port-forward -n $(K8S_NAMESPACE) service/object-storage $(K8S_STORAGE_PORT):9000 & \
+	$(KUBECTL) port-forward -n $(K8S_NAMESPACE) service/frontend $(K8S_FRONTEND_PORT):8080
+
+k8s-logs: ## Follow the backend logs
+	$(KUBECTL) logs -n $(K8S_NAMESPACE) deployment/backend --follow --tail=200
+
+k8s-delete: ## Delete the workloads and keep the volumes
+	$(KUBECTL) delete -R $(K8S_WORKLOAD_FLAGS) --ignore-not-found
+
+k8s-reset: ## Delete the namespace and its volumes
+	$(KUBECTL) delete namespace $(K8S_NAMESPACE) --ignore-not-found
