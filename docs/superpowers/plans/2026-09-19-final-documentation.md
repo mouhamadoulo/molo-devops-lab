@@ -31,7 +31,7 @@
 **Files:**
 - Create: `task_plan.md`, `progress.md`, `findings.md` à la racine du worktree (ignorés par Git)
 
-- [ ] **Step 1: Vérifier l'isolement**
+- [x] **Step 1: Vérifier l'isolement**
 
 ```powershell
 git status --short --branch
@@ -40,11 +40,11 @@ git log --oneline -2
 
 Attendu : `## docs/phase-14-final-docs...`, dernier commit `docs: add phase 14 final documentation design` (puis ce plan).
 
-- [ ] **Step 2: Créer les fichiers de suivi**
+- [x] **Step 2: Créer les fichiers de suivi**
 
 `task_plan.md` liste les tâches 1 à 10 du présent plan avec des cases, la spec et le plan en en-tête. `progress.md` et `findings.md` démarrent par un titre `Phase 14 — Documentation finale`.
 
-- [ ] **Step 3: Vérifier qu'ils sont ignorés**
+- [x] **Step 3: Vérifier qu'ils sont ignorés**
 
 ```powershell
 git status --short
@@ -63,7 +63,7 @@ Attendu : aucune ligne pour les trois fichiers.
 **Interfaces:**
 - Produces: `make docs-check` (sortie 0 si aucun lien relatif ou ancre cassé), job CI `Check documentation links`. Toutes les tâches suivantes utilisent cette commande comme test.
 
-- [ ] **Step 1: Prouver que lychee détecte un lien cassé**
+- [x] **Step 1: Prouver que lychee détecte un lien cassé**
 
 Dans le scratchpad (hors dépôt), créer `broken.md` contenant `[absent](missing.md)` puis :
 
@@ -73,7 +73,7 @@ docker run --rm -v "${PWD}:/input:ro" -w /input lycheeverse/lychee:0.24.2@sha256
 
 (exécuté depuis le scratchpad). Attendu : `1 Error`, code de sortie `2`. Consigner la sortie dans `progress.md`.
 
-- [ ] **Step 2: Ajouter la variable et la cible Make**
+- [x] **Step 2: Ajouter la variable et la cible Make**
 
 Sous `ACTIONLINT_IMAGE`, ajouter :
 
@@ -97,7 +97,7 @@ docs-check: ## Check relative links and anchors in the documentation
 		$(DOCS_FILES)
 ```
 
-- [ ] **Step 3: Ajouter le workflow**
+- [x] **Step 3: Ajouter le workflow**
 
 `.github/workflows/docs.yml` :
 
@@ -139,7 +139,7 @@ jobs:
         run: make docs-check
 ```
 
-- [ ] **Step 4: Valider**
+- [x] **Step 4: Valider**
 
 GNU Make est absent de l'hôte : exécuter la recette équivalente, puis `make -n docs-check` et `make help` dans le conteneur Maven épinglé avec `apt-get install -y make` (procédure de la phase 13), puis actionlint :
 
@@ -151,7 +151,7 @@ git diff --check
 
 Attendu : lychee `0 Errors`, exit 0 ; actionlint sans sortie, exit 0 ; `make -n docs-check` affiche la commande `docker run` ci-dessus.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add Makefile .github/workflows/docs.yml
@@ -170,7 +170,7 @@ git commit -m "ci: check documentation links with lychee"
 - Consumes: `make docs-check` (tâche 1).
 - Produces: `docs/architecture/overview.md` avec les ancres `#composants`, `#flux-dune-requête`, `#décisions-structurantes`, référencées par les tâches 3, 5 et 8.
 
-- [ ] **Step 1: Rendre l'index exigeant (rouge)**
+- [x] **Step 1: Rendre l'index exigeant (rouge)**
 
 Dans `docs/README.md`, remplacer la liste de la section « Architecture » (quatre entrées en `code`) par :
 
@@ -185,11 +185,11 @@ et ajouter au tableau « Disponible », avant « Décision stockage objet » :
 | [Vue d'ensemble de l'architecture](architecture/overview.md) | Composants, flux d'une requête de bout en bout et décisions structurantes |
 ```
 
-- [ ] **Step 2: Vérifier l'échec**
+- [x] **Step 2: Vérifier l'échec**
 
 Recette `docs-check` de la tâche 1. Attendu : erreurs sur `docs/architecture/overview.md` introuvable, exit 2.
 
-- [ ] **Step 3: Écrire `docs/architecture/overview.md`**
+- [x] **Step 3: Écrire `docs/architecture/overview.md`**
 
 Sections obligatoires, faits relevés dans le code et non inventés :
 
@@ -199,11 +199,11 @@ Sections obligatoires, faits relevés dans le code et non inventés :
 4. `## Décisions structurantes` — liste courte avec renvoi : organisation par fonctionnalité, migrations Flyway et `ddl-auto=validate`, JWT en mémoire plutôt que `localStorage`, stockage privé à URL présignée, Actuator sur port séparé, images non-root épinglées.
 5. `## Environnements d'exécution` — Compose local, profils DevOps, Kubernetes Docker Desktop, avec renvoi vers `../operations/services.md` (créé tâche 4 ; lien ajouté à cette tâche-là pour garder la vérification verte).
 
-- [ ] **Step 4: Vérifier le vert**
+- [x] **Step 4: Vérifier le vert**
 
 Recette `docs-check`. Attendu : `0 Errors`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add docs/architecture/overview.md docs/README.md
@@ -222,18 +222,18 @@ git commit -m "docs: add the consolidated architecture overview"
 - Consumes: `docs-check`, `architecture/overview.md`.
 - Produces: `docs/devops/toolchain.md`, référencé par le README (tâche 8) et le guide Confluence (tâche 7).
 
-- [ ] **Step 1: Rouge**
+- [x] **Step 1: Rouge**
 
 Dans la section « DevOps » de `docs/README.md`, remplacer `` `devops/toolchain.md` — chaîne DevSecOps et diagramme Mermaid ; `` par `[Chaîne d'outils](devops/toolchain.md) — chaîne DevSecOps et diagramme Mermaid ;` et ajouter au tableau « Disponible » : `| [Chaîne d'outils DevSecOps](devops/toolchain.md) | Diagramme de bout en bout, rôle et statut local ou externe de chaque outil |`. Lancer `docs-check` : erreur attendue sur `devops/toolchain.md`.
 
-- [ ] **Step 2: Écrire le document**
+- [x] **Step 2: Écrire le document**
 
 1. Diagramme Mermaid `flowchart TB` reprenant la chaîne du cahier des charges (section 25 de `Prompt-DevSecOps-Lab.md`), adapté à la réalité : `Kubernetes Docker Desktop` à la place de Minikube, `Terraform (tests simulés)`, Jira/Confluence en pointillés (externes). Classes Mermaid `local`, `external`, `licensed` avec légende.
 2. Tableau outil / rôle / version / exécution (locale, GitHub, externe, licence) / guide, pour : Git, GitHub, GitHub Actions, Dependabot, SonarQube, Trivy, Docker/Compose, JFrog Artifactory OSS, Terraform, Kubernetes, Prometheus, Grafana, Loki, Alloy, Jira, Confluence. Versions copiées depuis `AGENTS.md` et `docs/IMPLEMENTATION_PLAN.md#socle-de-versions`.
 3. Section `## Parcours d'une modification` : branche → PR → workflows (`backend-ci`, `frontend-ci`, `docker`, `quality`, `security`, `docs`) → fusion → publication conditionnelle Artifactory, avec renvoi à `github-actions.md`.
 4. Section `## Écarts avec la cible du cahier des charges` : Minikube remplacé (aucun binaire Windows ARM64), Terraform non appliqué (licence Pro), Jira/Confluence par import manuel.
 
-- [ ] **Step 3: Vert puis commit**
+- [x] **Step 3: Vert puis commit**
 
 `docs-check` : `0 Errors`.
 
@@ -253,11 +253,11 @@ git commit -m "docs: add the DevSecOps toolchain diagram"
 **Interfaces:**
 - Produces: `docs/operations/services.md` avec l'ancre `#limites-locales-externes-et-de-licence`, résumée par le README (tâche 8).
 
-- [ ] **Step 1: Rouge**
+- [x] **Step 1: Rouge**
 
 Ajouter une section `## Opérations` à `docs/README.md` avant « Observabilité » : `- [Services et accès](operations/services.md) — URL, ports, identifiants initiaux, démarrage et nettoyage de chaque stack.` et la ligne correspondante au tableau « Disponible ». Ajouter dans `overview.md` le lien `[Services et accès](../operations/services.md)`. `docs-check` : erreur attendue.
 
-- [ ] **Step 2: Relever les faits**
+- [x] **Step 2: Relever les faits**
 
 ```powershell
 Select-String -Path docker-compose.yml,docker-compose.devops.yml -Pattern '127.0.0.1:'
@@ -265,18 +265,18 @@ Select-String -Path .env.example -Pattern 'PORT|PASSWORD|EMAIL|NAME='
 Select-String -Path Makefile -Pattern '^[a-z0-9-]+-(up|down|reset|delete):'
 ```
 
-- [ ] **Step 3: Écrire le document**
+- [x] **Step 3: Écrire le document**
 
 1. `## Stacks` — tableau stack / commande de démarrage / arrêt conservant les données / réinitialisation : application (`docker compose up -d --wait`, `down`, `down -v`), `quality`, `artifacts`, `registry`, `observability`, Kubernetes (`k8s-deploy`, `k8s-delete`, `k8s-reset`).
 2. `## URL et ports` — tableau service / URL hôte / variable de port / stack, pour : frontend `4200`, backend `8080`, Swagger UI, AIStor API `9000` et console `9001`, PostgreSQL `5432`, SonarQube `9000`, Artifactory `8082`, JCR `8084`, Prometheus `9090`, Grafana `3000`, Loki `3100`, Alloy `12345`, Kubernetes `8088` et `9000` par `port-forward`. Tous liés à `127.0.0.1`. Paragraphe sur les conflits du port `9000`.
 3. `## Identifiants initiaux` — tableau compte / origine / comment le changer, sans aucune valeur : administrateur applicatif (`BOOTSTRAP_ADMIN_*`, créé au premier démarrage sur base vide ; changer via l'administration des utilisateurs), bases PostgreSQL (`DB_PASSWORD`, `SONAR_DB_PASSWORD`, `ARTIFACTORY_DB_PASSWORD`, `JCR_DB_PASSWORD` ; figés dans le volume au premier démarrage), AIStor (`MINIO_ACCESS_KEY`/`MINIO_SECRET_KEY`), Grafana (`GRAFANA_ADMIN_PASSWORD`, figé dans le volume, renvoi à la note de `grafana.md`), SonarQube `admin`/`admin` à changer à la première connexion, Artifactory `admin`/`password` à changer à la première connexion (vérifier dans `sonarqube.md` et `jfrog-artifactory.md`), Secrets Kubernetes (`k8s-secrets`).
 4. `## Limites locales, externes et de licence` — AIStor Free single-node sans SLA, Artifactory OSS sans API de configuration (Terraform non applicable), Kubernetes mono-nœud sans NodePort joignable depuis Windows, GitHub requis pour la CI, Jira/Confluence par import manuel, secrets `SONAR_TOKEN`/`JFROG_*` fournis hors Git.
 
-- [ ] **Step 4: Croiser et valider**
+- [x] **Step 4: Croiser et valider**
 
 Comparer chaque port du tableau avec la sortie de l'étape 2 ; aucune divergence attendue. `docs-check` : `0 Errors`.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```powershell
 git add docs/operations/services.md docs/README.md docs/architecture/overview.md
@@ -291,11 +291,11 @@ git commit -m "docs: add the services, access and cleanup inventory"
 - Create: `docs/security/security-guidelines.md`
 - Modify: `docs/README.md` (section « Sécurité et dépannage » et tableau)
 
-- [ ] **Step 1: Rouge**
+- [x] **Step 1: Rouge**
 
 Remplacer dans `docs/README.md` `` `security/security-guidelines.md` — secrets, images, dépendances et configuration ; `` par `[Règles de sécurité](security/security-guidelines.md) — secrets, images, dépendances et configuration ;`, ajouter la ligne au tableau. `docs-check` : erreur attendue.
 
-- [ ] **Step 2: Écrire le document**
+- [x] **Step 2: Écrire le document**
 
 1. `## Secrets` — tableau secret / où il vit (`.env` local, secrets GitHub, Secret Kubernetes, fichier de licence) / jamais dans Git ; `.env.example` sans valeur ; exemples Kubernetes à valeurs vides jamais appliqués ; scanner de secrets Trivy.
 2. `## Images et conteneurs` — tags explicites épinglés par digest, runtimes non-root (UIDs), racine en lecture seule et capacités supprimées côté Kubernetes, `latest` interdit, provenance Trivy vérifiée par Cosign.
@@ -303,7 +303,7 @@ Remplacer dans `docs/README.md` `` `security/security-guidelines.md` — secrets
 4. `## Surfaces exposées` — ports liés à `127.0.0.1`, Actuator limité à `health`, `info`, `prometheus` sur `8081` non publié, CORS limité à une origine, contrôle d'`Origin` sur le refresh, cookie `HttpOnly`, proxy de socket Docker en lecture seule avec allowlist, aucun token ServiceAccount monté.
 5. `## Exceptions` — renvoi à la politique d'exception de `../devops/trivy.md#politique-dexception` et aux findings Kubernetes acceptés.
 
-- [ ] **Step 3: Vert puis commit**
+- [x] **Step 3: Vert puis commit**
 
 `docs-check` : `0 Errors`.
 
@@ -320,15 +320,15 @@ git commit -m "docs: add the security guidelines"
 - Create: `docs/troubleshooting/common-issues.md`
 - Modify: `docs/README.md`
 
-- [ ] **Step 1: Rouge**
+- [x] **Step 1: Rouge**
 
 Remplacer `` `troubleshooting/common-issues.md` — diagnostics reproductibles et solutions. `` par `[Pannes courantes](troubleshooting/common-issues.md) — diagnostics reproductibles et solutions.`, ajouter la ligne au tableau. `docs-check` : erreur attendue.
 
-- [ ] **Step 2: Rassembler les sources**
+- [x] **Step 2: Rassembler les sources**
 
 Lire `findings.md` et `progress.md` du checkout principal (historique des phases 11 à 13), les sections « Dépannage » de `docker.md`, `trivy.md`, `grafana.md`, `loki.md`, `kubernetes.md`.
 
-- [ ] **Step 3: Écrire le document**
+- [x] **Step 3: Écrire le document**
 
 Une section `##` par domaine (Docker Desktop et WSL2, Git Bash et Windows, Compose, application, sécurité des dépendances, Kubernetes). Chaque entrée : **Symptôme** (message exact), **Cause**, **Résolution** (commande copiable), **Preuve** (ce qu'on observe une fois résolu). Entrées obligatoires :
 
@@ -344,7 +344,7 @@ Une section `##` par domaine (Docker Desktop et WSL2, Git Bash et Windows, Compo
 | Suppression d'un produit avec images | HTTP 500 `TransientPropertyValueException`, corrigé PR #46 (historique) |
 | Kubernetes : images introuvables, `/run/secrets` en lecture seule, StatefulSet bloqué, `port-forward` perdu | renvoi à `../infrastructure/kubernetes.md#pannes-rencontrées` avec une ligne de résumé chacune |
 
-- [ ] **Step 4: Vert puis commit**
+- [x] **Step 4: Vert puis commit**
 
 `docs-check` : `0 Errors` (l'ancre `#pannes-rencontrées` doit exister dans `kubernetes.md`).
 
@@ -364,7 +364,7 @@ git commit -m "docs: add the troubleshooting guide"
 **Interfaces:**
 - Produces: CSV à 7 colonnes `Issue Id,Parent,Issue Type,Summary,Description,Labels,Status`.
 
-- [ ] **Step 1: Écrire le test de structure (rouge)**
+- [x] **Step 1: Écrire le test de structure (rouge)**
 
 Dans le scratchpad, `check_backlog.py` :
 
@@ -392,7 +392,7 @@ print(f"{len(rows)} rows, {len(epics)} epics, all parents resolved")
 
 Lancer `python check_backlog.py docs/planning/jira-backlog.csv` : échec attendu (fichier absent).
 
-- [ ] **Step 2: Écrire le CSV**
+- [x] **Step 2: Écrire le CSV**
 
 `docs/planning/jira-backlog.csv`, UTF-8 sans BOM, fins de ligne LF :
 
@@ -434,20 +434,20 @@ Issue Id,Parent,Issue Type,Summary,Description,Labels,Status
 803,8,Bug,Contrôle du mot de passe Grafana,Mot de passe exigé seulement au démarrage de Grafana. PR #42.,bug,Done
 ```
 
-- [ ] **Step 3: Vert du test de structure**
+- [x] **Step 3: Vert du test de structure**
 
 `python check_backlog.py docs/planning/jira-backlog.csv`. Attendu : `34 rows, 8 epics, all parents resolved`.
 
-- [ ] **Step 4: Écrire `docs/planning/jira-confluence.md`**
+- [x] **Step 4: Écrire `docs/planning/jira-confluence.md`**
 
 1. `## Jira` — prérequis (projet logiciel, clé `DEVOPS` conseillée, droits d'import) ; procédure d'import CSV natif de Jira Cloud (Paramètres système → Import externe → CSV, encodage UTF-8, séparateur virgule) ; correspondance : `Issue Id` → *Issue Id*, `Parent` → *Parent*, `Issue Type` → *Issue Type*, `Summary`, `Description`, `Labels`, `Status` → *Status* avec mappage des valeurs `To Do`, `In Progress`, `Done` ; contrôle après import : 34 éléments, 8 epics, chaque story rattachée, 1 élément `To Do`. Mention explicite : non exécuté faute de compte, étape externe.
 2. `## Confluence` — arborescence de pages (Accueil = `docs/README.md`, puis Architecture, DevOps, Infrastructure, Opérations, Observabilité, Sécurité, Dépannage, Planification, une page par fichier) ; procédure de copie (coller le Markdown dans l'éditeur, qui le convertit ; remplacer les liens relatifs par des liens de page ; Mermaid par une macro ou une application Mermaid, sinon une capture) ; ordre de mise à jour quand un document change.
 
-- [ ] **Step 5: Index et plan**
+- [x] **Step 5: Index et plan**
 
 `docs/README.md` : section `## Planification` avec les deux fichiers en liens, et lignes au tableau. `docs/IMPLEMENTATION_PLAN.md` : sous le tableau « Backlog Jira proposé », ajouter `Le backlog importable réel est [docs/planning/jira-backlog.csv](planning/jira-backlog.csv) ; procédure dans [Jira et Confluence](planning/jira-confluence.md).` `docs-check` : `0 Errors`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```powershell
 git add docs/planning docs/README.md docs/IMPLEMENTATION_PLAN.md
@@ -461,7 +461,7 @@ git commit -m "docs: add the importable Jira backlog and Confluence guide"
 **Files:**
 - Modify: `README.md`, `AGENTS.md`, `docs/README.md` (retrait de toute entrée restante non créée)
 
-- [ ] **Step 1: README**
+- [x] **Step 1: README**
 
 - Section « Documentation » : ajouter en tête `[Vue d'ensemble](docs/architecture/overview.md)`, `[Chaîne d'outils](docs/devops/toolchain.md)`, `[Services et accès](docs/operations/services.md)`, `[Pannes courantes](docs/troubleshooting/common-issues.md)`, et `[Kubernetes local](docs/infrastructure/kubernetes.md)` (absent aujourd'hui).
 - Nouvelle section courte `## Limites` (3 à 5 puces) résumant `services.md#limites-locales-externes-et-de-licence`.
@@ -469,11 +469,11 @@ git commit -m "docs: add the importable Jira backlog and Confluence guide"
 - Ajouter `make docs-check` et `make k8s-deploy` à « Commandes principales ».
 - Mettre à jour le paragraphe d'état : phase 14.
 
-- [ ] **Step 2: AGENTS.md**
+- [x] **Step 2: AGENTS.md**
 
 Ajouter `docs-check` à la liste des cibles Make ; dans « Lint et formatage », documenter `make docs-check` comme contrôle disponible (lychee hors ligne, liens relatifs et ancres) ; dans « Documentation », règle : tout document annoncé dans l'index est un lien réel vérifié par `docs-check`.
 
-- [ ] **Step 3: Vérifier**
+- [x] **Step 3: Vérifier**
 
 ```powershell
 (Get-Content README.md | Measure-Object -Line).Lines
@@ -483,7 +483,7 @@ git diff --check
 
 Attendu : moins de 200 lignes ; aucune entrée d'index en `code` restante ; `docs-check` `0 Errors`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```powershell
 git add README.md AGENTS.md docs/README.md
@@ -498,7 +498,7 @@ git commit -m "docs: link the final documentation from the README and agent guid
 - Modify: selon frictions trouvées (`README.md` ou documents concernés)
 - Modify: `progress.md`, `findings.md` (ignorés)
 
-- [ ] **Step 1: Clone neuf hors dépôt**
+- [x] **Step 1: Clone neuf hors dépôt**
 
 ```powershell
 $clone = Join-Path $env:TEMP 'devops-store-clean'
@@ -507,7 +507,7 @@ git clone --branch docs/phase-14-final-docs (Resolve-Path .).Path $clone
 Set-Location $clone
 ```
 
-- [ ] **Step 2: Suivre uniquement le README**
+- [x] **Step 2: Suivre uniquement le README**
 
 Copier `.env.example` vers `.env` ; générer les secrets jetables hors dépôt (jamais affichés) ; renseigner `BOOTSTRAP_ADMIN_EMAIL`, `BOOTSTRAP_ADMIN_NAME` et `MINIO_LICENSE_FILE`. Arrêter au préalable toute stack ou redirection occupant `4200`, `8080`, `9000`, `9001`, `5432`. Puis exactement les commandes du Quick Start :
 
@@ -520,11 +520,11 @@ docker compose ps
 
 Attendu : quatre services `healthy`.
 
-- [ ] **Step 3: Parcours réel**
+- [x] **Step 3: Parcours réel**
 
 Via `http://localhost:4200` avec `Origin: http://localhost:4200` : login de l'administrateur bootstrap (200), `GET /api/v1/products` (200), création d'un produit (201), upload d'une image PNG (201), suppression du produit (204), puis `GET` de ce produit (404).
 
-- [ ] **Step 4: Nettoyer et consigner**
+- [x] **Step 4: Nettoyer et consigner**
 
 ```powershell
 docker compose down -v
@@ -541,7 +541,7 @@ Chaque friction du README (étape manquante, commande fausse, variable non docum
 **Files:**
 - Modify: `docs/IMPLEMENTATION_PLAN.md` (phase 14, état du dépôt), `docs/superpowers/plans/2026-09-19-final-documentation.md` (cases)
 
-- [ ] **Step 1: Validations complètes**
+- [x] **Step 1: Validations complètes**
 
 Depuis le worktree, sorties réelles copiées dans `progress.md` :
 
@@ -568,19 +568,19 @@ git diff --check
 
 Backend avec `JAVA_HOME` sur le JDK 25 et `MINIO_LICENSE_FILE` défini ; Compose avec valeurs factices en mémoire si `.env` absent.
 
-- [ ] **Step 2: Kubernetes**
+- [x] **Step 2: Kubernetes**
 
 `k8s-cluster`, `k8s-config`, `k8s-images` (après `docker compose build`), `k8s-secrets` avec secrets jetables hors dépôt, `k8s-deploy`, `k8s-rollout`, `k8s-status` (quatre pods `Ready`), puis `k8s-reset`. Recettes exécutées directement si GNU Make est absent.
 
-- [ ] **Step 3: Liens**
+- [x] **Step 3: Liens**
 
 `docs-check` hors ligne : `0 Errors`. Puis une passe en ligne unique, sans `--offline`, consignée ; chaque URL externe en échec est corrigée ou justifiée (limitation de débit, authentification) dans `findings.md`.
 
-- [ ] **Step 4: Mettre à jour le plan d'implémentation**
+- [x] **Step 4: Mettre à jour le plan d'implémentation**
 
 Phase 14 : cocher les neuf cases d'implémentation et les quatre critères avec une preuve en ligne chacun ; la case « Créer les documents architecture, DevOps, infrastructure, observabilité et sécurité » précise la consolidation. Ajouter `**Statut :** implémentée et validée depuis un clone neuf le <date>.`. Mettre à jour « État du dépôt » (date, documentation finale). Phase 10 inchangée (partielle). Cocher les étapes exécutées du présent plan, laisser ouvertes celles de push/PR/CI.
 
-- [ ] **Step 5: Revue du diff**
+- [x] **Step 5: Revue du diff**
 
 ```powershell
 git diff origin/main --stat
@@ -589,7 +589,7 @@ git diff origin/main --name-only
 
 Attendu : aucun fichier sous `backend/` ou `frontend/`, aucun secret, licence ou fichier généré.
 
-- [ ] **Step 6: Commit des preuves**
+- [x] **Step 6: Commit des preuves**
 
 ```powershell
 git add docs/IMPLEMENTATION_PLAN.md docs/superpowers/plans/2026-09-19-final-documentation.md

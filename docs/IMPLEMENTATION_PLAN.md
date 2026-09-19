@@ -49,6 +49,10 @@ GitHub Actions, SonarQube, Trivy, JFrog Artifactory, Terraform, Kubernetes et st
   `observability`, avec dashboard provisionné et Actuator isolé sur le port interne `8081`.
 - La stack applicative complète tourne aussi sur le Kubernetes de Docker Desktop, dans le namespace
   `devops-store`, avec Secrets créés hors Git et accès hôte par `kubectl port-forward`.
+- La documentation finale de la phase 14 est en place : vue d'architecture consolidée, chaîne
+  d'outils, inventaire des services et accès, règles de sécurité, pannes courantes, backlog Jira
+  importable et guide Confluence. `make docs-check` vérifie hors ligne les liens relatifs et les
+  ancres, et le workflow `Documentation` exécute le même contrôle en CI.
 - Docker 29.7.2, Docker Compose 5.4.0, Node 24.18.0, npm 11.16.0, Maven 3.9.13,
   Terraform 1.15.4 Windows ARM64, kubectl 1.36.1 (fourni par Docker Desktop) et Git 2.53.0 sont
   installés.
@@ -903,17 +907,33 @@ kubectl rollout status deployment/frontend -n devops-store
 **Fichiers concernés :** tous les documents annoncés dans `docs/README.md`, `README.md`,
 `Makefile`, exemples de configuration et diagrammes Mermaid.
 
+**Statut :** implémentée et validée depuis un clone neuf le 2026-09-19.
+
 **Implémentation :**
 
-- [ ] Créer les documents architecture, DevOps, infrastructure, observabilité et sécurité.
-- [ ] Ajouter le diagramme complet de toolchain dans `docs/devops/toolchain.md`.
-- [ ] Documenter chaque URL, credential initial à changer et procédure de nettoyage.
-- [ ] Convertir le backlog proposé en structure importable Jira ou instructions manuelles.
-- [ ] Structurer les Markdown pour copie/import dans Confluence sans appeler son API.
-- [ ] Documenter les pannes réellement rencontrées et leurs preuves de résolution.
-- [ ] Vérifier tous les liens, commandes, ports et versions depuis une machine propre.
-- [ ] Garder le README racine sous 200 lignes et l'index docs comme navigation détaillée.
-- [ ] Mettre toutes les phases terminées à `[x]` uniquement après la validation finale complète.
+- [x] Créer les documents architecture, DevOps, infrastructure, observabilité et sécurité :
+      consolidés en `docs/architecture/overview.md` (composants, flux, rôles, décisions,
+      environnements) plutôt qu'en quatre fichiers `architecture/*`, plus
+      `docs/operations/services.md`, `docs/security/security-guidelines.md` et
+      `docs/troubleshooting/common-issues.md` ; infrastructure et observabilité étaient déjà
+      couvertes par les guides des phases 4 à 13.
+- [x] Ajouter le diagramme complet de toolchain dans `docs/devops/toolchain.md` : `flowchart TB`
+      avec classes `local`, `external` et `licensed`, tableau des seize outils et écarts avec la
+      cible.
+- [x] Documenter chaque URL, credential initial à changer et procédure de nettoyage :
+      `docs/operations/services.md`, sans aucune valeur secrète.
+- [x] Convertir le backlog proposé en structure importable Jira :
+      `docs/planning/jira-backlog.csv`, 34 lignes et 8 epics, contrôle de structure vert.
+- [x] Structurer les Markdown pour copie/import dans Confluence sans appeler son API :
+      `docs/planning/jira-confluence.md` (arborescence, conversion, Mermaid, ordre de mise à jour).
+- [x] Documenter les pannes réellement rencontrées et leurs preuves de résolution :
+      `docs/troubleshooting/common-issues.md`, onze entrées symptôme/cause/résolution/preuve.
+- [x] Vérifier tous les liens, commandes, ports et versions depuis une machine propre : clone neuf
+      de la branche, `docker compose config/build/up -d --wait`, parcours login → produit → image →
+      suppression, puis `down -v` (voir critères ci-dessous).
+- [x] Garder le README racine sous 200 lignes et l'index docs comme navigation détaillée :
+      `README.md` à 160 lignes ; plus aucune entrée d'index en `code`, vérifié par `make docs-check`.
+- [x] Mettre toutes les phases terminées à `[x]` uniquement après la validation finale complète.
 
 **Commandes de validation :**
 
@@ -929,10 +949,22 @@ rg -n "\[[^]]+\]\([^)]+\)" README.md docs
 
 **Critères d'acceptation :**
 
-- [ ] Un nouveau développeur peut lancer l'application en suivant uniquement le README.
-- [ ] La documentation détaillée est atteignable depuis `docs/README.md`.
-- [ ] Les limites locales, externes et de licence JFrog sont explicites.
-- [ ] Toutes les validations applicables réussissent avec sorties consignées.
+- [x] Un nouveau développeur peut lancer l'application en suivant uniquement le README : depuis un
+      clone neuf, `docker compose up -d --wait` rend les quatre services `healthy`, puis login 200
+      (rôle `ADMIN`), `GET` produits 200, création 201, upload d'image 201, URL présignée 200,
+      suppression 204 et relecture 404. Deux frictions rencontrées et documentées : port 5432
+      occupé par un PostgreSQL WSL, et réutilisation des volumes existants par un clone puisque
+      `docker-compose.yml` fixe `name: devops-store`.
+- [x] La documentation détaillée est atteignable depuis `docs/README.md` : lychee hors ligne,
+      `133 OK, 0 Errors`, liens relatifs et ancres compris.
+- [x] Les limites locales, externes et de licence JFrog sont explicites :
+      `docs/operations/services.md#limites-locales-externes-et-de-licence`, résumé dans la section
+      « Limites » du `README.md`.
+- [x] Toutes les validations applicables réussissent avec sorties consignées : backend
+      `clean verify` **113 tests, 0 échec**, frontend lint vert, **31 fichiers / 105 tests**, build
+      vert ; Compose `config --quiet` rc 0 pour l'application et les quatre profils DevOps ;
+      Terraform `fmt`, `validate` et `test` (**4 passed, 0 failed**) ; Kubernetes déployé puis
+      réinitialisé, quatre pods `Ready` et `RESTARTS 0` ; actionlint rc 0 ; `git diff --check` rc 0.
 
 **Dépendances :** phases 1 à 13.
 
