@@ -67,6 +67,14 @@ seul `make k8s-forward` donne accès, voir [Kubernetes local](../infrastructure/
 | Grafana | `GRAFANA_ADMIN_PASSWORD`, obligatoire | figé dans le volume au premier démarrage, voir [Grafana](../observability/grafana.md) |
 | Secrets Kubernetes | créés hors Git par `make k8s-secrets` depuis l'environnement | relancer `make k8s-secrets` puis redémarrer les workloads |
 
+Le nom de projet Compose est fixé à `devops-store` dans `docker-compose.yml` : un clone du dépôt
+sur la même machine réutilise les volumes existants et donc les mots de passe figés au premier
+démarrage. Pour un essai isolé, définir `COMPOSE_PROJECT_NAME` plutôt que supprimer les volumes.
+
+Si le port 5432 est déjà pris par un autre PostgreSQL de la machine, y compris dans une
+distribution WSL, déplacer la publication avec `POSTGRES_PORT` ; voir
+[Pannes courantes](../troubleshooting/common-issues.md#le-port-5432-est-déjà-pris).
+
 Le fichier de licence AIStor (`MINIO_LICENSE_FILE`) est téléchargé séparément et n'est jamais
 versionné. Les jetons `SONAR_TOKEN`, `JFROG_ADMIN_TOKEN` et `JFROG_TOKEN` sont fournis par
 l'environnement au moment de la commande.

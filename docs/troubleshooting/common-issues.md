@@ -107,6 +107,55 @@ docker compose --project-directory <chemin-du-checkout-principal> ps
 
 **Preuve.** `docker compose ps` retrouve les conteneurs et volumes attendus.
 
+### Un clone neuf échoue sur `password authentication failed`
+
+**Symptôme.** Sur une machine qui a déjà lancé le laboratoire, un clone neuf démarre PostgreSQL
+puis le backend s'arrête :
+
+```text
+FATAL: password authentication failed for user "devops_store"
+```
+
+**Cause.** `docker-compose.yml` fixe `name: devops-store`. Tout clone du dépôt appartient donc au
+même projet Compose et **réutilise les volumes nommés existants**. Le mot de passe de la base a été
+figé dans le volume au tout premier démarrage : un nouveau `DB_PASSWORD` dans `.env` ne le change
+pas.
+
+**Résolution.** Au choix :
+
+- reprendre dans `.env` les valeurs du premier démarrage ;
+- repartir de zéro en supprimant les données : `docker compose down -v` (**destructif**) ;
+- isoler l'essai sans toucher aux données existantes :
+
+```powershell
+$env:COMPOSE_PROJECT_NAME = 'devops-store-clean'
+docker compose up -d --wait
+```
+
+**Preuve.** `docker compose ps` affiche les quatre services `healthy`.
+
+### Le port 5432 est déjà pris
+
+**Symptôme.**
+
+```text
+ports are not available: exposing port TCP 127.0.0.1:5432 -> 127.0.0.1:0:
+listen tcp4 127.0.0.1:5432: bind: Only one usage of each socket address ... is normally permitted.
+```
+
+**Cause.** Un autre PostgreSQL écoute déjà sur l'hôte, souvent dans une distribution WSL : le port
+apparaît alors détenu par `wslrelay.exe` et aucun conteneur Docker ne le publie.
+
+**Résolution.** Déplacer la publication avec `POSTGRES_PORT` dans `.env` ; le port interne reste
+`5432` et le backend continue de joindre la base par le nom de service.
+
+```powershell
+wsl -d Ubuntu -e sh -c "ss -ltnp | grep :5432"
+```
+
+**Preuve.** `docker compose up -d --wait` démarre sans erreur de bind. Vérifier que le port choisi
+n'est ni écouté ni réservé (`netsh interface ipv4 show excludedportrange protocol=tcp`).
+
 ### Healthcheck en échec avec `grep --quiet`
 
 **Symptôme.** Un conteneur reste `unhealthy` alors que le service répond ; le healthcheck signale
