@@ -115,9 +115,11 @@ public class ProductService {
     @Transactional
     public void delete(long id) {
         var product = findProduct(id);
-        imageRepository.findByProductIdOrderByPosition(id).stream()
+        var images = imageRepository.findByProductIdOrderByPosition(id);
+        images.stream()
                 .map(image -> new ObjectDeletionRequested(image.getObjectKey()))
                 .forEach(eventPublisher::publishEvent);
+        imageRepository.deleteAll(images);
         productRepository.delete(product);
     }
 

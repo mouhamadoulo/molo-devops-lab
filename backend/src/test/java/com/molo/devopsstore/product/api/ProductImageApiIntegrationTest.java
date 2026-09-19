@@ -225,6 +225,21 @@ class ProductImageApiIntegrationTest {
     }
 
     @Test
+    void deletesAProductTogetherWithItsImagesAndStoredObjects() throws Exception {
+        var primary = saveImage(0, true);
+        var secondary = saveImage(1, false);
+
+        var response = send(UserRole.ADMIN, "DELETE",
+                "/api/v1/products/" + product.getId(), null, null);
+
+        assertThat(response.statusCode()).isEqualTo(204);
+        assertThat(productRepository.findById(product.getId())).isEmpty();
+        assertThat(imageRepository.findByProductIdOrderByPosition(product.getId())).isEmpty();
+        verify(objectStorage).delete(primary.getObjectKey());
+        verify(objectStorage).delete(secondary.getObjectKey());
+    }
+
+    @Test
     void returnsTypedProblemsForUnknownProductsAndImages() throws Exception {
         var unknownProduct = send(UserRole.VIEWER, "GET",
                 "/api/v1/products/999999/images", null, null);
