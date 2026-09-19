@@ -263,6 +263,9 @@ Leur activation exige des identifiants fournis hors Git et une autorisation expl
 | EPIC-7 Kubernetes | Déploiement Kubernetes local | DEVOPS-15 manifests et probes |
 | EPIC-8 Observability | Métriques, dashboards et logs | DEVOPS-16 Prometheus/Grafana, DEVOPS-17 Loki/Alloy |
 
+Le backlog importable réel est [docs/planning/jira-backlog.csv](planning/jira-backlog.csv) ;
+procédure dans [Jira et Confluence](planning/jira-confluence.md).
+
 ---
 
 ## PHASE 0 — Architecture et choix techniques
