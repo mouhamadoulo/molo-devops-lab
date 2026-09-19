@@ -26,6 +26,7 @@
         <minio.version>9.0.3</minio.version>
         <okhttp.version>5.5.0</okhttp.version>
         <postgresql.version>42.7.12</postgresql.version>
+        <bouncycastle.version>1.86</bouncycastle.version>
         <tomcat.version>11.0.25</tomcat.version>
         <twelvemonkeys.version>3.15.0</twelvemonkeys.version>
         <sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
@@ -37,6 +38,17 @@
         <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
         <sonar.qualitygate.timeout>300</sonar.qualitygate.timeout>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- MinIO 9.0.3 still brings bcprov-jdk18on 1.84 (CVE-2026-8763, CVE-2026-13506). -->
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${bouncycastle.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
