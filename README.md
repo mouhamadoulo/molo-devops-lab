@@ -21,7 +21,9 @@ livraison.
 > la collecte des journaux Docker avec Loki 3.7.7 et Grafana Alloy 1.19.2, derrière un proxy de
 > socket Docker restreint. La phase 13 déploie la stack applicative sur le Kubernetes de Docker
 > Desktop ; voir [Kubernetes local](docs/infrastructure/kubernetes.md) et le
-> [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md).
+> [plan d'implémentation](docs/IMPLEMENTATION_PLAN.md). La phase 14 consolide la documentation :
+> vue d'architecture, chaîne d'outils, inventaire des services, règles de sécurité, pannes
+> courantes, backlog Jira importable et contrôle des liens en CI.
 
 ## Architecture
 
@@ -90,16 +92,10 @@ Les tests natifs restent disponibles avec `./mvnw clean verify` dans `backend/`,
 | Backend | <http://localhost:8080> |
 | Swagger UI | <http://localhost:8080/swagger-ui.html> |
 | Stockage objet S3 | <http://localhost:9000> |
-| Console AIStor | <http://localhost:9001> |
-| SonarQube (profil `quality`) | <http://localhost:9000> |
-| Artifactory OSS (profil `artifacts`) | <http://localhost:8082/ui/> |
-| Prometheus (profil `observability`) | <http://localhost:9090> |
-| Grafana (profil `observability`) | <http://localhost:3000> |
-| Loki (profil `observability`) | <http://localhost:3100> |
-| Alloy (profil `observability`) | <http://localhost:12345> |
 
-AIStor et SonarQube utilisent tous deux le port 9000 par défaut. Pour les exécuter en parallèle,
-modifier `SONAR_PORT` comme indiqué dans le [guide SonarQube](docs/devops/sonarqube.md).
+Les URL, ports et identifiants initiaux des profils DevOps et du déploiement Kubernetes sont
+regroupés dans [Services et accès](docs/operations/services.md), qui signale aussi le conflit du
+port 9000 entre AIStor, SonarQube et la redirection Kubernetes.
 
 ## Commandes principales
 
@@ -118,6 +114,7 @@ make trivy-fs
 make trivy-config
 make trivy-images
 make security
+make docs-check
 make artifacts-up
 make artifacts-verify
 make artifacts-status
@@ -127,11 +124,26 @@ make observability-status
 make observability-logs
 make observability-down
 make observability-reset
+make k8s-deploy
 ```
+
+## Limites
+
+- AIStor Free est limité à un nœud, sans SLA, et exige une licence locale ;
+- Artifactory OSS n'expose pas les API de configuration : Terraform reste validé par
+  `terraform test`, sans `apply` ;
+- le cluster Kubernetes est mono-nœud et ses NodePorts ne sont pas joignables depuis Windows ;
+- Jira et Confluence ne sont pas connectés : l'alimentation est manuelle ;
+- détail dans [Services et accès](docs/operations/services.md#limites-locales-externes-et-de-licence).
 
 ## Documentation
 
 - [Index documentaire](docs/README.md)
+- [Vue d'ensemble](docs/architecture/overview.md)
+- [Chaîne d'outils](docs/devops/toolchain.md)
+- [Services et accès](docs/operations/services.md)
+- [Règles de sécurité](docs/security/security-guidelines.md)
+- [Pannes courantes](docs/troubleshooting/common-issues.md)
 - [Images et stack Docker Compose](docs/infrastructure/docker.md)
 - [Workflow Git et GitHub](docs/devops/git-workflow.md)
 - [GitHub Actions](docs/devops/github-actions.md)
@@ -142,5 +154,7 @@ make observability-reset
 - [Dashboard Grafana](docs/observability/grafana.md)
 - [Journaux Loki](docs/observability/loki.md)
 - [Collecte Grafana Alloy](docs/observability/alloy.md)
+- [Kubernetes local](docs/infrastructure/kubernetes.md)
 - [Plan d'implémentation](docs/IMPLEMENTATION_PLAN.md)
+- [Jira et Confluence](docs/planning/jira-confluence.md)
 - [Cahier des charges](Prompt-DevSecOps-Lab.md)
