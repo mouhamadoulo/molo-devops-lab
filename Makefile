@@ -5,6 +5,8 @@ DEVOPS_COMPOSE ?= docker compose -f docker-compose.devops.yml
 DOCKER ?= docker
 MAVEN ?= ./mvnw
 ACTIONLINT_IMAGE ?= rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+LYCHEE_IMAGE ?= lycheeverse/lychee:0.24.2@sha256:e2d19e57cf6ab037026f20b8e449a1f30d9d7f81eef4194763aab2eab20bd28d
+DOCS_FILES ?= README.md AGENTS.md CLAUDE.md 'docs/**/*.md'
 MAVEN_IMAGE ?= maven:3.9.16-eclipse-temurin-25@sha256:31618505df21177d2baa3dc574be2d0b0b32614c8539baca1f23a9136b766eb0
 TRIVY_IMAGE ?= ghcr.io/aquasecurity/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c
 COSIGN_IMAGE ?= gcr.io/projectsigstore/cosign:v3.1.3@sha256:9e5c2f2edc34351160407ca3416c61855bdf9403c3c5936e0f0be7fc261611b8
@@ -48,7 +50,7 @@ TRIVY_IMAGE_RUN = $(DOCKER) run --rm \
 	-v /var/run/docker.sock:/var/run/docker.sock \
 	-w /workspace $(TRIVY_IMAGE)
 
-.PHONY: help application build test backend-test frontend-test ci-lint up down status logs \
+.PHONY: help application build test backend-test frontend-test ci-lint docs-check up down status logs \
 	quality-config quality-up quality-down quality-status quality-logs quality-reset \
 	observability-config observability-up observability-down observability-status \
 	observability-logs observability-reset \
@@ -72,6 +74,7 @@ help: ## Show available commands
 	$(info   backend-test      Run the complete Maven verification)
 	$(info   frontend-test     Install, lint, test and build the frontend)
 	$(info   ci-lint           Validate GitHub Actions workflows)
+	$(info   docs-check        Check relative links and anchors in the documentation)
 	$(info   trivy-verify      Verify the pinned Trivy image signature and version)
 	$(info   trivy-fs          Scan repository dependencies, misconfigurations and secrets)
 	$(info   trivy-config      Scan Dockerfiles and supported current or future IaC files)
@@ -141,6 +144,11 @@ frontend-test: ## Install, lint, test and build the frontend
 
 ci-lint: ## Validate GitHub Actions workflows
 	$(DOCKER) run --rm -v "$(CURDIR):/repo" -w /repo $(ACTIONLINT_IMAGE) -color
+
+docs-check: ## Check relative links and anchors in the documentation
+	$(DOCKER) run --rm -v "$(CURDIR):/input:ro" -w /input $(LYCHEE_IMAGE) \
+		--offline --no-progress --include-fragments --exclude-path docs/superpowers \
+		$(DOCS_FILES)
 
 trivy-verify: ## Verify the pinned Trivy image signature and version
 	$(DOCKER) run --rm $(COSIGN_IMAGE) verify $(TRIVY_IMAGE) \
