@@ -28,7 +28,7 @@
         <postgresql.version>42.7.12</postgresql.version>
         <bouncycastle.version>1.86</bouncycastle.version>
         <tomcat.version>11.0.25</tomcat.version>
-        <twelvemonkeys.version>3.15.0</twelvemonkeys.version>
+        <twelvemonkeys.version>3.15.1</twelvemonkeys.version>
         <sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
         <sonar.projectKey>devops-store-backend</sonar.projectKey>
         <sonar.projectName>DevOps Store Backend</sonar.projectName>
