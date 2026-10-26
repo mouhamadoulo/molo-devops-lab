@@ -34,7 +34,7 @@ services:
 
   sonarqube:
     profiles: [quality]
-    image: sonarqube:26.9.0.129388-community@sha256:aa7146fd72ef79ea8ca06315ca3121db9bb1c24a83ba5255e8df67b43dee6e04
+    image: sonarqube:26.10.0.133078-community@sha256:0b3408443fb6a311253de27941b10977c9b977fd53be2265947bfe14161308b8
     environment:
       SONAR_JDBC_URL: jdbc:postgresql://sonarqube-db:5432/${SONAR_DB_NAME:-sonarqube}
       SONAR_JDBC_USERNAME: ${SONAR_DB_USERNAME:-sonarqube}
@@ -205,7 +205,7 @@ services:
 
   artifactory-bootstrap:
     profiles: [artifacts-tools]
-    image: curlimages/curl:8.22.0@sha256:58adaa4e8dca9c988bae2aba4ab3434a0bb2da16bbe3f92dec39ec7785166777
+    image: curlimages/curl:8.23.0@sha256:11e64e28c5f58c8d93ee95fcf22ac055f48b0bc440e0ce7d8013bbb5ad6aa8ac
     environment:
       JFROG_INTERNAL_URL: http://artifactory:8082/artifactory
       JFROG_ADMIN_TOKEN: ${JFROG_ADMIN_TOKEN:-}
@@ -227,7 +227,7 @@ services:
 
   artifactory-promote:
     profiles: [artifacts-tools]
-    image: curlimages/curl:8.22.0@sha256:58adaa4e8dca9c988bae2aba4ab3434a0bb2da16bbe3f92dec39ec7785166777
+    image: curlimages/curl:8.23.0@sha256:11e64e28c5f58c8d93ee95fcf22ac055f48b0bc440e0ce7d8013bbb5ad6aa8ac
     environment:
       JFROG_INTERNAL_URL: http://artifactory:8082/artifactory
       JFROG_ADMIN_TOKEN: ${JFROG_ADMIN_TOKEN:-}
@@ -249,7 +249,7 @@ services:
 
   artifactory-resolve:
     profiles: [artifacts-tools]
-    image: maven:3.9.16-eclipse-temurin-25@sha256:31618505df21177d2baa3dc574be2d0b0b32614c8539baca1f23a9136b766eb0
+    image: maven:3.9-eclipse-temurin-26@sha256:b2c1ad85954592f9928e84327c65201f308ad9b5d8ed7d5b823717c97bf23fbb
     environment:
       JFROG_URL: http://artifactory:8082/artifactory
       JFROG_USERNAME: ${JFROG_USERNAME:-}
@@ -281,7 +281,7 @@ services:
 
   prometheus:
     profiles: [observability]
-    image: prom/prometheus:v3.14.0-distroless@sha256:50c707e96da5ade383cb1707790576480485e93de06aa60ad8802cb5f744bd0a
+    image: prom/prometheus:v3.15.1-distroless@sha256:451a845bae1d51622b41af1780eb2ad911bbb79a9855bc8e9bb67fabbc03f934
     user: "65532:65532"
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -315,7 +315,7 @@ services:
 
   grafana:
     profiles: [observability]
-    image: grafana/grafana:13.2.1@sha256:f772d434e8fab0049deb2b1b30abd43342bcfca1537614aa8d36080232cf4283
+    image: grafana/grafana:13.2.4@sha256:dbbc38ea21103cefb50396340cd88afec779c7e070b0a7bf5a75b4ce46651d3f
     user: "472:0"
     entrypoint:
       - /bin/sh
@@ -393,7 +393,7 @@ services:
 
   loki:
     profiles: [observability]
-    image: grafana/loki:3.7.7@sha256:d70e4659623f3e109af669cae76fe2a5dd5be54e2298fe8aed380d982fbc2500
+    image: grafana/loki:3.7.9@sha256:0db216b630ae1f348a1584c67f3cead8b4c1fc839169a39501db664744158e28
     user: "10001:10001"
     command:
       - -config.file=/etc/loki/loki-config.yml
@@ -418,7 +418,7 @@ services:
 
   alloy:
     profiles: [observability]
-    image: grafana/alloy:v1.19.2@sha256:b8ec653c44235fbe910879145dac3597d66b0aaecf60bcbbe82580767771a839
+    image: grafana/alloy:v1.21.2@sha256:89a5a320168387336b9ac3c850609c3ba7757eadd4ae5f1d819deb35e9854b18
     user: "473:473"
     command:
       - run
