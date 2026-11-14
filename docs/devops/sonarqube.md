@@ -10,7 +10,7 @@ nommés.
 Deux projets conservent des cycles de build indépendants :
 
 - `devops-store-backend`, analysé avec SonarScanner for Maven 5.8.0.7211 ;
-- `devops-store-frontend`, analysé avec SonarScanner for NPM 5.0.0.
+- `devops-store-frontend`, analysé avec SonarScanner for NPM 5.0.2.
 
 Community Build analyse ici uniquement la branche principale. Le workflow qualité ne lance donc
 pas d'analyse de Pull Request. Il attend une instance SonarQube accessible depuis GitHub Actions ;

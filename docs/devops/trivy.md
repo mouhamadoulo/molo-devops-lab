@@ -30,9 +30,9 @@ inférieure, hors gate, sont acceptés pour le laboratoire :
 - Maven/JDK pour le cache local : `maven:3.9.16-eclipse-temurin-25@sha256:31618505df21177d2baa3dc574be2d0b0b32614c8539baca1f23a9136b766eb0`.
 
 Les deux artefacts applicatifs scannés sont `devops-store-backend:local`, construit sur
-`eclipse-temurin:25-jre-alpine@sha256:3137541deb3cac6626b5d9a4a2187bc0d6a34312f858bd2c67dd01e732e6b682`,
+`eclipse-temurin:25-jre-alpine@sha256:e1898fd6a11fc965a994d8ace186fd3585aeb636cf8f05f47a723fcfee0b0918`,
 et `devops-store-frontend:local`, construit sur
-`nginxinc/nginx-unprivileged:1.31.5-alpine3.24@sha256:2ddec616f1cb58bcac057aa388f28cb81e35137641ef4226d321714499329bd1`.
+`nginxinc/nginx-unprivileged:1.31.7-alpine3.24@sha256:378d0c32f6562f7fd9629170797f57d2b953aa09be983b3daaf4809bb039ca00`.
 
 `make trivy-verify` vérifie la signature keyless de l’image Trivy contre l’identité GitHub Actions
 du projet Aqua Security, puis confirme que la version exécutée est exactement 0.73.0.

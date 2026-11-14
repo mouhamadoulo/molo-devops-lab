@@ -42,12 +42,12 @@ Aucune valeur secrète n'est versionnée, quelle que soit sa durée de vie.
 - Dependabot suit les dépendances Maven, npm, les actions GitHub et les images de base.
 - Le gate de sécurité bloque les vulnérabilités `HIGH` et `CRITICAL` **corrigibles**
   (`ignore-unfixed: true`) ; secrets et mauvaises configurations gardent le même seuil.
-- Deux surcharges sont en place dans `backend/pom.xml`, chacune justifiée par un commentaire :
-
-| Surcharge | Version forcée | Raison |
-|---|---|---|
-| Tomcat embarqué | 11.0.25 | Spring Boot 4.1.1 fournit encore 11.0.24, signalé en critique |
-| `bcprov-jdk18on` | 1.86 | MinIO 9.0.3 tire encore 1.84 (CVE-2026-8763, CVE-2026-13506), corrigé par la PR #45 |
+- Aucune surcharge de version n'est en place dans `backend/pom.xml`. Les deux précédentes
+  (Tomcat 11.0.25 et `bcprov-jdk18on` 1.86) ont été retirées avec Spring Boot 4.1.2, qui fournit
+  Tomcat 11.0.27, et MinIO 9.0.4, qui tire `bcprov-jdk18on` 1.86. Conserver la surcharge Tomcat
+  aurait rétrogradé la version du BOM.
+- Les images runtime appliquent `apk upgrade` sur une liste explicite de paquets Alpine signalés par
+  Trivy et déjà corrigés en amont, en attendant une image de base reconstruite.
 
 - Règle de sortie : une surcharge est **retirée** dès que le BOM ou la dépendance amont fournit la
   version corrigée. Elle n'est pas conservée « au cas où ».

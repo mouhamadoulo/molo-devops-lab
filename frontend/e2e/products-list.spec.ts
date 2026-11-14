@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import type { Page, Route } from '@playwright/test';
+import type { Route } from '@playwright/test';
 
 const adminSession = {
   accessToken: 'admin-access-token',
