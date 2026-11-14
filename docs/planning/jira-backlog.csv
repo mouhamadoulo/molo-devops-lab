@@ -1,0 +1,35 @@
+Issue Id,Parent,Issue Type,Summary,Description,Labels,Status
+1,,Epic,EPIC-1 Application Fullstack,"Catalogue produits Angular et Spring Boot sécurisé, galerie d'images et administration.",epic,Done
+2,,Epic,EPIC-2 Containerisation,Images non-root et stack locale Docker Compose en une commande.,epic,Done
+3,,Epic,EPIC-3 CI/CD,Workflows GitHub Actions et construction des images.,epic,Done
+4,,Epic,EPIC-4 Quality & Security,Quality gate SonarQube et scans Trivy bloquants.,epic,Done
+5,,Epic,EPIC-5 Artifact Management,Artefacts Maven versionnés dans JFrog Artifactory OSS.,epic,Done
+6,,Epic,EPIC-6 Infrastructure,Configuration Terraform des repositories JFrog.,epic,In Progress
+7,,Epic,EPIC-7 Kubernetes,Déploiement Kubernetes local de la stack applicative.,epic,Done
+8,,Epic,EPIC-8 Observability,"Métriques, dashboards et journaux centralisés.",epic,Done
+101,1,Story,DEVOPS-1 Initialiser Spring Boot et PostgreSQL,"Java 25, Spring Boot 4.1, Flyway et Testcontainers. Plan : phase 1 ; PR #1.",phase-1,Done
+102,1,Story,DEVOPS-2 Implémenter l'API Products,"CRUD versionné /api/v1/products, ProblemDetail, tri validé. Plan : phase 1 ; PR #1.",phase-1,Done
+103,1,Story,DEVOPS-3 Initialiser Angular 22,"Standalone, OnPush, session par Signals. Plan : phase 2 ; PR #1.",phase-2,Done
+104,1,Story,DEVOPS-4 Créer l'UI catalogue,"Catalogue responsive et formulaires produits. Plan : phase 2 ; PR #1.",phase-2,Done
+105,1,Story,Identité JWT et RBAC,"Login, refresh rotatif, rôles VIEWER, EDITOR et ADMIN. PR #1.",phase-2,Done
+106,1,Story,Galerie privée d'images produits,"Upload validé, stockage AIStor, URL présignées, suppression après commit. PR #2.",phase-2,Done
+107,1,Story,Administration des utilisateurs,Console réservée au rôle ADMIN. PR #3.,phase-2,Done
+108,1,Story,Tests et couverture,"JaCoCo, LCOV, scénarios critiques. Plan : phase 3 ; PR #4.",phase-3,Done
+109,1,Story,Documentation finale,"Documents consolidés, backlog Jira, guide Confluence, validation depuis un clone neuf. Plan : phase 14.",phase-14,Done
+201,2,Story,DEVOPS-5 Dockeriser le backend,Build Maven JDK 25 et runtime JRE 25 non-root. Plan : phase 4 ; PR #5.,phase-4,Done
+202,2,Story,DEVOPS-6 Dockeriser le frontend,Build Node 24 et runtime Nginx non-root. Plan : phase 4 ; PR #5.,phase-4,Done
+203,2,Story,DEVOPS-11 Stack Docker Compose,"Nginx, backend, PostgreSQL et AIStor avec healthchecks. Plan : phase 4 ; PR #5.",phase-4,Done
+301,3,Story,DEVOPS-7 Configurer GitHub Actions,"Workflows backend et frontend, actions épinglées, Dependabot. Plan : phase 6 ; PR #6.",phase-6,Done
+302,3,Story,DEVOPS-12 Construire les images en CI,Workflow docker. Plan : phase 6 ; PR #6.,phase-6,Done
+401,4,Story,DEVOPS-8 Intégrer SonarQube,"Profil qualité local, analyses backend et frontend. Plan : phase 7 ; PR #16.",phase-7,Done
+402,4,Story,DEVOPS-9 Intégrer Trivy,"Scans dépôt, configurations et images, SARIF. Plan : phase 8 ; PR #18.",phase-8,Done
+403,4,Bug,CVE Bouncy Castle transitive,"bcprov-jdk18on 1.84 via MinIO (CVE-2026-8763, CVE-2026-13506), forcé en 1.86. PR #45.",security,Done
+501,5,Story,DEVOPS-10 Configurer JFrog Artifactory,"Artifactory OSS et PostgreSQL 17, cinq repositories Maven. Plan : phase 9 ; PR #20.",phase-9,Done
+502,5,Story,DEVOPS-13 Publier les artefacts Maven,"Snapshot, candidate, promotion par checksum. Plan : phase 9 ; PR #20.",phase-9,Done
+601,6,Story,DEVOPS-14 Décrire JFrog avec Terraform,"Provider JFrog 12.11.3, tests simulés. Plan : phase 10 ; PR #21.",phase-10,Done
+602,6,Task,Appliquer Terraform sur Artifactory Pro,"Import, apply, plan vide et destroy ; exige une licence Pro. Plan : phase 10.",phase-10,To Do
+701,7,Story,DEVOPS-15 Manifests Kubernetes et probes,"Docker Desktop Kubernetes, StatefulSets, Secrets hors Git. Plan : phase 13 ; PR #44.",phase-13,Done
+702,1,Bug,Suppression d'un produit avec images,"HTTP 500 TransientPropertyValueException, images supprimées avant le produit. PR #46.",bug,Done
+801,8,Story,DEVOPS-16 Prometheus et Grafana,"Scrape interne, dashboard provisionné. Plan : phase 11 ; PR #29.",phase-11,Done
+802,8,Story,DEVOPS-17 Loki et Grafana Alloy,"Journaux Docker via proxy de socket restreint. Plan : phase 12 ; PR #43.",phase-12,Done
+803,8,Bug,Contrôle du mot de passe Grafana,Mot de passe exigé seulement au démarrage de Grafana. PR #42.,bug,Done

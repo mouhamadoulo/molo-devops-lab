@@ -200,8 +200,8 @@ Avec GNU Make, les cibles disponibles sont `help`, `application`, `build`, `test
 `observability-config`, `observability-up`, `observability-down`, `observability-status`,
 `observability-logs`, `observability-reset`, `trivy-verify`, `trivy-fs`, `trivy-config`,
 `trivy-images`, `security`, `k8s-cluster`, `k8s-config`, `k8s-images`, `k8s-secrets`,
-`k8s-deploy`, `k8s-rollout`, `k8s-status`, `k8s-forward`, `k8s-logs`, `k8s-delete` et
-`k8s-reset`.
+`k8s-deploy`, `k8s-rollout`, `k8s-status`, `k8s-forward`, `k8s-logs`, `k8s-delete`,
+`k8s-reset` et `docs-check`.
 `down` et `quality-down` préservent les volumes nommés ; `quality-reset` les supprime. Le fichier
 de licence reste hors Git. AIStor Free est limité au single-node sans SLA/SLO.
 
@@ -293,7 +293,12 @@ Les contrôles disponibles sont :
 ```bash
 git diff --check
 cd backend && ./mvnw clean verify
+make docs-check
 ```
+
+`make docs-check` exécute lychee hors ligne dans un conteneur épinglé et vérifie les liens
+relatifs et les ancres de `README.md`, `AGENTS.md`, `CLAUDE.md` et `docs/**/*.md`, en excluant
+`docs/superpowers`. Le même contrôle tourne en CI dans le workflow `Documentation`.
 
 Si un outil de formatage ou de lint est ajouté, le configurer dans le dépôt, documenter sa commande
 ici et l'intégrer au build ou à la CI.
@@ -339,7 +344,10 @@ ici et l'intégrer au build ou à la CI.
 - placer les explications détaillées dans `docs/` et maintenir `docs/README.md` comme index ;
 - fournir des commandes copiables et leurs prérequis ;
 - distinguer clairement les fonctionnalités disponibles de celles qui sont planifiées ;
-- mettre à jour `docs/IMPLEMENTATION_PLAN.md` lorsqu'une phase ou un critère d'acceptation change.
+- mettre à jour `docs/IMPLEMENTATION_PLAN.md` lorsqu'une phase ou un critère d'acceptation change ;
+- tout document annoncé dans `docs/README.md` est un lien réel, pas un nom de fichier en
+  `code` : l'index est vérifié par `make docs-check`, donc un document annoncé mais absent fait
+  échouer la CI.
 
 ## Discipline de modification
 
