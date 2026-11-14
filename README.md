@@ -1,5 +1,7 @@
 # DevOps Store — DevSecOps Product Catalog
 
+![Chaîne DevSecOps de DevOps Store : GitHub Actions, SonarQube, Trivy, Artifactory, Compose et Kubernetes, application observée par Prometheus, Grafana, Loki et Alloy](docs/assets/devops-store-overview.svg)
+
 DevOps Store est un mini-catalogue de produits électroniques conçu comme un laboratoire
 DevSecOps de bout en bout. Le périmètre métier reste volontairement limité au CRUD, à la
 recherche, aux filtres et à la pagination afin de concentrer l'apprentissage sur la chaîne de
