@@ -11,7 +11,7 @@ RUN --mount=type=cache,target=/root/.m2 \
     mvn -B -DskipTests package \
     && cp target/devops-store-backend-0.1.0-SNAPSHOT.jar application.jar
 
-FROM eclipse-temurin:25-jre-alpine@sha256:3137541deb3cac6626b5d9a4a2187bc0d6a34312f858bd2c67dd01e732e6b682 AS runtime
+FROM eclipse-temurin:25-jre-alpine@sha256:e1898fd6a11fc965a994d8ace186fd3585aeb636cf8f05f47a723fcfee0b0918 AS runtime
 
 RUN apk upgrade --no-cache libcrypto3 libssl3 openssl libexpat
 

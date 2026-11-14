@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.1</version>
+        <version>4.1.2</version>
         <relativePath/>
     </parent>
 
@@ -20,15 +20,13 @@
     <properties>
         <revision>0.1.0-SNAPSHOT</revision>
         <java.version>25</java.version>
-        <springdoc.version>3.1.1</springdoc.version>
+        <springdoc.version>3.2.0</springdoc.version>
         <testcontainers.version>2.0.5</testcontainers.version>
-        <jacoco.version>0.8.15</jacoco.version>
-        <minio.version>9.0.3</minio.version>
-        <okhttp.version>5.5.0</okhttp.version>
+        <jacoco.version>0.8.16</jacoco.version>
+        <minio.version>9.0.4</minio.version>
+        <okhttp.version>5.5.1</okhttp.version>
         <postgresql.version>42.7.12</postgresql.version>
-        <bouncycastle.version>1.86</bouncycastle.version>
-        <tomcat.version>11.0.25</tomcat.version>
-        <twelvemonkeys.version>3.15.0</twelvemonkeys.version>
+        <twelvemonkeys.version>3.15.3</twelvemonkeys.version>
         <sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
         <sonar.projectKey>devops-store-backend</sonar.projectKey>
         <sonar.projectName>DevOps Store Backend</sonar.projectName>
@@ -38,17 +36,6 @@
         <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
         <sonar.qualitygate.timeout>300</sonar.qualitygate.timeout>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <!-- MinIO 9.0.3 still brings bcprov-jdk18on 1.84 (CVE-2026-8763, CVE-2026-13506). -->
-            <dependency>
-                <groupId>org.bouncycastle</groupId>
-                <artifactId>bcprov-jdk18on</artifactId>
-                <version>${bouncycastle.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <dependencies>
         <dependency>

@@ -75,9 +75,9 @@ uniquement après lecture des notes de version et relance de toutes les validati
 | TypeScript | 6.0.x | Plage imposée par Angular 22 : `>=6.0.0 <6.1.0` |
 | Node.js / npm | 24.18.0 / 11.16.0 | Node satisfait le minimum Angular `^24.15.0` |
 | Java | 25 LTS | Version source, cible, tests et runtime |
-| Spring Boot | 4.1.1 | Supporte Java 17 à 26 et Maven 3.6.3+ ; Tomcat surchargé en 11.0.25 (CVE) |
+| Spring Boot | 4.1.2 | Supporte Java 17 à 26 et Maven 3.6.3+ ; Tomcat 11.0.27 fourni par le BOM |
 | Maven Wrapper | 3.9.16 | Aligné sur l'image de build `maven:3.9.16-eclipse-temurin-25` |
-| Springdoc OpenAPI | 3.1.1 | Branche 3.x compatible Spring Boot 4 |
+| Springdoc OpenAPI | 3.2.0 | Branche 3.x compatible Spring Boot 4 |
 | Testcontainers | 2.0.5 | Modules JUnit Jupiter et PostgreSQL |
 | PostgreSQL | 18.4 | Version courante supportée jusqu'en 2030 |
 | MinIO AIStor Free | RELEASE.2026-04-14T21-32-45Z | Single-node licencié, corrigé pour GHSA-xh8f-g2qw-gcm7 |

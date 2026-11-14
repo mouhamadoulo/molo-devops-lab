@@ -8,8 +8,8 @@ guides dédiés, référencés à chaque section.
 
 | Composant | Rôle | Technologie | Guide |
 |---|---|---|---|
-| Frontend | Console produits et administration, servie en statique | Angular 22, TypeScript 6, build Node 24, runtime `nginx-unprivileged` 1.31.5 en UID 101 | [Images et stack Docker Compose](../infrastructure/docker.md) |
-| Backend | API REST `/api/v1`, identité, règles métier | Spring Boot 4.1.1 sur Java 25, runtime JRE 25 en UID 10001 | [Tests et couverture](../devops/testing.md) |
+| Frontend | Console produits et administration, servie en statique | Angular 22, TypeScript 6, build Node 24, runtime `nginx-unprivileged` 1.31.7 en UID 101 | [Images et stack Docker Compose](../infrastructure/docker.md) |
+| Backend | API REST `/api/v1`, identité, règles métier | Spring Boot 4.1.2 sur Java 25, runtime JRE 25 en UID 10001 | [Tests et couverture](../devops/testing.md) |
 | Base de données | Catalogue, utilisateurs, jetons de rafraîchissement, métadonnées d'images | PostgreSQL 18.4, schéma géré par Flyway | `backend/src/main/resources/db/migration/` |
 | Stockage objet | Contenu binaire des images produits, privé | AIStor Free single-node, client MinIO Java 9 | [Décision stockage objet](object-storage-decision.md) |
 | Supervision | Santé, métriques Prometheus, logs structurés | Actuator sur le port de management `8081`, Micrometer, format Logstash | [Prometheus](../observability/prometheus.md) |
