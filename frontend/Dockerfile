@@ -10,11 +10,12 @@ COPY public ./public
 COPY src ./src
 RUN npm run build
 
-FROM nginxinc/nginx-unprivileged:1.31.5-alpine3.24@sha256:2ddec616f1cb58bcac057aa388f28cb81e35137641ef4226d321714499329bd1 AS runtime
+FROM nginxinc/nginx-unprivileged:1.31.7-alpine3.24@sha256:378d0c32f6562f7fd9629170797f57d2b953aa09be983b3daaf4809bb039ca00 AS runtime
 
 USER root
 
-RUN apk upgrade --no-cache libcrypto3 libssl3 libexpat libuuid
+RUN apk upgrade --no-cache libcrypto3 libssl3 libexpat libuuid \
+    brotli-libs curl libcurl libx11 libxslt musl musl-utils zlib
 
 COPY nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /workspace/dist/frontend/browser /usr/share/nginx/html
