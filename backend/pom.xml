@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.2</version>
+        <version>4.2.0</version>
         <relativePath/>
     </parent>
 
@@ -27,7 +27,7 @@
         <okhttp.version>5.5.1</okhttp.version>
         <postgresql.version>42.7.12</postgresql.version>
         <twelvemonkeys.version>3.15.3</twelvemonkeys.version>
-        <sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
+        <sonar-maven-plugin.version>5.9.0.7382</sonar-maven-plugin.version>
         <sonar.projectKey>devops-store-backend</sonar.projectKey>
         <sonar.projectName>DevOps Store Backend</sonar.projectName>
         <sonar.sourceEncoding>UTF-8</sonar.sourceEncoding>
